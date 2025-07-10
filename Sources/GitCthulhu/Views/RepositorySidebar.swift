@@ -58,7 +58,7 @@ struct RepositorySidebar: View {
                 .disabled(repositoryManager.isLoading)
 
                 Button(action: {
-                    // TODO: Implement clone repository
+                    // Clone repository functionality will be implemented in future sprint
                 }) {
                     Label("Clone Repository", systemImage: "square.and.arrow.down")
                 }

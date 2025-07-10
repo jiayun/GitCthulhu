@@ -35,18 +35,24 @@ public class GitCommandExecutor {
                     let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
 
                     if process.terminationStatus == 0 {
-                        self.logger.debug("Git command succeeded: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+                        self.logger.debug(
+                            "Git command succeeded: \(output.trimmingCharacters(in: .whitespacesAndNewlines))"
+                        )
                         continuation.resume(returning: output.trimmingCharacters(in: .whitespacesAndNewlines))
                     } else {
                         let fullError = errorOutput.isEmpty ? output : errorOutput
-                        let error = GitError.libgit2Error("Git command failed with status \(process.terminationStatus): \(fullError)")
+                        let error = GitError.libgit2Error(
+                            "Git command failed with status \(process.terminationStatus): \(fullError)"
+                        )
                         self.logger.error("Git command failed: \(error.localizedDescription)")
                         continuation.resume(throwing: error)
                     }
                 }
             } catch {
                 logger.error("Failed to start git process: \(error.localizedDescription)")
-                continuation.resume(throwing: GitError.libgit2Error("Failed to execute git command: \(error.localizedDescription)"))
+                continuation.resume(
+                    throwing: GitError.libgit2Error("Failed to execute git command: \(error.localizedDescription)")
+                )
             }
         }
     }

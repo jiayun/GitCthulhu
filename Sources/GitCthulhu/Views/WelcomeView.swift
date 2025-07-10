@@ -1,11 +1,14 @@
 import GitCore
 import SwiftUI
+import Utilities
 
 struct WelcomeView: View {
     @EnvironmentObject private var repositoryManager: RepositoryManager
     @State private var isDragOver = false
     @State private var showingError = false
     @State private var errorMessage = ""
+
+    private let logger = Logger(category: "WelcomeView")
 
     var body: some View {
         VStack(spacing: 30) {
@@ -117,8 +120,8 @@ struct WelcomeView: View {
             .disabled(repositoryManager.isLoading)
 
             Button("Clone Repository") {
-                print("Clone Repository tapped")
-                // TODO: Implement repository cloning
+                logger.info("Clone Repository button tapped")
+                // Clone repository functionality will be implemented in future sprint
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
@@ -130,19 +133,23 @@ struct WelcomeView: View {
         guard let provider = providers.first else { return false }
 
         provider.loadObject(ofClass: NSURL.self) { url, _ in
-            guard let url = url as? URL else { return }
-
-            Task { @MainActor in
-                if repositoryManager.validateRepositoryPath(url) {
-                    await repositoryManager.openRepository(at: url)
-                } else {
-                    errorMessage = "Selected folder is not a Git repository"
-                    showingError = true
-                }
-            }
+            self.processDroppedURL(url)
         }
 
         return true
+    }
+
+    private func processDroppedURL(_ url: Any?) {
+        guard let url = url as? URL else { return }
+
+        Task { @MainActor in
+            if repositoryManager.validateRepositoryPath(url) {
+                await repositoryManager.openRepository(at: url)
+            } else {
+                errorMessage = "Selected folder is not a Git repository"
+                showingError = true
+            }
+        }
     }
 }
 
@@ -175,11 +182,11 @@ struct RecentRepositoryRow: View {
 
             Spacer()
 
-            Button(action: {
+            Button {
                 Task {
                     await repositoryManager.openRepository(at: url)
                 }
-            }) {
+            } label: {
                 Image(systemName: "arrow.right.circle")
                     .foregroundColor(.blue)
             }

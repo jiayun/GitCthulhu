@@ -1,5 +1,6 @@
 import GitCore
 import SwiftUI
+import Utilities
 
 public struct ErrorAlert: View {
     let error: GitError
@@ -140,8 +141,8 @@ public struct ErrorBanner: View {
 #Preview("Error Alert") {
     ErrorAlert(
         error: .failedToOpenRepository("The selected folder is not a valid Git repository."),
-        onRetry: { print("Retry") },
-        onDismiss: { print("Dismiss") }
+        onRetry: { Logger(category: "ErrorAlert").info("Retry action") },
+        onDismiss: { Logger(category: "ErrorAlert").info("Dismiss action") }
     )
     .frame(width: 400, height: 300)
 }
@@ -149,7 +150,7 @@ public struct ErrorBanner: View {
 #Preview("Error Banner") {
     ErrorBanner(
         error: .permissionDenied,
-        onDismiss: { print("Dismiss") }
+        onDismiss: { Logger(category: "ErrorAlert").info("Dismiss action") }
     )
     .padding()
 }

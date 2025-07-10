@@ -1,4 +1,5 @@
 import SwiftUI
+import Utilities
 
 struct SimpleTestView: View {
     var body: some View {
@@ -17,7 +18,7 @@ struct SimpleTestView: View {
                 .multilineTextAlignment(.center)
 
             Button("Test Button") {
-                print("Button tapped!")
+                Logger(category: "SimpleTestView").info("Test button tapped")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
