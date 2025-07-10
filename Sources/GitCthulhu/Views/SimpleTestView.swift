@@ -6,16 +6,16 @@ struct SimpleTestView: View {
             Text("GitCthulhu Test")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-            
+
             Image(systemName: "terminal")
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
-            
+
             Text("If you can see this, the app is working!")
                 .font(.title2)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            
+
             Button("Test Button") {
                 print("Button tapped!")
             }

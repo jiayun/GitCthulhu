@@ -15,7 +15,7 @@ gh api repos/:owner/:repo/milestones \
   --method POST \
   --field title="Sprint 0: 專案初始化" \
   --field description="建立完整的開發環境和 CI/CD 流程
-  
+
 🎯 主要目標:
 - 建立 Xcode 專案結構
 - 設置 Swift Package Manager

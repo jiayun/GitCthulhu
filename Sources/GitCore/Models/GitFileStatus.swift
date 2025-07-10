@@ -9,7 +9,7 @@ public enum GitFileStatus: String, CaseIterable {
     case copied = "copied"
     case unmerged = "unmerged"
     case ignored = "ignored"
-    
+
     public var displayName: String {
         switch self {
         case .untracked:
@@ -30,7 +30,7 @@ public enum GitFileStatus: String, CaseIterable {
             return "Ignored"
         }
     }
-    
+
     public var symbolName: String {
         switch self {
         case .untracked:

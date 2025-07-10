@@ -4,25 +4,25 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 30) {
             Spacer()
-            
+
             // App Icon and Title
             VStack(spacing: 20) {
                 Image(systemName: "terminal")
                     .font(.system(size: 80))
                     .foregroundColor(.blue)
-                
+
                 Text("GitCthulhu")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                
+
                 Text("A Modern Git Client for macOS")
                     .font(.title2)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             Spacer()
-            
+
             // Action Buttons
             VStack(spacing: 16) {
                 Button("Open Repository") {
@@ -32,7 +32,7 @@ struct WelcomeView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .frame(width: 200)
-                
+
                 Button("Clone Repository") {
                     print("Clone Repository tapped")
                     // TODO: Implement repository cloning
@@ -41,9 +41,9 @@ struct WelcomeView: View {
                 .controlSize(.large)
                 .frame(width: 200)
             }
-            
+
             Spacer()
-            
+
             // Status Text
             Text("Ready to explore your Git repositories")
                 .font(.caption)

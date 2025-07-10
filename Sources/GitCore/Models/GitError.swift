@@ -9,7 +9,7 @@ public enum GitError: Error, LocalizedError {
     case permissionDenied
     case networkError(String)
     case unknown(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .failedToOpenRepository(let message):

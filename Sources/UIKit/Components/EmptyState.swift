@@ -4,23 +4,23 @@ public struct EmptyState: View {
     let title: String
     let subtitle: String
     let systemImage: String
-    
+
     public init(title: String, subtitle: String, systemImage: String) {
         self.title = title
         self.subtitle = subtitle
         self.systemImage = systemImage
     }
-    
+
     public var body: some View {
         VStack(spacing: 16) {
             Image(systemName: systemImage)
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            
+
             VStack(spacing: 4) {
                 Text(title)
                     .font(.headline)
-                
+
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundColor(.secondary)

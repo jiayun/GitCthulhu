@@ -5,7 +5,7 @@ struct RepositoryDetailView: View {
         VStack {
             Text("Repository Detail")
                 .font(.title)
-            
+
             Text("Repository content will be displayed here")
                 .foregroundColor(.secondary)
         }

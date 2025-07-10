@@ -2,9 +2,9 @@
 
 ## 🎯 專案概述
 
-**產品名稱**：GitCthulhu  
-**開發方式**：全開源 + 贊助服務模式  
-**技術堆疊**：Swift + SwiftUI/AppKit 混合 + libgit2  
+**產品名稱**：GitCthulhu
+**開發方式**：全開源 + 贊助服務模式
+**技術堆疊**：Swift + SwiftUI/AppKit 混合 + libgit2
 **最低需求**：macOS 12+
 
 ---

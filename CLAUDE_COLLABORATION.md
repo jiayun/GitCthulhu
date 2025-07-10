@@ -21,7 +21,7 @@
 #### 優先級
 - `priority/critical` - 需要立即處理
 - `priority/high` - 高優先級
-- `priority/medium` - 中優先級  
+- `priority/medium` - 中優先級
 - `priority/low` - 低優先級
 
 #### 類型

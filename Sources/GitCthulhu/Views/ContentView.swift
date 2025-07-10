@@ -4,7 +4,7 @@ import UIKit
 
 struct ContentView: View {
     @StateObject private var repositoryManager = RepositoryManager()
-    
+
     var body: some View {
         VStack {
             if #available(macOS 13.0, *) {
@@ -24,9 +24,9 @@ struct ContentView: View {
                 HStack {
                     RepositorySidebar()
                         .frame(minWidth: 200, maxWidth: 300)
-                    
+
                     Divider()
-                    
+
                     if repositoryManager.currentRepository != nil {
                         RepositoryDetailView()
                     } else {

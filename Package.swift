@@ -49,7 +49,7 @@ let package = Package(
                 .process("Resources")
             ]
         ),
-        
+
         // MARK: - Core Libraries
         .target(
             name: "GitCore",
@@ -59,7 +59,7 @@ let package = Package(
             ],
             path: "Sources/GitCore"
         ),
-        
+
         .target(
             name: "UIKit",
             dependencies: [
@@ -68,13 +68,13 @@ let package = Package(
             ],
             path: "Sources/UIKit"
         ),
-        
+
         .target(
             name: "Utilities",
             dependencies: [],
             path: "Sources/Utilities"
         ),
-        
+
         // MARK: - Tests
         .testTarget(
             name: "GitCthulhuTests",
@@ -87,7 +87,7 @@ let package = Package(
             ],
             path: "Tests/GitCthulhuTests"
         ),
-        
+
         .testTarget(
             name: "GitCoreTests",
             dependencies: [
@@ -97,7 +97,7 @@ let package = Package(
             ],
             path: "Tests/GitCoreTests"
         ),
-        
+
         .testTarget(
             name: "UITests",
             dependencies: [
