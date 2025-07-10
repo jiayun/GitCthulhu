@@ -18,6 +18,7 @@ disabled_rules:
   - file_name # 檔案名稱過於嚴格
   - multiple_closures_with_trailing_closure # 過於嚴格
   - switch_case_on_newline # 與程式碼風格衝突
+  - trailing_comma # 與 SwiftFormat 衝突，由 SwiftFormat 處理
 
 # 可選規則（預設未啟用但我們要啟用）
 opt_in_rules:

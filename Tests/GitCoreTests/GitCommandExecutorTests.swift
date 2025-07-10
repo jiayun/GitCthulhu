@@ -45,7 +45,7 @@ struct GitCommandExecutorTests {
 
         // Should have a current branch (likely "main" or "master")
         #expect(branch != nil)
-        if let branch = branch {
+        if let branch {
             #expect(!branch.isEmpty)
         }
     }

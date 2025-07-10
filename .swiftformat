@@ -1,0 +1,21 @@
+# SwiftFormat Configuration for GitCthulhu
+
+# Swift version
+--swiftversion 5.9
+
+# Disable rules that conflict with SwiftLint
+--disable wrapMultilineStatementBraces
+
+# Enable trailing commas (default behavior)
+--commas inline
+
+# Other formatting preferences
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapcollections before-first
+--closingparen balanced
+--funcattributes prev-line
+--typeattributes prev-line
+--varattributes same-line

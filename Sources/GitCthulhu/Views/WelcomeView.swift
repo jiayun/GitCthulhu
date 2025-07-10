@@ -134,7 +134,7 @@ struct WelcomeView: View {
         guard let provider = providers.first else { return false }
 
         provider.loadObject(ofClass: NSURL.self) { url, _ in
-            self.processDroppedURL(url)
+            processDroppedURL(url)
         }
 
         return true
