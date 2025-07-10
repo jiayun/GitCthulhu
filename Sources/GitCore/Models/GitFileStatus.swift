@@ -1,3 +1,10 @@
+//
+// GitFileStatus.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import Foundation
 
 public enum GitFileStatus: String, CaseIterable {

@@ -1,9 +1,17 @@
+//
+// RepositoryManagerTests.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import Foundation
 @testable import GitCore
 import Testing
 
 struct RepositoryManagerTests {
-    @Test func repositoryManagerInitialization() async throws {
+    @Test
+    func repositoryManagerInitialization() async throws {
         let manager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in
@@ -18,7 +26,8 @@ struct RepositoryManagerTests {
         }
     }
 
-    @Test func repositoryValidation() async throws {
+    @Test
+    func repositoryValidation() async throws {
         let manager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in
@@ -36,7 +45,8 @@ struct RepositoryManagerTests {
         }
     }
 
-    @Test func recentRepositoriesManagement() async throws {
+    @Test
+    func recentRepositoriesManagement() async throws {
         let manager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in

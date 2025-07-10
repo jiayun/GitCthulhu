@@ -1,10 +1,18 @@
+//
+// RepositoryInfoPanelTests.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 @testable import GitCore
 import SwiftUI
 import Testing
 @testable import UIKit
 
 struct RepositoryInfoPanelTests {
-    @Test func infoRowInitialization() async throws {
+    @Test
+    func infoRowInitialization() async throws {
         // Test InfoRow initialization
         let infoRow = InfoRow(
             title: "Test Title",
@@ -17,7 +25,8 @@ struct RepositoryInfoPanelTests {
         #expect(true) // InfoRow can be created successfully
     }
 
-    @Test func infoRowWithoutCopy() async throws {
+    @Test
+    func infoRowWithoutCopy() async throws {
         // Test InfoRow without copy functionality
         let infoRow = InfoRow(
             title: "Test Title",
@@ -29,32 +38,35 @@ struct RepositoryInfoPanelTests {
         #expect(true) // InfoRow can be created successfully
     }
 
-    @Test func errorAlertInitialization() async throws {
+    @Test
+    func errorAlertInitialization() async throws {
         // Test ErrorAlert initialization
         let error = GitError.failedToOpenRepository("Test error message")
         let errorAlert = ErrorAlert(
             error: error,
-            onRetry: { print("Retry") },
-            onDismiss: { print("Dismiss") }
+            onRetry: { /* Retry action */ },
+            onDismiss: { /* Dismiss action */ }
         )
 
         // Basic structural test
         #expect(true) // ErrorAlert can be created successfully
     }
 
-    @Test func errorBannerInitialization() async throws {
+    @Test
+    func errorBannerInitialization() async throws {
         // Test ErrorBanner initialization
         let error = GitError.permissionDenied
         let errorBanner = ErrorBanner(
             error: error,
-            onDismiss: { print("Dismiss") }
+            onDismiss: { /* Dismiss action */ }
         )
 
         // Basic structural test
         #expect(true) // ErrorBanner can be created successfully
     }
 
-    @Test func gitErrorDescriptions() async throws {
+    @Test
+    func gitErrorDescriptions() async throws {
         // Test that all GitError cases have proper descriptions
         let errors: [GitError] = [
             .failedToOpenRepository("Test"),

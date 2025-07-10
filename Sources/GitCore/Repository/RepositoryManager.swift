@@ -1,3 +1,10 @@
+//
+// RepositoryManager.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import AppKit
 import Combine
 import Foundation

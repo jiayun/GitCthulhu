@@ -1,10 +1,18 @@
+//
+// WelcomeViewTests.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 @testable import GitCore
 @testable import GitCthulhu
 import SwiftUI
 import Testing
 
 struct WelcomeViewTests {
-    @Test func welcomeViewInitialization() async throws {
+    @Test
+    func welcomeViewInitialization() async throws {
         // Test that WelcomeView can be instantiated
         let repositoryManager = await RepositoryManager()
 
@@ -22,7 +30,8 @@ struct WelcomeViewTests {
         }
     }
 
-    @Test func recentRepositoryRowFunctionality() async throws {
+    @Test
+    func recentRepositoryRowFunctionality() async throws {
         let repositoryManager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in
@@ -42,7 +51,8 @@ struct WelcomeViewTests {
         }
     }
 
-    @Test func dragAndDropHandling() async throws {
+    @Test
+    func dragAndDropHandling() async throws {
         // Test the drag and drop validation logic
         let repositoryManager = await RepositoryManager()
 
@@ -65,7 +75,8 @@ struct WelcomeViewTests {
         }
     }
 
-    @Test func errorHandling() async throws {
+    @Test
+    func errorHandling() async throws {
         let repositoryManager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in
@@ -85,7 +96,8 @@ struct WelcomeViewTests {
         }
     }
 
-    @Test func loadingState() async throws {
+    @Test
+    func loadingState() async throws {
         let repositoryManager = await RepositoryManager()
 
         await withCheckedContinuation { continuation in
