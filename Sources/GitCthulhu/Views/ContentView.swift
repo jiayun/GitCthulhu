@@ -6,30 +6,37 @@ struct ContentView: View {
     @StateObject private var repositoryManager = RepositoryManager()
     
     var body: some View {
-        if #available(macOS 13.0, *) {
-            NavigationSplitView {
-                RepositorySidebar()
-            } detail: {
-                if repositoryManager.currentRepository != nil {
-                    RepositoryDetailView()
-                } else {
-                    WelcomeView()
+        VStack {
+            if #available(macOS 13.0, *) {
+                NavigationSplitView {
+                    RepositorySidebar()
+                        .frame(minWidth: 200)
+                } detail: {
+                    if repositoryManager.currentRepository != nil {
+                        RepositoryDetailView()
+                    } else {
+                        WelcomeView()
+                    }
                 }
-            }
-            .environmentObject(repositoryManager)
-        } else {
-            // Fallback for macOS 12
-            NavigationView {
-                RepositorySidebar()
-                
-                if repositoryManager.currentRepository != nil {
-                    RepositoryDetailView()
-                } else {
-                    WelcomeView()
+                .environmentObject(repositoryManager)
+            } else {
+                // Fallback for macOS 12
+                HStack {
+                    RepositorySidebar()
+                        .frame(minWidth: 200, maxWidth: 300)
+                    
+                    Divider()
+                    
+                    if repositoryManager.currentRepository != nil {
+                        RepositoryDetailView()
+                    } else {
+                        WelcomeView()
+                    }
                 }
+                .environmentObject(repositoryManager)
             }
-            .environmentObject(repositoryManager)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
