@@ -1,3 +1,10 @@
+//
+// GitCommandExecutor.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import Foundation
 import Utilities
 
@@ -11,44 +18,92 @@ public class GitCommandExecutor {
 
     @discardableResult
     public func execute(_ arguments: [String]) async throws -> String {
-        return try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
-            let pipe = Pipe()
-            let errorPipe = Pipe()
-
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-            process.arguments = arguments
-            process.currentDirectoryURL = repositoryURL
-            process.standardOutput = pipe
-            process.standardError = errorPipe
+        try await withCheckedThrowingContinuation { continuation in
+            let process = setupProcess(with: arguments)
+            let (pipe, errorPipe) = setupPipes(for: process)
 
             logger.debug("Executing git command: git \(arguments.joined(separator: " "))")
 
             do {
                 try process.run()
-
-                process.terminationHandler = { process in
-                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-
-                    let output = String(data: data, encoding: .utf8) ?? ""
-                    let errorOutput = String(data: errorData, encoding: .utf8) ?? ""
-
-                    if process.terminationStatus == 0 {
-                        self.logger.debug("Git command succeeded: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
-                        continuation.resume(returning: output.trimmingCharacters(in: .whitespacesAndNewlines))
-                    } else {
-                        let fullError = errorOutput.isEmpty ? output : errorOutput
-                        let error = GitError.libgit2Error("Git command failed with status \(process.terminationStatus): \(fullError)")
-                        self.logger.error("Git command failed: \(error.localizedDescription)")
-                        continuation.resume(throwing: error)
-                    }
+                process.terminationHandler = { [weak self] process in
+                    self?.handleProcessTermination(
+                        process,
+                        pipe: pipe,
+                        errorPipe: errorPipe,
+                        continuation: continuation
+                    )
                 }
             } catch {
-                logger.error("Failed to start git process: \(error.localizedDescription)")
-                continuation.resume(throwing: GitError.libgit2Error("Failed to execute git command: \(error.localizedDescription)"))
+                handleProcessStartError(error, continuation: continuation)
             }
         }
+    }
+
+    private func setupProcess(with arguments: [String]) -> Process {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = arguments
+        process.currentDirectoryURL = repositoryURL
+        return process
+    }
+
+    private func setupPipes(for process: Process) -> (Pipe, Pipe) {
+        let pipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = errorPipe
+        return (pipe, errorPipe)
+    }
+
+    private func handleProcessTermination(
+        _ process: Process,
+        pipe: Pipe,
+        errorPipe: Pipe,
+        continuation: CheckedContinuation<String, Error>
+    ) {
+        let output = readOutput(from: pipe)
+        let errorOutput = readOutput(from: errorPipe)
+
+        if process.terminationStatus == 0 {
+            handleSuccessfulCommand(output: output, continuation: continuation)
+        } else {
+            handleFailedCommand(
+                output: output,
+                errorOutput: errorOutput,
+                status: process.terminationStatus,
+                continuation: continuation
+            )
+        }
+    }
+
+    private func readOutput(from pipe: Pipe) -> String {
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    private func handleSuccessfulCommand(output: String, continuation: CheckedContinuation<String, Error>) {
+        let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        logger.debug("Git command succeeded: \(trimmedOutput)")
+        continuation.resume(returning: trimmedOutput)
+    }
+
+    private func handleFailedCommand(
+        output: String,
+        errorOutput: String,
+        status: Int32,
+        continuation: CheckedContinuation<String, Error>
+    ) {
+        let fullError = errorOutput.isEmpty ? output : errorOutput
+        let error = GitError.libgit2Error("Git command failed with status \(status): \(fullError)")
+        logger.error("Git command failed: \(error.localizedDescription)")
+        continuation.resume(throwing: error)
+    }
+
+    private func handleProcessStartError(_ error: Error, continuation: CheckedContinuation<String, Error>) {
+        logger.error("Failed to start git process: \(error.localizedDescription)")
+        let gitError = GitError.libgit2Error("Failed to execute git command: \(error.localizedDescription)")
+        continuation.resume(throwing: gitError)
     }
 
     // MARK: - Repository Info
@@ -63,7 +118,7 @@ public class GitCommandExecutor {
     }
 
     public func getRepositoryRoot() async throws -> String {
-        return try await execute(["rev-parse", "--show-toplevel"])
+        try await execute(["rev-parse", "--show-toplevel"])
     }
 
     // MARK: - Branch Operations
@@ -126,8 +181,8 @@ public class GitCommandExecutor {
             let output = try await execute(["status", "--porcelain"])
             var status: [String: String] = [:]
 
-            output.components(separatedBy: .newlines).forEach { line in
-                guard line.count >= 3 else { return }
+            for line in output.components(separatedBy: .newlines) {
+                guard line.count >= 3 else { continue }
                 let statusCode = String(line.prefix(2))
                 let fileName = String(line.dropFirst(3))
                 status[fileName] = statusCode
@@ -172,7 +227,7 @@ public class GitCommandExecutor {
 
     public func commit(message: String, author: String? = nil) async throws -> String {
         var args = ["commit", "-m", message]
-        if let author = author {
+        if let author {
             args.append(contentsOf: ["--author", author])
         }
         return try await execute(args)
@@ -180,7 +235,7 @@ public class GitCommandExecutor {
 
     public func amendCommit(message: String? = nil) async throws -> String {
         var args = ["commit", "--amend"]
-        if let message = message {
+        if let message {
             args.append(contentsOf: ["-m", message])
         } else {
             args.append("--no-edit")
@@ -190,7 +245,7 @@ public class GitCommandExecutor {
 
     public func getCommitHistory(limit: Int = 100, branch: String? = nil) async throws -> [String] {
         var args = ["log", "--oneline", "--max-count=\(limit)"]
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
 
@@ -206,7 +261,7 @@ public class GitCommandExecutor {
         if staged {
             args.append("--cached")
         }
-        if let filePath = filePath {
+        if let filePath {
             args.append(filePath)
         }
 
@@ -219,9 +274,9 @@ public class GitCommandExecutor {
         let output = try await execute(["remote", "-v"])
         var remotes: [String: String] = [:]
 
-        output.components(separatedBy: .newlines).forEach { line in
+        for line in output.components(separatedBy: .newlines) {
             let components = line.components(separatedBy: .whitespaces)
-            guard components.count >= 2 else { return }
+            guard components.count >= 2 else { continue }
             let name = components[0]
             let url = components[1]
             if !remotes.keys.contains(name) {
@@ -238,7 +293,7 @@ public class GitCommandExecutor {
 
     public func pull(remote: String = "origin", branch: String? = nil) async throws {
         var args = ["pull", remote]
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
         try await execute(args)
@@ -250,7 +305,7 @@ public class GitCommandExecutor {
             args.append("-u")
         }
         args.append(remote)
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
         try await execute(args)

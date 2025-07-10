@@ -61,8 +61,13 @@ jobs:
     - name: Check for sensitive files
       run: |
         # 檢查是否有敏感檔案被誤commit
-        if find . -name "*.key" -o -name "*.pem" -o -name "*.p12" | grep -v ".build" | head -1; then
-          echo "❌ Found potential sensitive files"
+        echo "🔍 Checking for sensitive files..."
+        SENSITIVE_FILES=$(find . -name "*.key" -o -name "*.pem" -o -name "*.p12" | grep -v ".build" || true)
+        echo "Debug: Found files: '$SENSITIVE_FILES'"
+
+        if [ -n "$SENSITIVE_FILES" ]; then
+          echo "❌ Found potential sensitive files:"
+          echo "$SENSITIVE_FILES"
           exit 1
         fi
 

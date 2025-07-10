@@ -1,11 +1,18 @@
+//
+// Logger.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import Foundation
 import os.log
 
 public struct Logger {
     private let logger: os.Logger
 
-    public init(subsystem: String = "com.gitcthulhu", category: String) {
-        self.logger = os.Logger(subsystem: subsystem, category: category)
+    public init(category: String, subsystem: String = "com.gitcthulhu") {
+        logger = os.Logger(subsystem: subsystem, category: category)
     }
 
     public func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {

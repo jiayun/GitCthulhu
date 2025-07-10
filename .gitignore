@@ -63,3 +63,9 @@ fastlane/test_output
 
 # Claude Code
 .claude/
+
+# CI/CD output files
+output.txt
+build_output.txt
+test_output.txt
+*_output.txt

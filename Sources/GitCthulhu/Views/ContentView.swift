@@ -1,9 +1,16 @@
-import SwiftUI
+//
+// ContentView.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import GitCore
+import SwiftUI
 import UIKit
 
 struct ContentView: View {
-    @StateObject private var repositoryManager = RepositoryManager()
+    @EnvironmentObject private var repositoryManager: RepositoryManager
 
     var body: some View {
         VStack {
@@ -18,7 +25,6 @@ struct ContentView: View {
                         WelcomeView()
                     }
                 }
-                .environmentObject(repositoryManager)
             } else {
                 // Fallback for macOS 12
                 HStack {
@@ -33,7 +39,6 @@ struct ContentView: View {
                         WelcomeView()
                     }
                 }
-                .environmentObject(repositoryManager)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -42,4 +47,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(RepositoryManager())
 }

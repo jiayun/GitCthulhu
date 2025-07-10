@@ -1,4 +1,12 @@
+//
+// SimpleTestView.swift
+// GitCthulhu
+//
+// Created by GitCthulhu Team on 2025-07-11.
+//
+
 import SwiftUI
+import Utilities
 
 struct SimpleTestView: View {
     var body: some View {
@@ -17,7 +25,7 @@ struct SimpleTestView: View {
                 .multilineTextAlignment(.center)
 
             Button("Test Button") {
-                print("Button tapped!")
+                Logger(category: "SimpleTestView").info("Test button tapped")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
