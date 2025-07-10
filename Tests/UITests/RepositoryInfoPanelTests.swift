@@ -76,7 +76,7 @@ struct RepositoryInfoPanelTests {
             .fileNotFound("Test"),
             .permissionDenied,
             .networkError("Test"),
-            .unknown("Test")
+            .unknown("Test"),
         ]
 
         for error in errors {

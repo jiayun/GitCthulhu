@@ -11,7 +11,7 @@ import os.log
 public struct Logger {
     private let logger: os.Logger
 
-    public init(subsystem: String = "com.gitcthulhu", category: String) {
+    public init(category: String, subsystem: String = "com.gitcthulhu") {
         logger = os.Logger(subsystem: subsystem, category: category)
     }
 

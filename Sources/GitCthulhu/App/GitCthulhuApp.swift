@@ -32,7 +32,7 @@ struct GitCthulhuApp: App {
                     NSApplication.shared.orderFrontStandardAboutPanel(
                         options: [
                             .applicationName: "GitCthulhu",
-                            .applicationVersion: "1.0.0"
+                            .applicationVersion: "1.0.0",
                         ]
                     )
                 }

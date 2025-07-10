@@ -9,6 +9,18 @@ import AppKit
 import Combine
 import Foundation
 
+public struct RepositoryInfo {
+    public let name: String
+    public let path: String
+    public let branch: String?
+
+    public init(name: String, path: String, branch: String? = nil) {
+        self.name = name
+        self.path = path
+        self.branch = branch
+    }
+}
+
 @MainActor
 public class RepositoryManager: ObservableObject {
     @Published public var currentRepository: GitRepository?
@@ -72,7 +84,8 @@ public class RepositoryManager: ObservableObject {
 
     private func loadRecentRepositories() {
         if let data = userDefaults.data(forKey: recentRepositoriesKey),
-           let urls = try? JSONDecoder().decode([URL].self, from: data) {
+           let urls = try? JSONDecoder().decode([URL].self, from: data)
+        {
             // Filter out repositories that no longer exist
             recentRepositories = urls.filter { url in
                 FileManager.default.fileExists(atPath: url.path)
@@ -123,13 +136,13 @@ public class RepositoryManager: ObservableObject {
         return FileManager.default.fileExists(atPath: gitDir.path)
     }
 
-    public func getRepositoryInfo(at url: URL) async -> (name: String, path: String, branch: String?)? {
+    public func getRepositoryInfo(at url: URL) async -> RepositoryInfo? {
         guard validateRepositoryPath(url) else { return nil }
 
         do {
             let executor = GitCommandExecutor(repositoryURL: url)
             let branch = try? await executor.getCurrentBranch()
-            return (
+            return RepositoryInfo(
                 name: url.lastPathComponent,
                 path: url.path,
                 branch: branch

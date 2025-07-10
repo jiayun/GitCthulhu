@@ -20,79 +20,23 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 30) {
             Spacer()
-
             headerSection
-
             Spacer()
-
             actionButtonsSection
-
-            // Recent Repositories Section
-            if !repositoryManager.recentRepositories.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Recent Repositories")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    ScrollView {
-                        VStack(spacing: 8) {
-                            ForEach(repositoryManager.recentRepositories, id: \.self) { url in
-                                RecentRepositoryRow(url: url)
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 120)
-                }
-                .padding(.horizontal, 40)
-            }
-
+            recentRepositoriesSection
             Spacer()
-
-            // Status Text
-            VStack(spacing: 8) {
-                if repositoryManager.isLoading {
-                    HStack {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                        Text("Opening repository...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                } else {
-                    Text("Ready to explore your Git repositories")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text("Drag and drop a Git repository folder here")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.bottom, 20)
+            statusSection
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
-        .overlay(
-            // Drag and drop overlay
-            Rectangle()
-                .fill(isDragOver ? Color.blue.opacity(0.1) : Color.clear)
-                .border(isDragOver ? Color.blue : Color.clear, width: 2)
-                .animation(.easeInOut(duration: 0.2), value: isDragOver)
-        )
-        .onDrop(of: ["public.file-url"], isTargeted: $isDragOver) { providers in
-            handleDrop(providers: providers)
-        }
+        .overlay(dragOverlay)
+        .onDrop(of: ["public.file-url"], isTargeted: $isDragOver, perform: handleDrop)
         .alert("Error Opening Repository", isPresented: $showingError) {
             Button("OK") {}
         } message: {
             Text(errorMessage)
         }
-        .onChange(of: repositoryManager.error) { newError in
-            if let error = newError {
-                errorMessage = error.localizedDescription
-                showingError = true
-            }
-        }
+        .onChange(of: repositoryManager.error, perform: handleRepositoryError)
     }
 
     // MARK: - View Components
@@ -136,6 +80,57 @@ struct WelcomeView: View {
         }
     }
 
+    @ViewBuilder
+    private var recentRepositoriesSection: some View {
+        if !repositoryManager.recentRepositories.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Recent Repositories")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(repositoryManager.recentRepositories, id: \.self) { url in
+                            RecentRepositoryRow(url: url)
+                        }
+                    }
+                }
+                .frame(maxHeight: 120)
+            }
+            .padding(.horizontal, 40)
+        }
+    }
+
+    private var statusSection: some View {
+        VStack(spacing: 8) {
+            if repositoryManager.isLoading {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Opening repository...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Text("Ready to explore your Git repositories")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text("Drag and drop a Git repository folder here")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.bottom, 20)
+    }
+
+    private var dragOverlay: some View {
+        Rectangle()
+            .fill(isDragOver ? Color.blue.opacity(0.1) : Color.clear)
+            .border(isDragOver ? Color.blue : Color.clear, width: 2)
+            .animation(.easeInOut(duration: 0.2), value: isDragOver)
+    }
+
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
 
@@ -158,12 +153,19 @@ struct WelcomeView: View {
             }
         }
     }
+
+    private func handleRepositoryError(_ newError: GitError?) {
+        if let error = newError {
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
+    }
 }
 
 struct RecentRepositoryRow: View {
     let url: URL
     @EnvironmentObject private var repositoryManager: RepositoryManager
-    @State private var repositoryInfo: (name: String, path: String, branch: String?)?
+    @State private var repositoryInfo: RepositoryInfo?
 
     var body: some View {
         HStack {

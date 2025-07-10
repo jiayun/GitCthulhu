@@ -27,7 +27,12 @@ public class GitCommandExecutor {
             do {
                 try process.run()
                 process.terminationHandler = { [weak self] process in
-                    self?.handleProcessTermination(process, pipe: pipe, errorPipe: errorPipe, continuation: continuation)
+                    self?.handleProcessTermination(
+                        process,
+                        pipe: pipe,
+                        errorPipe: errorPipe,
+                        continuation: continuation
+                    )
                 }
             } catch {
                 handleProcessStartError(error, continuation: continuation)
@@ -63,7 +68,12 @@ public class GitCommandExecutor {
         if process.terminationStatus == 0 {
             handleSuccessfulCommand(output: output, continuation: continuation)
         } else {
-            handleFailedCommand(output: output, errorOutput: errorOutput, status: process.terminationStatus, continuation: continuation)
+            handleFailedCommand(
+                output: output,
+                errorOutput: errorOutput,
+                status: process.terminationStatus,
+                continuation: continuation
+            )
         }
     }
 
