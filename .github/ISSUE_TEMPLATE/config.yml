@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/jiayun/GitCthulhu/wiki
+    about: 查看專案文檔和使用指南
+  - name: 💬 Discussions
+    url: https://github.com/jiayun/GitCthulhu/discussions
+    about: 一般討論、功能請求和 Q&A
+  - name: 🐛 Security Issue
+    url: https://github.com/jiayun/GitCthulhu/security/advisories/new
+    about: 回報安全性問題 (私密報告)

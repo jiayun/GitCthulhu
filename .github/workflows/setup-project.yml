@@ -1,0 +1,46 @@
+name: Setup Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      setup_type:
+        description: 'Setup type'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - labels
+          - milestones
+          - issues
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup GitHub CLI
+        uses: cli/gh-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Make scripts executable
+        run: |
+          chmod +x .github/scripts/*.sh
+          
+      - name: Setup Labels
+        if: ${{ github.event.inputs.setup_type == 'all' || github.event.inputs.setup_type == 'labels' }}
+        run: |
+          .github/scripts/setup-labels.sh
+          
+      - name: Setup Milestones
+        if: ${{ github.event.inputs.setup_type == 'all' || github.event.inputs.setup_type == 'milestones' }}
+        run: |
+          .github/scripts/setup-milestones.sh
+          
+      - name: Create Sprint 0 Issues
+        if: ${{ github.event.inputs.setup_type == 'all' || github.event.inputs.setup_type == 'issues' }}
+        run: |
+          .github/scripts/create-sprint0-issues.sh
