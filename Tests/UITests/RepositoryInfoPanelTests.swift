@@ -1,10 +1,9 @@
-import Testing
-import SwiftUI
-@testable import UIKit
 @testable import GitCore
+import SwiftUI
+import Testing
+@testable import UIKit
 
 struct RepositoryInfoPanelTests {
-    
     @Test func infoRowInitialization() async throws {
         // Test InfoRow initialization
         let infoRow = InfoRow(
@@ -13,11 +12,11 @@ struct RepositoryInfoPanelTests {
             icon: "folder",
             allowsCopy: true
         )
-        
+
         // Basic structural test - InfoRow should contain the provided values
         #expect(true) // InfoRow can be created successfully
     }
-    
+
     @Test func infoRowWithoutCopy() async throws {
         // Test InfoRow without copy functionality
         let infoRow = InfoRow(
@@ -25,11 +24,11 @@ struct RepositoryInfoPanelTests {
             value: "Test Value",
             icon: "folder"
         )
-        
+
         // Basic structural test
         #expect(true) // InfoRow can be created successfully
     }
-    
+
     @Test func errorAlertInitialization() async throws {
         // Test ErrorAlert initialization
         let error = GitError.failedToOpenRepository("Test error message")
@@ -38,11 +37,11 @@ struct RepositoryInfoPanelTests {
             onRetry: { print("Retry") },
             onDismiss: { print("Dismiss") }
         )
-        
+
         // Basic structural test
         #expect(true) // ErrorAlert can be created successfully
     }
-    
+
     @Test func errorBannerInitialization() async throws {
         // Test ErrorBanner initialization
         let error = GitError.permissionDenied
@@ -50,11 +49,11 @@ struct RepositoryInfoPanelTests {
             error: error,
             onDismiss: { print("Dismiss") }
         )
-        
+
         // Basic structural test
         #expect(true) // ErrorBanner can be created successfully
     }
-    
+
     @Test func gitErrorDescriptions() async throws {
         // Test that all GitError cases have proper descriptions
         let errors: [GitError] = [
@@ -67,7 +66,7 @@ struct RepositoryInfoPanelTests {
             .networkError("Test"),
             .unknown("Test")
         ]
-        
+
         for error in errors {
             let description = error.localizedDescription
             #expect(!description.isEmpty)

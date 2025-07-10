@@ -15,6 +15,6 @@ public struct GitBranch: Identifiable, Hashable {
     }
 
     public var displayName: String {
-        return isRemote ? "origin/\(shortName)" : shortName
+        isRemote ? "origin/\(shortName)" : shortName
     }
 }

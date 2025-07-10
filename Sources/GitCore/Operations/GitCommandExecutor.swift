@@ -11,7 +11,7 @@ public class GitCommandExecutor {
 
     @discardableResult
     public func execute(_ arguments: [String]) async throws -> String {
-        return try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             let pipe = Pipe()
             let errorPipe = Pipe()
@@ -63,7 +63,7 @@ public class GitCommandExecutor {
     }
 
     public func getRepositoryRoot() async throws -> String {
-        return try await execute(["rev-parse", "--show-toplevel"])
+        try await execute(["rev-parse", "--show-toplevel"])
     }
 
     // MARK: - Branch Operations
@@ -126,8 +126,8 @@ public class GitCommandExecutor {
             let output = try await execute(["status", "--porcelain"])
             var status: [String: String] = [:]
 
-            output.components(separatedBy: .newlines).forEach { line in
-                guard line.count >= 3 else { return }
+            for line in output.components(separatedBy: .newlines) {
+                guard line.count >= 3 else { continue }
                 let statusCode = String(line.prefix(2))
                 let fileName = String(line.dropFirst(3))
                 status[fileName] = statusCode
@@ -172,7 +172,7 @@ public class GitCommandExecutor {
 
     public func commit(message: String, author: String? = nil) async throws -> String {
         var args = ["commit", "-m", message]
-        if let author = author {
+        if let author {
             args.append(contentsOf: ["--author", author])
         }
         return try await execute(args)
@@ -180,7 +180,7 @@ public class GitCommandExecutor {
 
     public func amendCommit(message: String? = nil) async throws -> String {
         var args = ["commit", "--amend"]
-        if let message = message {
+        if let message {
             args.append(contentsOf: ["-m", message])
         } else {
             args.append("--no-edit")
@@ -190,7 +190,7 @@ public class GitCommandExecutor {
 
     public func getCommitHistory(limit: Int = 100, branch: String? = nil) async throws -> [String] {
         var args = ["log", "--oneline", "--max-count=\(limit)"]
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
 
@@ -206,7 +206,7 @@ public class GitCommandExecutor {
         if staged {
             args.append("--cached")
         }
-        if let filePath = filePath {
+        if let filePath {
             args.append(filePath)
         }
 
@@ -219,9 +219,9 @@ public class GitCommandExecutor {
         let output = try await execute(["remote", "-v"])
         var remotes: [String: String] = [:]
 
-        output.components(separatedBy: .newlines).forEach { line in
+        for line in output.components(separatedBy: .newlines) {
             let components = line.components(separatedBy: .whitespaces)
-            guard components.count >= 2 else { return }
+            guard components.count >= 2 else { continue }
             let name = components[0]
             let url = components[1]
             if !remotes.keys.contains(name) {
@@ -238,7 +238,7 @@ public class GitCommandExecutor {
 
     public func pull(remote: String = "origin", branch: String? = nil) async throws {
         var args = ["pull", remote]
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
         try await execute(args)
@@ -250,7 +250,7 @@ public class GitCommandExecutor {
             args.append("-u")
         }
         args.append(remote)
-        if let branch = branch {
+        if let branch {
             args.append(branch)
         }
         try await execute(args)

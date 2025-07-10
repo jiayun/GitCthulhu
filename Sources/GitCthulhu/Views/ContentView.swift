@@ -1,5 +1,5 @@
-import SwiftUI
 import GitCore
+import SwiftUI
 import UIKit
 
 struct ContentView: View {

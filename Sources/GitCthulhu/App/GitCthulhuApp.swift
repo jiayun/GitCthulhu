@@ -1,11 +1,11 @@
-import SwiftUI
 import AppKit
 import GitCore
+import SwiftUI
 
 @main
 struct GitCthulhuApp: App {
     @StateObject private var repositoryManager = RepositoryManager()
-    
+
     init() {
         // Force the app to appear as a regular macOS application
         NSApplication.shared.setActivationPolicy(.regular)
@@ -30,7 +30,7 @@ struct GitCthulhuApp: App {
                     )
                 }
             }
-            
+
             CommandGroup(replacing: .newItem) {
                 Button("Open Repository...") {
                     Task {
@@ -39,7 +39,7 @@ struct GitCthulhuApp: App {
                 }
                 .keyboardShortcut("o", modifiers: .command)
             }
-            
+
             CommandGroup(after: .newItem) {
                 Button("Close Repository") {
                     repositoryManager.closeRepository()

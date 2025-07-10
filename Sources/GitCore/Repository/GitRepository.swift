@@ -16,8 +16,8 @@ public class GitRepository: ObservableObject, Identifiable {
 
     public init(url: URL) throws {
         self.url = url
-        self.name = url.lastPathComponent
-        self.gitExecutor = GitCommandExecutor(repositoryURL: url)
+        name = url.lastPathComponent
+        gitExecutor = GitCommandExecutor(repositoryURL: url)
 
         // Validate that this is a git repository
         let gitDir = url.appendingPathComponent(".git")
@@ -83,7 +83,7 @@ public class GitRepository: ObservableObject, Identifiable {
             // Load remote branches
             let remoteBranchNames = try await gitExecutor.getRemoteBranches()
             let remoteBranches = remoteBranchNames.map { branchName in
-                return GitBranch(
+                GitBranch(
                     name: branchName,
                     shortName: branchName.components(separatedBy: "/").last ?? branchName,
                     isRemote: true,
@@ -118,14 +118,14 @@ public class GitRepository: ObservableObject, Identifiable {
 
     private func convertGitStatus(_ statusCode: String) -> GitFileStatus {
         switch statusCode.prefix(2) {
-        case "??": return .untracked
-        case "A ", " A": return .added
-        case "M ", " M", "MM": return .modified
-        case "D ", " D": return .deleted
-        case "R ", " R": return .renamed
-        case "C ", " C": return .copied
-        case "UU", "AA", "DD": return .unmerged
-        default: return .modified
+        case "??": .untracked
+        case "A ", " A": .added
+        case "M ", " M", "MM": .modified
+        case "D ", " D": .deleted
+        case "R ", " R": .renamed
+        case "C ", " C": .copied
+        case "UU", "AA", "DD": .unmerged
+        default: .modified
         }
     }
 

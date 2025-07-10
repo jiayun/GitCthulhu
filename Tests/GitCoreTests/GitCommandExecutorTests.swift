@@ -1,9 +1,8 @@
-import Testing
 import Foundation
 @testable import GitCore
+import Testing
 
 struct GitCommandExecutorTests {
-
     @Test func gitCommandExecutorInitialization() async throws {
         let tempURL = URL(fileURLWithPath: "/tmp")
         let executor = GitCommandExecutor(repositoryURL: tempURL)

@@ -1,54 +1,54 @@
 import Foundation
 
 public enum GitFileStatus: String, CaseIterable {
-    case untracked = "untracked"
-    case modified = "modified"
-    case added = "added"
-    case deleted = "deleted"
-    case renamed = "renamed"
-    case copied = "copied"
-    case unmerged = "unmerged"
-    case ignored = "ignored"
+    case untracked
+    case modified
+    case added
+    case deleted
+    case renamed
+    case copied
+    case unmerged
+    case ignored
 
     public var displayName: String {
         switch self {
         case .untracked:
-            return "Untracked"
+            "Untracked"
         case .modified:
-            return "Modified"
+            "Modified"
         case .added:
-            return "Added"
+            "Added"
         case .deleted:
-            return "Deleted"
+            "Deleted"
         case .renamed:
-            return "Renamed"
+            "Renamed"
         case .copied:
-            return "Copied"
+            "Copied"
         case .unmerged:
-            return "Unmerged"
+            "Unmerged"
         case .ignored:
-            return "Ignored"
+            "Ignored"
         }
     }
 
     public var symbolName: String {
         switch self {
         case .untracked:
-            return "questionmark.circle"
+            "questionmark.circle"
         case .modified:
-            return "pencil.circle"
+            "pencil.circle"
         case .added:
-            return "plus.circle"
+            "plus.circle"
         case .deleted:
-            return "minus.circle"
+            "minus.circle"
         case .renamed:
-            return "arrow.triangle.2.circlepath"
+            "arrow.triangle.2.circlepath"
         case .copied:
-            return "doc.on.doc"
+            "doc.on.doc"
         case .unmerged:
-            return "exclamationmark.triangle"
+            "exclamationmark.triangle"
         case .ignored:
-            return "eye.slash"
+            "eye.slash"
         }
     }
 }

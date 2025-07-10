@@ -1,6 +1,6 @@
-import Foundation
-import Combine
 import AppKit
+import Combine
+import Foundation
 
 @MainActor
 public class RepositoryManager: ObservableObject {
@@ -51,7 +51,7 @@ public class RepositoryManager: ObservableObject {
         panel.message = "Select a Git repository folder"
 
         let response = await panel.begin()
-        
+
         if response == .OK, let url = panel.url {
             await openRepository(at: url)
         }
@@ -70,7 +70,7 @@ public class RepositoryManager: ObservableObject {
             recentRepositories = urls.filter { url in
                 FileManager.default.fileExists(atPath: url.path)
             }
-            
+
             // Update UserDefaults if we filtered out any repositories
             if recentRepositories.count != urls.count {
                 saveRecentRepositories()
@@ -87,15 +87,15 @@ public class RepositoryManager: ObservableObject {
     private func addToRecentRepositories(_ url: URL) {
         // Remove if already exists
         recentRepositories.removeAll { $0 == url }
-        
+
         // Add to beginning
         recentRepositories.insert(url, at: 0)
-        
+
         // Keep only maxRecentRepositories
         if recentRepositories.count > maxRecentRepositories {
             recentRepositories = Array(recentRepositories.prefix(maxRecentRepositories))
         }
-        
+
         saveRecentRepositories()
     }
 
@@ -118,7 +118,7 @@ public class RepositoryManager: ObservableObject {
 
     public func getRepositoryInfo(at url: URL) async -> (name: String, path: String, branch: String?)? {
         guard validateRepositoryPath(url) else { return nil }
-        
+
         do {
             let executor = GitCommandExecutor(repositoryURL: url)
             let branch = try? await executor.getCurrentBranch()

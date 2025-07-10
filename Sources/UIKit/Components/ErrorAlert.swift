@@ -1,44 +1,44 @@
-import SwiftUI
 import GitCore
+import SwiftUI
 
 public struct ErrorAlert: View {
     let error: GitError
     let onRetry: (() -> Void)?
     let onDismiss: () -> Void
-    
+
     public init(error: GitError, onRetry: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
         self.error = error
         self.onRetry = onRetry
         self.onDismiss = onDismiss
     }
-    
+
     public var body: some View {
         VStack(spacing: 16) {
             // Error Icon
             Image(systemName: errorIcon)
                 .font(.system(size: 48))
                 .foregroundColor(.red)
-            
+
             // Error Title
             Text(errorTitle)
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             // Error Description
             Text(error.localizedDescription)
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             // Action Buttons
             HStack(spacing: 12) {
                 Button("Dismiss") {
                     onDismiss()
                 }
                 .buttonStyle(.bordered)
-                
-                if let onRetry = onRetry {
+
+                if let onRetry {
                     Button("Retry") {
                         onRetry()
                     }
@@ -51,46 +51,46 @@ public struct ErrorAlert: View {
         .cornerRadius(12)
         .shadow(radius: 8)
     }
-    
+
     private var errorIcon: String {
         switch error {
         case .failedToOpenRepository:
-            return "folder.badge.questionmark"
+            "folder.badge.questionmark"
         case .failedToInitializeRepository:
-            return "plus.square.dashed"
+            "plus.square.dashed"
         case .invalidRepositoryPath:
-            return "exclamationmark.triangle"
+            "exclamationmark.triangle"
         case .libgit2Error:
-            return "terminal"
+            "terminal"
         case .fileNotFound:
-            return "doc.badge.exclamationmark"
+            "doc.badge.exclamationmark"
         case .permissionDenied:
-            return "lock.shield"
+            "lock.shield"
         case .networkError:
-            return "wifi.exclamationmark"
+            "wifi.exclamationmark"
         case .unknown:
-            return "questionmark.circle"
+            "questionmark.circle"
         }
     }
-    
+
     private var errorTitle: String {
         switch error {
         case .failedToOpenRepository:
-            return "Failed to Open Repository"
+            "Failed to Open Repository"
         case .failedToInitializeRepository:
-            return "Failed to Initialize Repository"
+            "Failed to Initialize Repository"
         case .invalidRepositoryPath:
-            return "Invalid Repository Path"
+            "Invalid Repository Path"
         case .libgit2Error:
-            return "Git Operation Failed"
+            "Git Operation Failed"
         case .fileNotFound:
-            return "File Not Found"
+            "File Not Found"
         case .permissionDenied:
-            return "Permission Denied"
+            "Permission Denied"
         case .networkError:
-            return "Network Error"
+            "Network Error"
         case .unknown:
-            return "Unknown Error"
+            "Unknown Error"
         }
     }
 }
@@ -98,29 +98,29 @@ public struct ErrorAlert: View {
 public struct ErrorBanner: View {
     let error: GitError
     let onDismiss: () -> Void
-    
+
     public init(error: GitError, onDismiss: @escaping () -> Void) {
         self.error = error
         self.onDismiss = onDismiss
     }
-    
+
     public var body: some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.red)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text("Error")
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 Text(error.localizedDescription)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Button(action: onDismiss) {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.secondary)

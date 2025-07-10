@@ -5,7 +5,7 @@ public struct Logger {
     private let logger: os.Logger
 
     public init(subsystem: String = "com.gitcthulhu", category: String) {
-        self.logger = os.Logger(subsystem: subsystem, category: category)
+        logger = os.Logger(subsystem: subsystem, category: category)
     }
 
     public func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {

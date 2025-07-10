@@ -1,54 +1,21 @@
-import SwiftUI
 import GitCore
+import SwiftUI
 
 struct WelcomeView: View {
     @EnvironmentObject private var repositoryManager: RepositoryManager
     @State private var isDragOver = false
     @State private var showingError = false
     @State private var errorMessage = ""
-    
+
     var body: some View {
         VStack(spacing: 30) {
             Spacer()
 
-            // App Icon and Title
-            VStack(spacing: 20) {
-                Image(systemName: "terminal")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-
-                Text("GitCthulhu")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("A Modern Git Client for macOS")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+            headerSection
 
             Spacer()
 
-            // Action Buttons
-            VStack(spacing: 16) {
-                Button("Open Repository") {
-                    Task {
-                        await repositoryManager.openRepositoryWithFileBrowser()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .frame(width: 200)
-                .disabled(repositoryManager.isLoading)
-
-                Button("Clone Repository") {
-                    print("Clone Repository tapped")
-                    // TODO: Implement repository cloning
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .frame(width: 200)
-            }
+            actionButtonsSection
 
             // Recent Repositories Section
             if !repositoryManager.recentRepositories.isEmpty {
@@ -56,7 +23,7 @@ struct WelcomeView: View {
                     Text("Recent Repositories")
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     ScrollView {
                         VStack(spacing: 8) {
                             ForEach(repositoryManager.recentRepositories, id: \.self) { url in
@@ -85,10 +52,10 @@ struct WelcomeView: View {
                     Text("Ready to explore your Git repositories")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Text("Drag and drop a Git repository folder here")
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(.secondary)
                 }
             }
             .padding(.bottom, 20)
@@ -106,24 +73,65 @@ struct WelcomeView: View {
             handleDrop(providers: providers)
         }
         .alert("Error Opening Repository", isPresented: $showingError) {
-            Button("OK") { }
+            Button("OK") {}
         } message: {
             Text(errorMessage)
         }
-        .onChange(of: repositoryManager.error) { _, newError in
+        .onChange(of: repositoryManager.error) { newError in
             if let error = newError {
                 errorMessage = error.localizedDescription
                 showingError = true
             }
         }
     }
-    
+
+    // MARK: - View Components
+
+    private var headerSection: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "terminal")
+                .font(.system(size: 80))
+                .foregroundColor(.blue)
+
+            Text("GitCthulhu")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text("A Modern Git Client for macOS")
+                .font(.title2)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var actionButtonsSection: some View {
+        VStack(spacing: 16) {
+            Button("Open Repository") {
+                Task {
+                    await repositoryManager.openRepositoryWithFileBrowser()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .frame(width: 200)
+            .disabled(repositoryManager.isLoading)
+
+            Button("Clone Repository") {
+                print("Clone Repository tapped")
+                // TODO: Implement repository cloning
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .frame(width: 200)
+        }
+    }
+
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
-        
-        provider.loadObject(ofClass: NSURL.self) { (url, error) in
+
+        provider.loadObject(ofClass: NSURL.self) { url, _ in
             guard let url = url as? URL else { return }
-            
+
             Task { @MainActor in
                 if repositoryManager.validateRepositoryPath(url) {
                     await repositoryManager.openRepository(at: url)
@@ -133,7 +141,7 @@ struct WelcomeView: View {
                 }
             }
         }
-        
+
         return true
     }
 }
@@ -142,7 +150,7 @@ struct RecentRepositoryRow: View {
     let url: URL
     @EnvironmentObject private var repositoryManager: RepositoryManager
     @State private var repositoryInfo: (name: String, path: String, branch: String?)?
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -150,23 +158,23 @@ struct RecentRepositoryRow: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
-                
+
                 HStack {
                     Text(url.path)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
-                    
+
                     if let branch = repositoryInfo?.branch {
                         Text("• \(branch)")
                             .font(.caption)
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
-            
+
             Spacer()
-            
+
             Button(action: {
                 Task {
                     await repositoryManager.openRepository(at: url)

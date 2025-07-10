@@ -1,9 +1,9 @@
-import SwiftUI
 import GitCore
+import SwiftUI
 
 struct RepositorySidebar: View {
     @EnvironmentObject private var repositoryManager: RepositoryManager
-    
+
     var body: some View {
         List {
             // Current Repository Section
@@ -13,7 +13,7 @@ struct RepositorySidebar: View {
                         Text(currentRepo.name)
                             .font(.headline)
                             .foregroundColor(.primary)
-                        
+
                         if let branch = currentRepo.currentBranch {
                             HStack {
                                 Image(systemName: "arrow.triangle.branch")
@@ -23,16 +23,16 @@ struct RepositorySidebar: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        
+
                         Text(currentRepo.url.path)
                             .font(.caption)
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                             .lineLimit(2)
                     }
                     .padding(.vertical, 4)
                 }
             }
-            
+
             // Recent Repositories Section
             Section("Recent Repositories") {
                 if repositoryManager.recentRepositories.isEmpty {
@@ -45,7 +45,7 @@ struct RepositorySidebar: View {
                     }
                 }
             }
-            
+
             // Actions Section
             Section("Actions") {
                 Button(action: {
@@ -56,14 +56,14 @@ struct RepositorySidebar: View {
                     Label("Open Repository", systemImage: "folder.badge.plus")
                 }
                 .disabled(repositoryManager.isLoading)
-                
+
                 Button(action: {
                     // TODO: Implement clone repository
                 }) {
                     Label("Clone Repository", systemImage: "square.and.arrow.down")
                 }
                 .disabled(repositoryManager.isLoading)
-                
+
                 if !repositoryManager.recentRepositories.isEmpty {
                     Button(action: {
                         repositoryManager.clearRecentRepositories()
@@ -95,7 +95,7 @@ struct SidebarRepositoryRow: View {
     let url: URL
     @EnvironmentObject private var repositoryManager: RepositoryManager
     @State private var repositoryInfo: (name: String, path: String, branch: String?)?
-    
+
     var body: some View {
         Button(action: {
             Task {
@@ -108,7 +108,7 @@ struct SidebarRepositoryRow: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                    
+
                     if let branch = repositoryInfo?.branch {
                         HStack {
                             Image(systemName: "arrow.triangle.branch")
@@ -120,9 +120,9 @@ struct SidebarRepositoryRow: View {
                         }
                     }
                 }
-                
+
                 Spacer()
-                
+
                 // Show indicator if this is the current repository
                 if repositoryManager.currentRepository?.url == url {
                     Image(systemName: "checkmark.circle.fill")
@@ -136,7 +136,7 @@ struct SidebarRepositoryRow: View {
             Button("Remove from Recent") {
                 repositoryManager.removeFromRecentRepositories(url)
             }
-            
+
             Button("Show in Finder") {
                 NSWorkspace.shared.open(url)
             }
