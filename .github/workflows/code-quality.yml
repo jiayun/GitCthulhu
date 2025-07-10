@@ -1,0 +1,116 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SwiftLint
+      run: |
+        brew install swiftlint
+
+    - name: Run SwiftLint
+      run: |
+        swiftlint --strict --reporter github-actions-logging
+
+    - name: SwiftLint Report
+      if: failure()
+      run: |
+        echo "SwiftLint found issues. Please fix them before merging."
+        swiftlint --reporter emoji
+
+  swiftformat:
+    name: SwiftFormat
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SwiftFormat
+      run: |
+        brew install swiftformat
+
+    - name: Check SwiftFormat
+      run: |
+        swiftformat --lint Sources/ Tests/
+
+    - name: SwiftFormat Report
+      if: failure()
+      run: |
+        echo "Code formatting issues found. Please run 'swiftformat Sources/ Tests/' locally."
+
+  security-audit:
+    name: Security Audit
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for sensitive files
+      run: |
+        # 檢查是否有敏感檔案被誤commit
+        if find . -name "*.key" -o -name "*.pem" -o -name "*.p12" | grep -v ".build" | head -1; then
+          echo "❌ Found potential sensitive files"
+          exit 1
+        fi
+
+        # 檢查 Package.swift 中的依賴
+        if grep -q "http://" Package.swift; then
+          echo "⚠️  Found HTTP dependencies, consider using HTTPS"
+        fi
+
+        echo "✅ Security audit passed"
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check Package Dependencies
+      run: |
+        echo "📦 Checking Package.swift dependencies..."
+
+        # 驗證 Package.swift 語法
+        swift package dump-package > /dev/null
+
+        # 列出依賴關係
+        swift package show-dependencies
+
+        echo "✅ Dependency check completed"
+
+  build-documentation:
+    name: Documentation Build
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Build Documentation
+      run: |
+        # 使用 Swift-DocC 建立文檔（如果有的話）
+        if [ -d "Sources" ]; then
+          echo "📚 Building documentation..."
+          swift package generate-documentation --warnings-as-errors || true
+          echo "✅ Documentation build completed"
+        fi

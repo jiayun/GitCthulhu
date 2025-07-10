@@ -1,0 +1,159 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Generate Coverage Report
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Swift Package Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .build
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-swift-coverage-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-coverage-
+          ${{ runner.os }}-swift-
+
+    - name: Run Tests with Coverage
+      run: |
+        swift test --enable-code-coverage
+
+    - name: Generate Coverage Report
+      run: |
+        # 建立覆蓋率目錄
+        mkdir -p coverage
+
+        # 找到測試執行檔
+        TEST_BINARY=$(find .build -name "*PackageTests.xctest" -type d | head -1)
+        if [ -z "$TEST_BINARY" ]; then
+          echo "❌ Could not find test binary"
+          exit 1
+        fi
+
+        TEST_EXECUTABLE="$TEST_BINARY/Contents/MacOS/$(basename $TEST_BINARY .xctest)"
+        PROFILE_DATA=$(find .build -name "*.profdata" | head -1)
+
+        if [ -z "$PROFILE_DATA" ]; then
+          echo "❌ Could not find profile data"
+          exit 1
+        fi
+
+        echo "📊 Generating coverage report..."
+        echo "Test executable: $TEST_EXECUTABLE"
+        echo "Profile data: $PROFILE_DATA"
+
+        # 生成 LCOV 格式覆蓋率報告
+        xcrun llvm-cov export \
+          "$TEST_EXECUTABLE" \
+          -instr-profile="$PROFILE_DATA" \
+          -format="lcov" \
+          -ignore-filename-regex=".build|Tests|\.swiftpm" \
+          > coverage/coverage.lcov
+
+        # 生成 HTML 報告
+        xcrun llvm-cov show \
+          "$TEST_EXECUTABLE" \
+          -instr-profile="$PROFILE_DATA" \
+          -format="html" \
+          -output-dir=coverage/html \
+          -ignore-filename-regex=".build|Tests|\.swiftpm"
+
+        # 生成覆蓋率摘要
+        xcrun llvm-cov report \
+          "$TEST_EXECUTABLE" \
+          -instr-profile="$PROFILE_DATA" \
+          -ignore-filename-regex=".build|Tests|\.swiftpm" \
+          > coverage/summary.txt
+
+    - name: Display Coverage Summary
+      run: |
+        echo "📈 Coverage Summary:"
+        cat coverage/summary.txt
+
+        # 提取總覆蓋率百分比
+        COVERAGE_PERCENT=$(grep "TOTAL" coverage/summary.txt | awk '{print $4}' | sed 's/%//')
+        echo "Total Coverage: ${COVERAGE_PERCENT}%"
+
+        # 檢查覆蓋率是否達到最低要求
+        MINIMUM_COVERAGE=80
+        if (( $(echo "$COVERAGE_PERCENT < $MINIMUM_COVERAGE" | bc -l) )); then
+          echo "❌ Coverage ${COVERAGE_PERCENT}% is below minimum ${MINIMUM_COVERAGE}%"
+          echo "::warning::Code coverage is below minimum threshold"
+        else
+          echo "✅ Coverage ${COVERAGE_PERCENT}% meets minimum requirement"
+        fi
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/coverage.lcov
+        flags: unittests
+        name: GitCthulhu-coverage
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Upload Coverage Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports-${{ github.sha }}
+        path: |
+          coverage/
+        retention-days: 30
+
+    - name: Comment Coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          try {
+            const summary = fs.readFileSync('coverage/summary.txt', 'utf8');
+            const lines = summary.split('\n');
+            const totalLine = lines.find(line => line.includes('TOTAL'));
+
+            if (totalLine) {
+              const coverage = totalLine.split(/\s+/)[3];
+              const body = `## 📊 Test Coverage Report
+
+              **Total Coverage: ${coverage}**
+
+              <details>
+              <summary>Coverage Details</summary>
+
+              \`\`\`
+              ${summary}
+              \`\`\`
+
+              </details>
+
+              > Coverage report generated for commit ${context.sha.substring(0, 7)}
+              `;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+          } catch (error) {
+            console.log('Could not read coverage summary:', error);
+          }

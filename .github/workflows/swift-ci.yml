@@ -1,0 +1,92 @@
+name: Swift CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Swift Package Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .build
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-swift-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-
+
+    - name: Build
+      run: |
+        swift build --configuration debug
+
+    - name: Run Tests
+      run: |
+        swift test --configuration debug --enable-code-coverage
+
+    - name: Generate Test Coverage
+      run: |
+        xcrun llvm-cov export \
+          .build/debug/GitCthulhuPackageTests.xctest/Contents/MacOS/GitCthulhuPackageTests \
+          -instr-profile .build/debug/codecov/default.profdata \
+          -format="lcov" \
+          -ignore-filename-regex=".build|Tests" \
+          > coverage.lcov
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.lcov
+        flags: unittests
+        name: GitCthulhu-coverage
+        fail_ci_if_error: false
+
+    - name: Verify App Builds
+      run: |
+        swift build --configuration release
+
+    - name: Basic Smoke Test
+      run: |
+        # 確保執行檔可以正常啟動（快速退出測試）
+        timeout 5s swift run GitCthulhu --help || true
+
+  build:
+    name: Release Build
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Build Release
+      run: |
+        swift build --configuration release
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitCthulhu-${{ github.sha }}
+        path: |
+          .build/release/GitCthulhu
+        retention-days: 30

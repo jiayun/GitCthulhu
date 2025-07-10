@@ -1,0 +1,177 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    name: Build and Create Release
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Get Version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ inputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Validate Version
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Invalid version format: $VERSION"
+          echo "Expected format: v1.0.0"
+          exit 1
+        fi
+        echo "✅ Version format is valid"
+
+    - name: Run Tests
+      run: |
+        echo "🧪 Running full test suite..."
+        swift test --configuration release
+
+    - name: Build Release Binary
+      run: |
+        echo "🔨 Building release binary..."
+        swift build --configuration release
+
+        # 建立發布目錄
+        mkdir -p release
+
+        # 複製執行檔
+        cp .build/release/GitCthulhu release/
+
+        # 建立版本資訊
+        echo "GitCthulhu ${{ steps.version.outputs.version }}" > release/VERSION
+        echo "Built on: $(date)" >> release/VERSION
+        echo "Commit: ${{ github.sha }}" >> release/VERSION
+
+    - name: Create Archive
+      run: |
+        cd release
+        tar -czf GitCthulhu-${{ steps.version.outputs.version }}-macos.tar.gz GitCthulhu VERSION
+        zip -r GitCthulhu-${{ steps.version.outputs.version }}-macos.zip GitCthulhu VERSION
+
+        # 計算檔案雜湊
+        shasum -a 256 *.tar.gz *.zip > checksums.txt
+
+    - name: Generate Changelog
+      id: changelog
+      run: |
+        echo "📝 Generating changelog..."
+
+        # 取得上一個標籤
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "First release - no previous tag found"
+          CHANGELOG="🎉 Initial release of GitCthulhu"
+        else
+          echo "Previous tag: $PREVIOUS_TAG"
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+        fi
+
+        # 儲存變更記錄到檔案
+        echo "$CHANGELOG" > CHANGELOG.md
+
+        # 設定 output（處理多行文字）
+        {
+          echo 'changelog<<EOF'
+          echo "$CHANGELOG"
+          echo 'EOF'
+        } >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: GitCthulhu ${{ steps.version.outputs.version }}
+        body: |
+          ## 🚀 GitCthulhu ${{ steps.version.outputs.version }}
+
+          ### 📦 Downloads
+          - [macOS Binary (tar.gz)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/GitCthulhu-${{ steps.version.outputs.version }}-macos.tar.gz)
+          - [macOS Binary (zip)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/GitCthulhu-${{ steps.version.outputs.version }}-macos.zip)
+
+          ### 📋 Changes
+          ${{ steps.changelog.outputs.changelog }}
+
+          ### 🔧 Installation
+          ```bash
+          # Download and extract
+          curl -L -o GitCthulhu.tar.gz https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/GitCthulhu-${{ steps.version.outputs.version }}-macos.tar.gz
+          tar -xzf GitCthulhu.tar.gz
+
+          # Make executable and run
+          chmod +x GitCthulhu
+          ./GitCthulhu
+          ```
+
+          ### ✅ System Requirements
+          - macOS 12.0 or later
+          - Git installed
+
+          > Generated automatically on $(date)
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/GitCthulhu-${{ steps.version.outputs.version }}-macos.tar.gz
+        asset_name: GitCthulhu-${{ steps.version.outputs.version }}-macos.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Release Assets (ZIP)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/GitCthulhu-${{ steps.version.outputs.version }}-macos.zip
+        asset_name: GitCthulhu-${{ steps.version.outputs.version }}-macos.zip
+        asset_content_type: application/zip
+
+    - name: Upload Checksums
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/checksums.txt
+        asset_name: checksums.txt
+        asset_content_type: text/plain
+
+    - name: Notify Success
+      run: |
+        echo "🎉 Release ${{ steps.version.outputs.version }} created successfully!"
+        echo "📥 Download: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}"
