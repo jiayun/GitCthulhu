@@ -29,7 +29,7 @@ gh api repos/:owner/:repo/milestones \
 - 代碼覆蓋率達 80%
 - 所有依賴正確安裝" \
   --field state="open" \
-  --field due_on="$(date -v+14d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+14 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 1: 核心架構 (Week 3-4)
 gh api repos/:owner/:repo/milestones \
@@ -50,7 +50,7 @@ gh api repos/:owner/:repo/milestones \
 - 單元測試覆蓋率 > 85%
 - 記憶體無洩漏" \
   --field state="open" \
-  --field due_on="$(date -v+28d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+28 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 2: 檔案狀態管理 (Week 5-6)
 gh api repos/:owner/:repo/milestones \
@@ -71,7 +71,7 @@ gh api repos/:owner/:repo/milestones \
 - Diff 顯示正確
 - UI 響應流暢" \
   --field state="open" \
-  --field due_on="$(date -v+42d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+42 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 3: Commit 功能 (Week 7-8)
 gh api repos/:owner/:repo/milestones \
@@ -92,7 +92,7 @@ gh api repos/:owner/:repo/milestones \
 - 歷史顯示完整
 - 支援 GPG 簽名" \
   --field state="open" \
-  --field due_on="$(date -v+56d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+56 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 4: 分支管理 (Week 9-10)
 gh api repos/:owner/:repo/milestones \
@@ -113,7 +113,7 @@ gh api repos/:owner/:repo/milestones \
 - 視覺化清晰易懂
 - 資料一致性保證" \
   --field state="open" \
-  --field due_on="$(date -v+70d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+70 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 5: Remote 操作 (Week 11-12)
 gh api repos/:owner/:repo/milestones \
@@ -134,7 +134,7 @@ gh api repos/:owner/:repo/milestones \
 - 網路錯誤處理完整
 - 進度回饋即時" \
   --field state="open" \
-  --field due_on="$(date -v+84d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+84 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Sprint 6: MVP 完善 (Week 13-14)
 gh api repos/:owner/:repo/milestones \
@@ -155,6 +155,6 @@ gh api repos/:owner/:repo/milestones \
 - 效能符合預期
 - 使用文檔完整" \
   --field state="open" \
-  --field due_on="$(date -v+98d -u +%Y-%m-%dT%H:%M:%SZ)"
+  --field due_on="$(date -d "+98 days" -u +%Y-%m-%dT%H:%M:%SZ)"
 
 echo "✅ GitHub Milestones 設置完成！"
