@@ -96,7 +96,7 @@ struct GitCommandExecutorTests {
             (" D", .deleted),
             ("R ", .renamed),
             ("C ", .copied),
-            ("UU", .unmerged),
+            ("UU", .unmerged)
         ]
 
         // This is tested through the GitRepository conversion method

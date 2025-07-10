@@ -84,8 +84,7 @@ public class RepositoryManager: ObservableObject {
 
     private func loadRecentRepositories() {
         if let data = userDefaults.data(forKey: recentRepositoriesKey),
-           let urls = try? JSONDecoder().decode([URL].self, from: data)
-        {
+           let urls = try? JSONDecoder().decode([URL].self, from: data) {
             // Filter out repositories that no longer exist
             recentRepositories = urls.filter { url in
                 FileManager.default.fileExists(atPath: url.path)

@@ -31,7 +31,6 @@ struct RepositorySidebar: View {
 
     // MARK: - View Components
 
-    @ViewBuilder
     private var currentRepositorySection: some View {
         if let currentRepo = repositoryManager.currentRepository {
             Section("Current Repository") {

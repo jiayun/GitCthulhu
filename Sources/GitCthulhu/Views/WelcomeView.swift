@@ -80,7 +80,6 @@ struct WelcomeView: View {
         }
     }
 
-    @ViewBuilder
     private var recentRepositoriesSection: some View {
         if !repositoryManager.recentRepositories.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
