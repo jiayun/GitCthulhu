@@ -32,29 +32,31 @@ struct RepositorySidebar: View {
     // MARK: - View Components
 
     private var currentRepositorySection: some View {
-        if let currentRepo = repositoryManager.currentRepository {
-            Section("Current Repository") {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(currentRepo.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+        Group {
+            if let currentRepo = repositoryManager.currentRepository {
+                Section("Current Repository") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(currentRepo.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
 
-                    if let branch = currentRepo.currentBranch {
-                        HStack {
-                            Image(systemName: "arrow.triangle.branch")
-                                .foregroundColor(.blue)
-                            Text(branch.shortName)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                        if let branch = currentRepo.currentBranch {
+                            HStack {
+                                Image(systemName: "arrow.triangle.branch")
+                                    .foregroundColor(.blue)
+                                Text(branch.shortName)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                    }
 
-                    Text(currentRepo.url.path)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+                        Text(currentRepo.url.path)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
             }
         }
     }

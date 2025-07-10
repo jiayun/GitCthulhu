@@ -81,22 +81,24 @@ struct WelcomeView: View {
     }
 
     private var recentRepositoriesSection: some View {
-        if !repositoryManager.recentRepositories.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Recent Repositories")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+        Group {
+            if !repositoryManager.recentRepositories.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Recent Repositories")
+                        .font(.headline)
+                        .foregroundColor(.primary)
 
-                ScrollView {
-                    VStack(spacing: 8) {
-                        ForEach(repositoryManager.recentRepositories, id: \.self) { url in
-                            RecentRepositoryRow(url: url)
+                    ScrollView {
+                        VStack(spacing: 8) {
+                            ForEach(repositoryManager.recentRepositories, id: \.self) { url in
+                                RecentRepositoryRow(url: url)
+                            }
                         }
                     }
+                    .frame(maxHeight: 120)
                 }
-                .frame(maxHeight: 120)
+                .padding(.horizontal, 40)
             }
-            .padding(.horizontal, 40)
         }
     }
 
