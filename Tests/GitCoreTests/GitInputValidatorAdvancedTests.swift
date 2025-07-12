@@ -56,7 +56,7 @@ struct GitInputValidatorAdvancedTests {
 
         for attack in unicodeAttacks {
             #expect(throws: GitError.self) {
-                try GitInputValidator.validateRepositoryURL(attack)
+                try GitInputValidator.validateRemoteURL(attack)
             }
         }
     }
@@ -73,7 +73,7 @@ struct GitInputValidatorAdvancedTests {
 
         for attempt in smugglingAttempts {
             #expect(throws: GitError.self) {
-                try GitInputValidator.validateRepositoryURL(attempt)
+                try GitInputValidator.validateRemoteURL(attempt)
             }
         }
     }
@@ -84,7 +84,7 @@ struct GitInputValidatorAdvancedTests {
         let largeInput = String(repeating: "a", count: 10000)
 
         #expect(throws: GitError.self) {
-            try GitInputValidator.validateInput(largeInput, type: .commitMessage)
+            try GitInputValidator.sanitizeCommitMessage(largeInput)
         }
     }
 
@@ -163,7 +163,7 @@ struct GitInputValidatorAdvancedTests {
 
         for protocol in protocolAbuse {
             #expect(throws: GitError.self) {
-                try GitInputValidator.validateRepositoryURL(protocol)
+                try GitInputValidator.validateRemoteURL(protocol)
             }
         }
     }
