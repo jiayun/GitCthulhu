@@ -107,7 +107,12 @@ struct GitRepositoryTests {
 
         // Get current branch and verify it's in the branch list
         let currentBranch = try await repo.getCurrentBranch()
-        #expect(branches.contains(currentBranch))
+        if let currentBranch = currentBranch {
+            #expect(branches.contains(currentBranch))
+        } else {
+            // If no current branch (detached HEAD), just verify branches exist
+            #expect(!branches.isEmpty)
+        }
     }
 
     @MainActor
