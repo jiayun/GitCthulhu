@@ -371,6 +371,10 @@ struct GitSecurityConfigTests {
         config.resetToDefaults()
         config.applyPermissiveProfile()
 
+        // Verify protocol sets are correctly configured for permissive mode
+        #expect(config.allowedProtocols.contains("http://"), "HTTP should be in allowedProtocols for permissive mode")
+        #expect(!config.dangerousProtocols.contains("http://"), "HTTP should NOT be in dangerousProtocols for permissive mode")
+
         // Verify the changes took effect immediately
         #expect(config.maxCommitMessageLength == 10000)
         #expect(config.maxAuthorLength == 512)
