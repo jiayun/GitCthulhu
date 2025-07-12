@@ -59,7 +59,7 @@ actor MockGitRepository: GitRepositoryProtocol {
         return branches.filter(\.isRemote).map(\.name)
     }
 
-    func createBranch(_ name: String, from baseBranch: String?) async throws {
+    func createBranch(_ name: String, from _: String?) async throws {
         if shouldThrowError {
             throw GitError.libgit2Error("Mock error")
         }
@@ -89,7 +89,7 @@ actor MockGitRepository: GitRepositoryProtocol {
         }
     }
 
-    func deleteBranch(_ name: String, force: Bool) async throws {
+    func deleteBranch(_ name: String, force _: Bool) async throws {
         if shouldThrowError {
             throw GitError.libgit2Error("Mock error")
         }
