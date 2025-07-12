@@ -44,7 +44,7 @@ public class RepositoryManager: ObservableObject {
         error = nil
 
         do {
-            let repository = try GitRepository(url: url)
+            let repository = try await GitRepository.create(url: url)
             currentRepository = repository
 
             // Add to repositories list if not already present
@@ -138,16 +138,12 @@ public class RepositoryManager: ObservableObject {
     public func getRepositoryInfo(at url: URL) async -> RepositoryInfo? {
         guard validateRepositoryPath(url) else { return nil }
 
-        do {
-            let executor = GitCommandExecutor(repositoryURL: url)
-            let branch = try? await executor.getCurrentBranch()
-            return RepositoryInfo(
-                name: url.lastPathComponent,
-                path: url.path,
-                branch: branch
-            )
-        } catch {
-            return nil
-        }
+        let executor = GitCommandExecutor(repositoryURL: url)
+        let branch = try? await executor.getCurrentBranch()
+        return RepositoryInfo(
+            name: url.lastPathComponent,
+            path: url.path,
+            branch: branch
+        )
     }
 }

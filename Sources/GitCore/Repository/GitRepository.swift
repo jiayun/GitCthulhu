@@ -24,6 +24,11 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     @Published public var currentBranch: GitBranch?
     @Published public var isLoading = false
 
+    // Performance optimization: debouncing mechanism
+    private var refreshTask: Task<Void, Never>?
+    private var lastRefreshTime: Date = .distantPast
+    private let refreshDebounceInterval: TimeInterval = 0.5
+
     public init(url: URL) throws {
         self.url = url
         name = url.lastPathComponent
@@ -35,10 +40,16 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
             throw GitError.failedToOpenRepository("No .git directory found at \(url.path)")
         }
 
-        // Load initial data
-        Task { @MainActor in
-            await loadRepositoryData()
-        }
+        // Note: Initial data loading should be done explicitly after initialization
+        // to avoid race conditions
+    }
+
+    /// Factory method to create and initialize a GitRepository
+    @MainActor
+    public static func create(url: URL) async throws -> GitRepository {
+        let repository = try GitRepository(url: url)
+        await repository.loadRepositoryData()
+        return repository
     }
 
     @MainActor
@@ -249,8 +260,26 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         await loadBranches()
     }
 
+    /// Debounced refresh to prevent excessive UI updates
+    @MainActor
+    public func refreshWithDebounce() {
+        let now = Date()
+        guard now.timeIntervalSince(lastRefreshTime) >= refreshDebounceInterval else {
+            return
+        }
+
+        refreshTask?.cancel()
+        refreshTask = Task {
+            try? await Task.sleep(nanoseconds: UInt64(refreshDebounceInterval * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+
+            lastRefreshTime = Date()
+            await loadRepositoryData()
+        }
+    }
+
     public func close() async {
-        // No special cleanup needed for CLI-based implementation
+        refreshTask?.cancel()
         logger.info("Repository closed")
     }
 }

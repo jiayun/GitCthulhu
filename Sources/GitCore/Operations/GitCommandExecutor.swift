@@ -16,9 +16,90 @@ public class GitCommandExecutor {
         self.repositoryURL = repositoryURL
     }
 
+    // MARK: - Input Validation
+
+    private func validateArguments(_ arguments: [String]) throws {
+        for argument in arguments {
+            try validateSingleArgument(argument)
+        }
+    }
+
+    private func validateSingleArgument(_ argument: String) throws {
+        // Prevent null bytes and other control characters
+        if argument.contains("\0") || argument.contains("\r") || argument.contains("\n") {
+            throw GitError.invalidRepositoryPath
+        }
+
+        // Prevent command injection by checking for dangerous characters, but allow some git-specific characters
+        let dangerousChars = CharacterSet(charactersIn: ";|&$`<>")
+        if argument.rangeOfCharacter(from: dangerousChars) != nil {
+            throw GitError.invalidRepositoryPath
+        }
+
+        // Validate that the argument doesn't start with suspicious patterns
+        let suspiciousPatterns = ["--exec", "--upload-pack", "--receive-pack"]
+        for pattern in suspiciousPatterns {
+            if argument.hasPrefix(pattern) {
+                throw GitError.permissionDenied
+            }
+        }
+    }
+
+    private func sanitizeBranchName(_ branchName: String) throws -> String {
+        // Git branch name validation rules
+        let invalidChars = CharacterSet(charactersIn: " ~^:?*[\\")
+        if branchName.rangeOfCharacter(from: invalidChars) != nil {
+            throw GitError.invalidBranch("Branch name contains invalid characters: \(branchName)")
+        }
+
+        if branchName.isEmpty || branchName.hasPrefix(".") || branchName.hasSuffix(".") ||
+           branchName.hasPrefix("-") || branchName.contains("..") || branchName.contains("@{") {
+            throw GitError.invalidBranch("Invalid branch name format: \(branchName)")
+        }
+
+        return branchName
+    }
+
+    private func sanitizeFilePath(_ filePath: String) throws -> String {
+        // Prevent directory traversal
+        if filePath.contains("../") || filePath.contains("..\\") || filePath.hasPrefix("/") {
+            throw GitError.fileNotFound("Invalid file path: \(filePath)")
+        }
+
+        // Ensure path is within repository bounds
+        let normalizedPath = (filePath as NSString).standardizingPath
+        if normalizedPath != filePath {
+            throw GitError.fileNotFound("Path normalization changed path, potential security issue")
+        }
+
+        return filePath
+    }
+
+    private func sanitizeCommitMessage(_ message: String) throws -> String {
+        // Prevent null bytes and excessive length
+        if message.contains("\0") {
+            throw GitError.commitFailed("Commit message contains null bytes")
+        }
+
+        // Trim whitespace and ensure reasonable length
+        let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            throw GitError.commitFailed("Commit message cannot be empty")
+        }
+
+        if trimmed.count > 5000 {
+            throw GitError.commitFailed("Commit message too long (max 5000 characters)")
+        }
+
+        return trimmed
+    }
+
     @discardableResult
     public func execute(_ arguments: [String]) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
+        // Validate all arguments before execution
+        try validateArguments(arguments)
+
+        return try await withCheckedThrowingContinuation { continuation in
             let process = setupProcess(with: arguments)
             let (pipe, errorPipe) = setupPipes(for: process)
 
@@ -158,20 +239,24 @@ public class GitCommandExecutor {
     }
 
     public func createBranch(_ name: String, from baseBranch: String? = nil) async throws {
-        var args = ["checkout", "-b", name]
+        let sanitizedName = try sanitizeBranchName(name)
+        var args = ["checkout", "-b", sanitizedName]
         if let base = baseBranch {
-            args.append(base)
+            let sanitizedBase = try sanitizeBranchName(base)
+            args.append(sanitizedBase)
         }
         try await execute(args)
     }
 
     public func switchBranch(_ name: String) async throws {
-        try await execute(["checkout", name])
+        let sanitizedName = try sanitizeBranchName(name)
+        try await execute(["checkout", sanitizedName])
     }
 
     public func deleteBranch(_ name: String, force: Bool = false) async throws {
+        let sanitizedName = try sanitizeBranchName(name)
         let flag = force ? "-D" : "-d"
-        try await execute(["branch", flag, name])
+        try await execute(["branch", flag, sanitizedName])
     }
 
     // MARK: - Status Operations
@@ -208,7 +293,8 @@ public class GitCommandExecutor {
     // MARK: - Staging Operations
 
     public func stageFile(_ filePath: String) async throws {
-        try await execute(["add", filePath])
+        let sanitizedPath = try sanitizeFilePath(filePath)
+        try await execute(["add", sanitizedPath])
     }
 
     public func stageAllFiles() async throws {
@@ -216,7 +302,8 @@ public class GitCommandExecutor {
     }
 
     public func unstageFile(_ filePath: String) async throws {
-        try await execute(["reset", "HEAD", filePath])
+        let sanitizedPath = try sanitizeFilePath(filePath)
+        try await execute(["reset", "HEAD", sanitizedPath])
     }
 
     public func unstageAllFiles() async throws {
@@ -226,8 +313,13 @@ public class GitCommandExecutor {
     // MARK: - Commit Operations
 
     public func commit(message: String, author: String? = nil) async throws -> String {
-        var args = ["commit", "-m", message]
+        let sanitizedMessage = try sanitizeCommitMessage(message)
+        var args = ["commit", "-m", sanitizedMessage]
         if let author {
+            // Basic validation for author string
+            if author.contains("\0") || author.isEmpty {
+                throw GitError.commitFailed("Invalid author format")
+            }
             args.append(contentsOf: ["--author", author])
         }
         return try await execute(args)
@@ -236,7 +328,8 @@ public class GitCommandExecutor {
     public func amendCommit(message: String? = nil) async throws -> String {
         var args = ["commit", "--amend"]
         if let message {
-            args.append(contentsOf: ["-m", message])
+            let sanitizedMessage = try sanitizeCommitMessage(message)
+            args.append(contentsOf: ["-m", sanitizedMessage])
         } else {
             args.append("--no-edit")
         }
