@@ -8,7 +8,10 @@
 import Foundation
 import Utilities
 
-public class GitRepository: ObservableObject, Identifiable {
+/// CLI-based implementation of GitRepositoryProtocol
+/// This implementation uses the git command-line interface
+@MainActor
+public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiable {
     public let id = UUID()
     public let url: URL
     public let name: String
@@ -136,7 +139,44 @@ public class GitRepository: ObservableObject, Identifiable {
         }
     }
 
-    // MARK: - Public Git Operations
+    // MARK: - GitRepositoryProtocol Implementation
+
+    public func isValidRepository() async -> Bool {
+        await gitExecutor.isValidRepository()
+    }
+
+    public func getRepositoryRoot() async throws -> String {
+        try await gitExecutor.getRepositoryRoot()
+    }
+
+    public func getCurrentBranch() async throws -> String? {
+        try await gitExecutor.getCurrentBranch()
+    }
+
+    public func getBranches() async throws -> [String] {
+        try await gitExecutor.getBranches()
+    }
+
+    public func getRemoteBranches() async throws -> [String] {
+        try await gitExecutor.getRemoteBranches()
+    }
+
+    public func deleteBranch(_ name: String, force: Bool) async throws {
+        try await gitExecutor.deleteBranch(name, force: force)
+        await loadBranches()
+    }
+
+    public func getRepositoryStatus() async throws -> [String: GitFileStatus] {
+        let statusMap = try await gitExecutor.getRepositoryStatus()
+        var convertedStatus: [String: GitFileStatus] = [:]
+
+        for (fileName, statusCode) in statusMap {
+            let gitStatus = convertGitStatus(statusCode)
+            convertedStatus[fileName] = gitStatus
+        }
+
+        return convertedStatus
+    }
 
     public func refreshStatus() async {
         await loadStatus()
@@ -147,23 +187,70 @@ public class GitRepository: ObservableObject, Identifiable {
         await refreshStatus()
     }
 
+    public func stageAllFiles() async throws {
+        try await gitExecutor.stageAllFiles()
+        await refreshStatus()
+    }
+
     public func unstageFile(_ filePath: String) async throws {
         try await gitExecutor.unstageFile(filePath)
         await refreshStatus()
     }
 
-    public func commit(message: String) async throws {
-        _ = try await gitExecutor.commit(message: message)
-        await loadRepositoryData() // Refresh all data after commit
+    public func unstageAllFiles() async throws {
+        try await gitExecutor.unstageAllFiles()
+        await refreshStatus()
+    }
+
+    public func commit(message: String, author: String? = nil) async throws -> String {
+        let result = try await gitExecutor.commit(message: message, author: author)
+        await loadRepositoryData()
+        return result
+    }
+
+    public func amendCommit(message: String?) async throws -> String {
+        let result = try await gitExecutor.amendCommit(message: message)
+        await loadRepositoryData()
+        return result
+    }
+
+    public func getCommitHistory(limit: Int, branch: String?) async throws -> [String] {
+        try await gitExecutor.getCommitHistory(limit: limit, branch: branch)
+    }
+
+    public func getDiff(filePath: String?, staged: Bool) async throws -> String {
+        try await gitExecutor.getDiff(filePath: filePath, staged: staged)
+    }
+
+    public func getRemotes() async throws -> [String: String] {
+        try await gitExecutor.getRemotes()
+    }
+
+    public func fetch(remote: String) async throws {
+        try await gitExecutor.fetch(remote: remote)
+    }
+
+    public func pull(remote: String, branch: String?) async throws {
+        try await gitExecutor.pull(remote: remote, branch: branch)
+        await loadRepositoryData()
+    }
+
+    public func push(remote: String, branch: String?, setUpstream: Bool) async throws {
+        try await gitExecutor.push(remote: remote, branch: branch, setUpstream: setUpstream)
     }
 
     public func switchBranch(_ branchName: String) async throws {
         try await gitExecutor.switchBranch(branchName)
-        await loadRepositoryData() // Refresh all data after branch switch
+        await loadRepositoryData()
     }
 
     public func createBranch(_ name: String, from baseBranch: String? = nil) async throws {
         try await gitExecutor.createBranch(name, from: baseBranch)
-        await loadBranches() // Refresh branches after creation
+        await loadBranches()
+    }
+
+    public func close() async {
+        // No special cleanup needed for CLI-based implementation
+        logger.info("Repository closed")
     }
 }
