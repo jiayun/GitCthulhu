@@ -12,6 +12,7 @@ public class GitSecurityConfig {
     // MARK: - Singleton Pattern
 
     public static let shared = GitSecurityConfig()
+    private let configLock = NSLock()
 
     private init() {}
 
@@ -121,12 +122,21 @@ public class GitSecurityConfig {
 
     /// Resets configuration to default values
     public func resetToDefaults() {
+        configLock.lock()
+        defer { configLock.unlock() }
+
+        _resetToDefaultsInternal()
+    }
+
+    /// Internal reset method without locking (for use within locked contexts)
+    private func _resetToDefaultsInternal() {
         maxCommitMessageLength = 5000
         maxAuthorLength = 255
         maxBranchNameLength = 255
         maxFilePathLength = 4096
         maxInputLength = 1000
 
+        // Reset to exact default protocol sets
         allowedProtocols = Set(["https://", "git://", "ssh://", "git@"])
         dangerousProtocols = Set(["file://", "ftp://", "javascript:", "data:", "http://"])
         suspiciousPatterns = Set(["--exec", "--upload-pack", "--receive-pack"])
@@ -145,6 +155,11 @@ public class GitSecurityConfig {
 
     /// Applies a strict security profile
     public func applyStrictProfile() {
+        configLock.lock()
+        defer { configLock.unlock() }
+
+        _resetToDefaultsInternal() // Start with clean defaults
+
         maxCommitMessageLength = 2000
         maxAuthorLength = 128
         maxBranchNameLength = 100
@@ -164,14 +179,20 @@ public class GitSecurityConfig {
 
     /// Applies a permissive security profile (for development)
     public func applyPermissiveProfile() {
+        configLock.lock()
+        defer { configLock.unlock() }
+
+        _resetToDefaultsInternal() // Start with clean defaults
+
         maxCommitMessageLength = 10000
         maxAuthorLength = 512
         maxBranchNameLength = 500
         maxFilePathLength = 8192
         maxInputLength = 2000
 
-        allowedProtocols.insert("http://")
-        dangerousProtocols.remove("http://")
+        // Reset protocol sets and configure for permissive mode
+        allowedProtocols = Set(["https://", "git://", "ssh://", "git@", "http://"])
+        dangerousProtocols = Set(["file://", "ftp://", "javascript:", "data:"])
 
         allowLocalFileAccess = true
         allowHTTPProtocol = true
