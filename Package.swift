@@ -38,6 +38,7 @@ let package = Package(
     ],
     targets: [
         // MARK: - Main Application
+
         .executableTarget(
             name: "GitCthulhu",
             dependencies: [
@@ -52,6 +53,7 @@ let package = Package(
         ),
 
         // MARK: - Core Libraries
+
         .target(
             name: "GitCore",
             dependencies: [
@@ -78,6 +80,7 @@ let package = Package(
         ),
 
         // MARK: - Tests
+
         .testTarget(
             name: "GitCthulhuTests",
             dependencies: [
