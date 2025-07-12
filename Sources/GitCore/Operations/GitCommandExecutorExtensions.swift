@@ -8,6 +8,7 @@
 import Foundation
 
 // MARK: - Data Structures
+
 public extension GitCommandExecutor {
     struct CommitInfo {
         public let hash: String
@@ -51,6 +52,7 @@ public extension GitCommandExecutor {
 }
 
 // MARK: - Repository Information
+
 public extension GitCommandExecutor {
     func getLatestCommit() async throws -> CommitInfo? {
         do {
