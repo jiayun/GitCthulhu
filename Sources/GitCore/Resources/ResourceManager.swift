@@ -6,9 +6,12 @@
 //
 
 import Foundation
-import SwiftGit2
+// TODO: Re-enable when SwiftGit2 SPM support is stable
+// import SwiftGit2
 import Utilities
 
+// TODO: Re-enable when LibGit2Repository is available
+/*
 /// Manages repository resources and ensures proper cleanup
 /// This class provides automatic resource management for Git repositories
 public actor ResourceManager {
@@ -173,3 +176,4 @@ public struct MemoryReport {
 
 /// Shared resource manager instance
 public let sharedResourceManager = ResourceManager()
+*/

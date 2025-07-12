@@ -6,9 +6,12 @@
 //
 
 import Foundation
-import SwiftGit2
+// TODO: Re-enable when SwiftGit2 SPM support is stable
+// import SwiftGit2
 import Utilities
 
+// TODO: Re-enable when SwiftGit2 SPM support is stable
+/*
 /// Low-level wrapper for libgit2 operations
 /// This class provides thread-safe operations for Git repositories
 public class LibGit2Wrapper {
@@ -319,3 +322,4 @@ public class LibGit2Wrapper {
         }
     }
 }
+*/

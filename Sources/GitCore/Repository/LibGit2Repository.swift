@@ -6,9 +6,12 @@
 //
 
 import Foundation
-import SwiftGit2
+// TODO: Re-enable when SwiftGit2 SPM support is stable
+// import SwiftGit2
 import Utilities
 
+// TODO: Re-enable when SwiftGit2 SPM support is stable
+/*
 /// Implementation of GitRepositoryProtocol using libgit2
 @MainActor
 public class LibGit2Repository: ObservableObject, GitRepositoryProtocol, Identifiable {
@@ -456,3 +459,4 @@ public class LibGit2Repository: ObservableObject, GitRepositoryProtocol, Identif
         repository = nil
     }
 }
+*/

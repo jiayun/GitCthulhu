@@ -32,9 +32,9 @@ let package = Package(
     ],
     dependencies: [
         // Testing framework
-        .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0"),
-        // libgit2 Swift wrapper
-        .package(url: "https://github.com/SwiftGit2/SwiftGit2.git", from: "1.5.3")
+        .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0")
+        // TODO: Add libgit2 dependency when SPM support is stable
+        // .package(url: "https://github.com/light-tech/SwiftGit2.git", branch: "spm")
     ],
     targets: [
         // MARK: - Main Application
@@ -55,8 +55,9 @@ let package = Package(
         .target(
             name: "GitCore",
             dependencies: [
-                "Utilities",
-                .product(name: "SwiftGit2", package: "SwiftGit2")
+                "Utilities"
+                // TODO: Re-enable when libgit2 dependency is working
+                // .product(name: "SwiftGit2", package: "SwiftGit2")
             ],
             path: "Sources/GitCore"
         ),

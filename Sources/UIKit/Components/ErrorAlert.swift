@@ -76,6 +76,32 @@ public struct ErrorAlert: View {
             "lock.shield"
         case .networkError:
             "wifi.exclamationmark"
+        case .authenticationRequired:
+            "key"
+        case .mergeConflict:
+            "arrow.triangle.merge"
+        case .invalidBranch:
+            "point.3.connected.trianglepath.dotted"
+        case .invalidRemote:
+            "cloud.slash"
+        case .commitFailed:
+            "checkmark.circle.trianglebadge.exclamationmark"
+        case .fetchFailed:
+            "arrow.down.circle.dotted"
+        case .pushFailed:
+            "arrow.up.circle.dotted"
+        case .pullFailed:
+            "arrow.2.circlepath.circle"
+        case .checkoutFailed:
+            "arrow.turn.up.right"
+        case .indexCorrupted:
+            "externaldrive.trianglebadge.exclamationmark"
+        case .headDetached:
+            "point.3.filled.connected.trianglepath.dotted"
+        case .noChangesToCommit:
+            "checkmark.circle"
+        case .repositoryLocked:
+            "lock"
         case .unknown:
             "questionmark.circle"
         }
@@ -97,6 +123,32 @@ public struct ErrorAlert: View {
             "Permission Denied"
         case .networkError:
             "Network Error"
+        case .authenticationRequired:
+            "Authentication Required"
+        case .mergeConflict:
+            "Merge Conflict"
+        case .invalidBranch:
+            "Invalid Branch"
+        case .invalidRemote:
+            "Invalid Remote"
+        case .commitFailed:
+            "Commit Failed"
+        case .fetchFailed:
+            "Fetch Failed"
+        case .pushFailed:
+            "Push Failed"
+        case .pullFailed:
+            "Pull Failed"
+        case .checkoutFailed:
+            "Checkout Failed"
+        case .indexCorrupted:
+            "Index Corrupted"
+        case .headDetached:
+            "HEAD Detached"
+        case .noChangesToCommit:
+            "No Changes to Commit"
+        case .repositoryLocked:
+            "Repository Locked"
         case .unknown:
             "Unknown Error"
         }
