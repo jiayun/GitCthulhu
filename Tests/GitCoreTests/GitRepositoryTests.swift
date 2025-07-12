@@ -104,7 +104,10 @@ struct GitRepositoryTests {
 
         let branches = try await repo.getBranches()
         #expect(!branches.isEmpty)
-        #expect(branches.contains("main") || branches.contains("master"))
+
+        // Get current branch and verify it's in the branch list
+        let currentBranch = try await repo.getCurrentBranch()
+        #expect(branches.contains(currentBranch))
     }
 
     @MainActor

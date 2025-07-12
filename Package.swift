@@ -90,7 +90,10 @@ let package = Package(
                 "Utilities",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/GitCthulhuTests"
+            path: "Tests/GitCthulhuTests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         ),
 
         .testTarget(
@@ -100,7 +103,10 @@ let package = Package(
                 "Utilities",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/GitCoreTests"
+            path: "Tests/GitCoreTests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         ),
 
         .testTarget(
@@ -110,7 +116,10 @@ let package = Package(
                 "GitCore",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/UITests"
+            path: "Tests/UITests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         )
     ]
 )
