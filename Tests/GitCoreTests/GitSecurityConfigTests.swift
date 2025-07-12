@@ -23,19 +23,24 @@ struct GitSecurityConfigTests {
     @Test("Default configuration values")
     func defaultConfigurationValues() async throws {
         let config = GitSecurityConfig.shared
+
+        // Force a complete reset to ensure clean state
         config.resetToDefaults()
 
+        // Verify length limits
         #expect(config.maxCommitMessageLength == 5000)
         #expect(config.maxAuthorLength == 255)
         #expect(config.maxBranchNameLength == 255)
         #expect(config.maxFilePathLength == 4096)
         #expect(config.maxInputLength == 1000)
 
+        // Verify allowed protocols
         #expect(config.allowedProtocols.contains("https://"))
         #expect(config.allowedProtocols.contains("git://"))
         #expect(config.allowedProtocols.contains("ssh://"))
         #expect(config.allowedProtocols.contains("git@"))
 
+        // Verify dangerous protocols
         #expect(config.dangerousProtocols.contains("file://"))
         #expect(config.dangerousProtocols.contains("ftp://"))
         #expect(config.dangerousProtocols.contains("javascript:"))
