@@ -30,6 +30,10 @@ public struct RepositoryInfoPanel: View {
         .onAppear {
             loadRepositoryInfo()
         }
+        .onChange(of: repository.url) { _ in
+            loadRepositoryInfo()
+        }
+        .id(repository.url.path)
     }
 
     // MARK: - View Components
