@@ -85,4 +85,92 @@ struct RepositoryInfoPanelTests {
             #expect(!description.isEmpty)
         }
     }
+
+    @Test
+    func commitInfoCreation() async throws {
+        // Test CommitInfo structure creation
+        let timestamp = Date()
+        let commitInfo = GitCommandExecutor.CommitInfo(
+            hash: "abc123def",
+            author: "Test Author",
+            message: "Test commit message",
+            timestamp: timestamp
+        )
+
+        #expect(commitInfo.hash == "abc123def")
+        #expect(commitInfo.author == "Test Author")
+        #expect(commitInfo.message == "Test commit message")
+        #expect(commitInfo.timestamp == timestamp)
+    }
+
+    @Test
+    func remoteInfoCreation() async throws {
+        // Test RemoteInfo structure creation
+        let remoteInfo = GitCommandExecutor.RemoteInfo(
+            name: "origin",
+            url: "https://github.com/test/repo.git",
+            isUpToDate: true
+        )
+
+        #expect(remoteInfo.name == "origin")
+        #expect(remoteInfo.url == "https://github.com/test/repo.git")
+        #expect(remoteInfo.isUpToDate == true)
+    }
+
+    @Test
+    func detailedFileStatusCreation() async throws {
+        // Test DetailedFileStatus structure creation
+        let status = GitCommandExecutor.DetailedFileStatus(
+            staged: 2,
+            unstaged: 3,
+            untracked: 1
+        )
+
+        #expect(status.staged == 2)
+        #expect(status.unstaged == 3)
+        #expect(status.untracked == 1)
+        #expect(status.total == 6)
+    }
+
+    @Test
+    func repositoryInfoWithAllFields() async throws {
+        // Test RepositoryInfo with all new fields
+        let timestamp = Date()
+        let commitInfo = GitCommandExecutor.CommitInfo(
+            hash: "abc123",
+            author: "Test Author",
+            message: "Test message",
+            timestamp: timestamp
+        )
+
+        let remoteInfo = [GitCommandExecutor.RemoteInfo(
+            name: "origin",
+            url: "https://github.com/test/repo.git",
+            isUpToDate: true
+        )]
+
+        let status = GitCommandExecutor.DetailedFileStatus(
+            staged: 1,
+            unstaged: 2,
+            untracked: 3
+        )
+
+        let repositoryInfo = RepositoryInfo(
+            name: "TestRepo",
+            path: "/path/to/repo",
+            branch: "main",
+            latestCommit: commitInfo,
+            remoteInfo: remoteInfo,
+            commitCount: 42,
+            workingDirectoryStatus: status
+        )
+
+        #expect(repositoryInfo.name == "TestRepo")
+        #expect(repositoryInfo.path == "/path/to/repo")
+        #expect(repositoryInfo.branch == "main")
+        #expect(repositoryInfo.latestCommit != nil)
+        #expect(repositoryInfo.remoteInfo.count == 1)
+        #expect(repositoryInfo.commitCount == 42)
+        #expect(repositoryInfo.workingDirectoryStatus.total == 6)
+    }
 }

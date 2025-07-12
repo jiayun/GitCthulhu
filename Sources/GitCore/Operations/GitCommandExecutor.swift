@@ -10,7 +10,7 @@ import Utilities
 
 public class GitCommandExecutor {
     private let repositoryURL: URL
-    private let logger = Logger(category: "GitCommandExecutor")
+    let logger = Logger(category: "GitCommandExecutor")
 
     public init(repositoryURL: URL) {
         self.repositoryURL = repositoryURL
