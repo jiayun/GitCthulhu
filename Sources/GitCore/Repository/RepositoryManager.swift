@@ -13,11 +13,27 @@ public struct RepositoryInfo {
     public let name: String
     public let path: String
     public let branch: String?
+    public let latestCommit: GitCommandExecutor.CommitInfo?
+    public let remoteInfo: [GitCommandExecutor.RemoteInfo]
+    public let commitCount: Int
+    public let workingDirectoryStatus: GitCommandExecutor.DetailedFileStatus
 
-    public init(name: String, path: String, branch: String? = nil) {
+    public init(
+        name: String,
+        path: String,
+        branch: String? = nil,
+        latestCommit: GitCommandExecutor.CommitInfo? = nil,
+        remoteInfo: [GitCommandExecutor.RemoteInfo] = [],
+        commitCount: Int = 0,
+        workingDirectoryStatus: GitCommandExecutor.DetailedFileStatus = GitCommandExecutor.DetailedFileStatus(staged: 0, unstaged: 0, untracked: 0)
+    ) {
         self.name = name
         self.path = path
         self.branch = branch
+        self.latestCommit = latestCommit
+        self.remoteInfo = remoteInfo
+        self.commitCount = commitCount
+        self.workingDirectoryStatus = workingDirectoryStatus
     }
 }
 
@@ -139,11 +155,27 @@ public class RepositoryManager: ObservableObject {
         guard validateRepositoryPath(url) else { return nil }
 
         let executor = GitCommandExecutor(repositoryURL: url)
-        let branch = try? await executor.getCurrentBranch()
+
+        async let branch = try? await executor.getCurrentBranch()
+        async let latestCommit = try? await executor.getLatestCommit()
+        async let remoteInfo = try? await executor.getRemoteInfo()
+        async let commitCount = try? await executor.getCommitCount()
+        async let workingDirectoryStatus = try? await executor.getDetailedStatus()
+
+        let branchResult = await branch
+        let latestCommitResult = await latestCommit
+        let remoteInfoResult = await remoteInfo ?? []
+        let commitCountResult = await commitCount ?? 0
+        let workingDirectoryStatusResult = await workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(staged: 0, unstaged: 0, untracked: 0)
+
         return RepositoryInfo(
             name: url.lastPathComponent,
             path: url.path,
-            branch: branch
+            branch: branchResult,
+            latestCommit: latestCommitResult,
+            remoteInfo: remoteInfoResult,
+            commitCount: commitCountResult,
+            workingDirectoryStatus: workingDirectoryStatusResult
         )
     }
 }
