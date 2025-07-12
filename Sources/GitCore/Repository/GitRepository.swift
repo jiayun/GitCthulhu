@@ -278,6 +278,10 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         }
     }
 
+    deinit {
+        refreshTask?.cancel()
+    }
+
     public func close() async {
         refreshTask?.cancel()
         logger.info("Repository closed")

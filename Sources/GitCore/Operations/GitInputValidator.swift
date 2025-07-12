@@ -8,8 +8,7 @@
 import Foundation
 
 /// Validates Git command inputs to prevent injection attacks and ensure data integrity
-struct GitInputValidator {
-
+enum GitInputValidator {
     // MARK: - Argument Validation
 
     static func validateArguments(_ arguments: [String]) throws {
