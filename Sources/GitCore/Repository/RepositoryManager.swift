@@ -25,7 +25,11 @@ public struct RepositoryInfo {
         latestCommit: GitCommandExecutor.CommitInfo? = nil,
         remoteInfo: [GitCommandExecutor.RemoteInfo] = [],
         commitCount: Int = 0,
-        workingDirectoryStatus: GitCommandExecutor.DetailedFileStatus = GitCommandExecutor.DetailedFileStatus(staged: 0, unstaged: 0, untracked: 0)
+        workingDirectoryStatus: GitCommandExecutor.DetailedFileStatus = GitCommandExecutor.DetailedFileStatus(
+            staged: 0,
+            unstaged: 0,
+            untracked: 0
+        )
     ) {
         self.name = name
         self.path = path
@@ -166,7 +170,11 @@ public class RepositoryManager: ObservableObject {
         let latestCommitResult = await latestCommit
         let remoteInfoResult = await remoteInfo ?? []
         let commitCountResult = await commitCount ?? 0
-        let workingDirectoryStatusResult = await workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(staged: 0, unstaged: 0, untracked: 0)
+        let workingDirectoryStatusResult = await workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(
+            staged: 0,
+            unstaged: 0,
+            untracked: 0
+        )
 
         return RepositoryInfo(
             name: url.lastPathComponent,

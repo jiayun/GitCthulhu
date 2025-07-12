@@ -144,99 +144,116 @@ public struct RepositoryInfoPanel: View {
     @ViewBuilder
     private func remoteInfoView(_ remotes: [GitCommandExecutor.RemoteInfo]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
+            remoteHeaderView
+            remoteListView(remotes)
+        }
+    }
+
+    private var remoteHeaderView: some View {
+        HStack {
+            Image(systemName: "network")
+                .foregroundColor(.blue)
+                .frame(width: 20)
+            Text("Remote")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func remoteListView(_ remotes: [GitCommandExecutor.RemoteInfo]) -> some View {
+        ForEach(remotes.prefix(2), id: \.name) { remote in
             HStack {
-                Image(systemName: "network")
-                    .foregroundColor(.blue)
-                    .frame(width: 20)
-                Text("Remote")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            ForEach(remotes.prefix(2), id: \.name) { remote in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(remote.name)
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                        Text(remote.url)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer()
-
-                    if remote.isUpToDate {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                    } else {
-                        Image(systemName: "arrow.up.circle")
-                            .foregroundColor(.orange)
-                            .font(.caption)
-                    }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(remote.name)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                    Text(remote.url)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
-                .padding(.leading, 28)
+
+                Spacer()
+
+                remoteStatusIcon(remote.isUpToDate)
             }
+            .padding(.leading, 28)
+        }
+    }
+
+    @ViewBuilder
+    private func remoteStatusIcon(_ isUpToDate: Bool) -> some View {
+        if isUpToDate {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.caption)
+        } else {
+            Image(systemName: "arrow.up.circle")
+                .foregroundColor(.orange)
+                .font(.caption)
         }
     }
 
     @ViewBuilder
     private func workingDirectoryView(_ status: GitCommandExecutor.DetailedFileStatus) -> some View {
         if status.total > 0 {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "doc.text")
-                        .foregroundColor(.blue)
-                        .frame(width: 20)
-                    Text("Working Directory")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    if status.staged > 0 {
-                        HStack {
-                            Circle()
-                                .fill(Color.green)
-                                .frame(width: 8, height: 8)
-                            Text("\(status.staged) staged")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                        }
-                    }
-
-                    if status.unstaged > 0 {
-                        HStack {
-                            Circle()
-                                .fill(Color.orange)
-                                .frame(width: 8, height: 8)
-                            Text("\(status.unstaged) modified")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                        }
-                    }
-
-                    if status.untracked > 0 {
-                        HStack {
-                            Circle()
-                                .fill(Color.gray)
-                                .frame(width: 8, height: 8)
-                            Text("\(status.untracked) untracked")
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                        }
-                    }
-                }
-                .padding(.leading, 28)
-            }
+            workingDirectoryDetailView(status)
         } else {
             InfoRow(
                 title: "Working Directory",
                 value: "Clean",
                 icon: "checkmark.circle"
             )
+        }
+    }
+
+    @ViewBuilder
+    private func workingDirectoryDetailView(_ status: GitCommandExecutor.DetailedFileStatus) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            workingDirectoryHeader
+            workingDirectoryStatusList(status)
+        }
+    }
+
+    private var workingDirectoryHeader: some View {
+        HStack {
+            Image(systemName: "doc.text")
+                .foregroundColor(.blue)
+                .frame(width: 20)
+            Text("Working Directory")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func workingDirectoryStatusList(_ status: GitCommandExecutor.DetailedFileStatus) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if status.staged > 0 {
+                statusIndicator(color: .green, text: "\(status.staged) staged")
+            }
+
+            if status.unstaged > 0 {
+                statusIndicator(color: .orange, text: "\(status.unstaged) modified")
+            }
+
+            if status.untracked > 0 {
+                statusIndicator(color: .gray, text: "\(status.untracked) untracked")
+            }
+        }
+        .padding(.leading, 28)
+    }
+
+    @ViewBuilder
+    private func statusIndicator(color: Color, text: String) -> some View {
+        HStack {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(text)
+                .font(.caption)
+                .foregroundColor(.primary)
         }
     }
 

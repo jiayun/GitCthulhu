@@ -382,7 +382,7 @@ public class GitCommandExecutor {
             self.staged = staged
             self.unstaged = unstaged
             self.untracked = untracked
-            self.total = staged + unstaged + untracked
+            total = staged + unstaged + untracked
         }
     }
 
@@ -400,10 +400,10 @@ public class GitCommandExecutor {
                 if statusCode.hasPrefix("??") {
                     untracked += 1
                 } else {
-                    if statusCode.first != " " && statusCode.first != "?" {
+                    if statusCode.first != " ", statusCode.first != "?" {
                         staged += 1
                     }
-                    if statusCode.last != " " && statusCode.last != "?" {
+                    if statusCode.last != " ", statusCode.last != "?" {
                         unstaged += 1
                     }
                 }
