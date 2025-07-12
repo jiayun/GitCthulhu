@@ -288,7 +288,15 @@ struct GitSecurityConfigTests {
     func inputValidationLengthLimits() async throws {
         let config = GitSecurityConfig.shared
         config.resetToDefaults()
+
+        // Store original value for cleanup
+        let originalMaxLength = config.maxCommitMessageLength
         config.maxCommitMessageLength = 10
+
+        defer {
+            // Restore original value to avoid affecting other tests
+            config.maxCommitMessageLength = originalMaxLength
+        }
 
         // Should pass
         let shortMessage = "short"
@@ -308,7 +316,32 @@ struct GitSecurityConfigTests {
     func strictSecurityProfile() async throws {
         let config = GitSecurityConfig.shared
         config.resetToDefaults() // Start with clean state
+
+        // Store original values for cleanup
+        let originalMaxCommitLength = config.maxCommitMessageLength
+        let originalMaxAuthorLength = config.maxAuthorLength
+        let originalMaxBranchLength = config.maxBranchNameLength
+        let originalMaxDirectoryDepth = config.maxDirectoryDepth
+        let originalAllowedProtocols = config.allowedProtocols
+        let originalDangerousProtocols = config.dangerousProtocols
+
         config.applyStrictProfile()
+
+        defer {
+            // Restore original values
+            config.maxCommitMessageLength = originalMaxCommitLength
+            config.maxAuthorLength = originalMaxAuthorLength
+            config.maxBranchNameLength = originalMaxBranchLength
+            config.maxDirectoryDepth = originalMaxDirectoryDepth
+            config.allowedProtocols = originalAllowedProtocols
+            config.dangerousProtocols = originalDangerousProtocols
+            // Reset all other flags too
+            config.allowLocalFileAccess = false
+            config.allowHTTPProtocol = false
+            config.strictAuthorValidation = true
+            config.allowEmptyCommitMessages = false
+            config.validateGitPath = true
+        }
 
         #expect(config.maxCommitMessageLength == 2000)
         #expect(config.maxAuthorLength == 128)

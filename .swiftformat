@@ -18,4 +18,5 @@
 --closingparen balanced
 --funcattributes prev-line
 --typeattributes prev-line
---varattributes same-line
+--storedvarattrs same-line
+--computedvarattrs prev-line

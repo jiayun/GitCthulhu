@@ -113,9 +113,10 @@ struct GitRepositoryTests {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
-        // Remote branches might be empty in some setups, so just check it doesn't throw
+        // Remote branches might exist in actual repositories, just check it doesn't throw
         let remoteBranches = try await repo.getRemoteBranches()
-        #expect(remoteBranches.isEmpty)
+        // Don't assert empty - real repositories often have remote branches
+        _ = remoteBranches // Just ensure it doesn't throw
     }
 
     // MARK: - Status Operations Tests
@@ -127,7 +128,8 @@ struct GitRepositoryTests {
         let repo = try GitRepository(url: currentDir)
 
         let status = try await repo.getRepositoryStatus()
-        #expect(status.isEmpty) // Status can be empty in clean repo
+        // Don't assert empty - real repositories often have uncommitted changes
+        _ = status // Just ensure it doesn't throw
     }
 
     @MainActor
@@ -197,7 +199,8 @@ struct GitRepositoryTests {
 
         // Should not throw even if there's no diff
         let diff = try await repo.getDiff(filePath: nil, staged: false)
-        #expect(diff.isEmpty) // Diff can be empty
+        // Don't assert empty - real repositories often have changes
+        _ = diff // Just ensure it doesn't throw
     }
 
     // MARK: - Remote Operations Tests
@@ -209,7 +212,8 @@ struct GitRepositoryTests {
         let repo = try GitRepository(url: currentDir)
 
         let remotes = try await repo.getRemotes()
-        #expect(remotes.isEmpty) // Remotes can be empty
+        // Don't assert empty - real repositories often have remotes configured
+        _ = remotes // Just ensure it doesn't throw
     }
 
     // MARK: - Resource Management Tests
@@ -295,9 +299,9 @@ struct GitRepositoryTests {
         let results = try await (branches, status, currentBranch, remotes)
 
         #expect(!results.0.isEmpty) // branches
-        #expect(results.1.isEmpty) // status
+        _ = results.1 // status - just ensure valid
         #expect(results.2 != nil) // current branch
-        #expect(results.3.isEmpty) // remotes
+        _ = results.3 // remotes - just ensure valid
     }
 }
 
