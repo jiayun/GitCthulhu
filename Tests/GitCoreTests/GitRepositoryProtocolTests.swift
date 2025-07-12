@@ -10,7 +10,8 @@ import Foundation
 import Testing
 
 // Mock implementation for testing
-actor MockGitRepository: GitRepositoryProtocol {
+@MainActor
+class MockGitRepository: GitRepositoryProtocol {
     let url: URL
     let name: String
     var status: [String: GitFileStatus] = [:]
@@ -72,7 +73,7 @@ actor MockGitRepository: GitRepositoryProtocol {
         branches.append(branch)
     }
 
-    func switchToBranch(_ branchName: String) async throws {
+    func switchBranch(_ branchName: String) async throws {
         if shouldThrowError {
             throw GitError.checkoutFailed("Mock error")
         }
@@ -96,18 +97,15 @@ actor MockGitRepository: GitRepositoryProtocol {
         branches.removeAll { $0.name == name }
     }
 
-    func renameBranch(from oldName: String, to newName: String) async throws {
+    func getRepositoryStatus() async throws -> [String: GitFileStatus] {
         if shouldThrowError {
             throw GitError.libgit2Error("Mock error")
         }
-        if let index = branches.firstIndex(where: { $0.name == oldName }) {
-            branches[index] = GitBranch(
-                name: newName,
-                shortName: newName,
-                isRemote: branches[index].isRemote,
-                isCurrent: branches[index].isCurrent
-            )
-        }
+        return status
+    }
+
+    func refreshStatus() async {
+        // Mock implementation - no-op
     }
 
     func stageFile(_ filePath: String) async throws {
@@ -193,7 +191,7 @@ actor MockGitRepository: GitRepositoryProtocol {
         }
     }
 
-    func push(remote _: String, branch _: String?) async throws {
+    func push(remote _: String, branch _: String?, setUpstream _: Bool = false) async throws {
         if shouldThrowError {
             throw GitError.pushFailed("Mock error")
         }
@@ -271,7 +269,7 @@ struct GitRepositoryProtocolTests {
         }
 
         await #expect(throws: GitError.self) {
-            try await repo.switchToBranch("test")
+            try await repo.switchBranch("test")
         }
 
         await #expect(throws: GitError.self) {
