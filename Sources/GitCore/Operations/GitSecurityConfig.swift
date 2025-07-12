@@ -158,23 +158,27 @@ public class GitSecurityConfig {
         configLock.lock()
         defer { configLock.unlock() }
 
-        _resetToDefaultsInternal() // Start with clean defaults
+        // Reset to defaults first
+        _resetToDefaultsInternal()
 
+        // Apply strict configuration values
         maxCommitMessageLength = 2000
         maxAuthorLength = 128
         maxBranchNameLength = 100
         maxFilePathLength = 1000
         maxInputLength = 500
+        maxDirectoryDepth = 5
 
+        // Configure strict protocol settings
         allowedProtocols = Set(["https://", "ssh://"]) // Only secure protocols
-        dangerousProtocols.insert("git://") // Block insecure git protocol
+        dangerousProtocols = Set(["file://", "ftp://", "javascript:", "data:", "http://", "git://"])
 
+        // Apply strict policy flags
         allowLocalFileAccess = false
         allowHTTPProtocol = false
         strictAuthorValidation = true
         allowEmptyCommitMessages = false
         validateGitPath = true
-        maxDirectoryDepth = 5
     }
 
     /// Applies a permissive security profile (for development)
@@ -182,24 +186,29 @@ public class GitSecurityConfig {
         configLock.lock()
         defer { configLock.unlock() }
 
-        _resetToDefaultsInternal() // Start with clean defaults
+        // Reset to defaults first
+        _resetToDefaultsInternal()
 
+        // Apply permissive configuration values
         maxCommitMessageLength = 10000
         maxAuthorLength = 512
         maxBranchNameLength = 500
         maxFilePathLength = 8192
         maxInputLength = 2000
+        maxDirectoryDepth = 20
 
-        // Reset protocol sets and configure for permissive mode
+        // Configure permissive protocol settings
         allowedProtocols = Set(["https://", "git://", "ssh://", "git@", "http://"])
+        // Explicitly remove http:// from dangerous protocols for permissive mode
         dangerousProtocols = Set(["file://", "ftp://", "javascript:", "data:"])
+        dangerousProtocols.remove("http://")
 
+        // Apply permissive policy flags
         allowLocalFileAccess = true
         allowHTTPProtocol = true
         strictAuthorValidation = false
         allowEmptyCommitMessages = true
         validateGitPath = false
-        maxDirectoryDepth = 20
     }
 
     // MARK: - Validation Integration

@@ -346,6 +346,9 @@ struct GitSecurityConfigTests {
             config.strictAuthorValidation = true
             config.allowEmptyCommitMessages = false
             config.validateGitPath = true
+            // Also reset missing properties
+            config.maxFilePathLength = 4096
+            config.maxInputLength = 1000
         }
 
         #expect(config.maxCommitMessageLength == 2000)
@@ -372,8 +375,14 @@ struct GitSecurityConfigTests {
         config.applyPermissiveProfile()
 
         // Verify protocol sets are correctly configured for permissive mode
-        #expect(config.allowedProtocols.contains("http://"), "HTTP should be in allowedProtocols for permissive mode")
-        #expect(!config.dangerousProtocols.contains("http://"), "HTTP should NOT be in dangerousProtocols for permissive mode")
+        #expect(
+            config.allowedProtocols.contains("http://"),
+            "HTTP should be in allowedProtocols for permissive mode"
+        )
+        #expect(
+            !config.dangerousProtocols.contains("http://"),
+            "HTTP should NOT be in dangerousProtocols for permissive mode"
+        )
 
         // Verify the changes took effect immediately
         #expect(config.maxCommitMessageLength == 10000)
