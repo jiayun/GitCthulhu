@@ -10,6 +10,7 @@ import SwiftUI
 import Testing
 @testable import UIKit
 
+@MainActor
 struct RepositoryInfoPanelTests {
     @Test
     func infoRowInitialization() async throws {

@@ -31,8 +31,6 @@ let package = Package(
         )
     ],
     dependencies: [
-        // Testing framework
-        .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0")
         // TODO: Add libgit2 dependency when SPM support is stable
         // .package(url: "https://github.com/light-tech/SwiftGit2.git", branch: "spm")
     ],
@@ -87,8 +85,7 @@ let package = Package(
                 "GitCthulhu",
                 "GitCore",
                 "UIKit",
-                "Utilities",
-                .product(name: "Testing", package: "swift-testing")
+                "Utilities"
             ],
             path: "Tests/GitCthulhuTests"
         ),
@@ -97,8 +94,7 @@ let package = Package(
             name: "GitCoreTests",
             dependencies: [
                 "GitCore",
-                "Utilities",
-                .product(name: "Testing", package: "swift-testing")
+                "Utilities"
             ],
             path: "Tests/GitCoreTests"
         ),
@@ -107,8 +103,7 @@ let package = Package(
             name: "UITests",
             dependencies: [
                 "UIKit",
-                "GitCore",
-                .product(name: "Testing", package: "swift-testing")
+                "GitCore"
             ],
             path: "Tests/UITests"
         )
