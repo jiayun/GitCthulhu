@@ -47,11 +47,11 @@ struct GitInputValidatorAdvancedTests {
     @Test("Unicode and encoding attacks")
     func unicodeAndEncodingAttacks() async throws {
         let unicodeAttacks = [
-            "../../etc/passwd", // Directory traversal
-            "%2e%2e%2f%2e%2e%2f", // URL encoded traversal
-            "\u{0000}", // Null byte
-            "\u{001b}[31mEvil\u{001b}[0m", // ANSI escape
-            "＜script＞alert('xss')＜/script＞" // Full-width characters
+            "../../etc/passwd",
+            "%2e%2e%2f%2e%2e%2f",
+            "\u{0000}",
+            "\u{001b}[31mEvil\u{001b}[0m",
+            "＜script＞alert('xss')＜/script＞"
         ]
 
         for attack in unicodeAttacks {
@@ -80,7 +80,6 @@ struct GitInputValidatorAdvancedTests {
 
     @Test("Performance with large inputs")
     func performanceWithLargeInputs() async throws {
-        // Create a very large input string
         let largeInput = String(repeating: "a", count: 10000)
 
         #expect(throws: GitError.self) {
@@ -99,7 +98,7 @@ struct GitInputValidatorAdvancedTests {
         ]
 
         await withTaskGroup(of: Void.self) { group in
-            for _ in 0..<50 {
+            for _ in 0 ..< 50 {
                 group.addTask {
                     for input in testInputs {
                         do {
@@ -112,7 +111,7 @@ struct GitInputValidatorAdvancedTests {
             }
         }
 
-        #expect(true) // If we get here, no crashes occurred
+        #expect(true)
     }
 
     // MARK: - Real-world Attack Vectors
@@ -137,7 +136,7 @@ struct GitInputValidatorAdvancedTests {
     func pathTraversalVariations() async throws {
         let traversalPatterns = [
             "../../../etc/passwd",
-            "..\\..\\..\\windows\\system32\\",
+            "..\\\\..\\\\..\\\\windows\\\\system32\\\\",
             ".././.././.././etc/passwd",
             "%2e%2e%2fetc%2fpasswd",
             "....//....//etc/passwd",
@@ -161,9 +160,9 @@ struct GitInputValidatorAdvancedTests {
             "dict://evil.com:2628/show:banner"
         ]
 
-        for protocol in protocolAbuse {
+        for `protocol` in protocolAbuse {
             #expect(throws: GitError.self) {
-                try GitInputValidator.validateRemoteURL(protocol)
+                try GitInputValidator.validateRemoteURL(`protocol`)
             }
         }
     }

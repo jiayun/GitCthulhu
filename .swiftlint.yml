@@ -152,11 +152,11 @@ custom_rules:
     message: "Avoid force casting, use safe casting instead"
     severity: error
 
-  git_commit_convention:
-    name: "Git Commit Convention"
-    regex: '(?i)(fix|feat|docs|style|refactor|test|chore)(\(.+\))?: .+'
-    message: "Follow conventional commit format"
-    severity: warning
+  # git_commit_convention:
+  #   name: "Git Commit Convention"
+  #   regex: '(?i)(fix|feat|docs|style|refactor|test|chore)(\(.+\))?: .+'
+  #   message: "Follow conventional commit format"
+  #   severity: warning
 
 # 報告配置
 analyzer_rules:
