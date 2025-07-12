@@ -99,7 +99,7 @@ struct GitInputValidatorAdvancedTests {
         ]
 
         await withTaskGroup(of: Void.self) { group in
-            for _ in 0 ..< 50 {
+            for _ in 0..<50 {
                 group.addTask {
                     for input in testInputs {
                         do {
