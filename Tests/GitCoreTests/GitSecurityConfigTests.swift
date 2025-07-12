@@ -360,5 +360,4 @@ struct GitSecurityConfigTests {
         #expect(config.maxCommitMessageLength == 5000)
         #expect(config.strictAuthorValidation == true)
     }
-
 }

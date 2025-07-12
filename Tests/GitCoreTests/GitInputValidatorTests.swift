@@ -340,5 +340,4 @@ struct GitInputValidatorTests {
             _ = try GitInputValidator.sanitizeInput(input, maxLength: 10)
         }
     }
-
 }
