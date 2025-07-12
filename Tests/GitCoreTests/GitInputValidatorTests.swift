@@ -10,7 +10,6 @@ import Foundation
 import Testing
 
 struct GitInputValidatorTests {
-
     // MARK: - Argument Validation Tests
 
     @Test("Valid arguments pass validation")

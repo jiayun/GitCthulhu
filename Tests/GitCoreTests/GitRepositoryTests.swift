@@ -10,10 +10,10 @@ import Foundation
 import Testing
 
 struct GitRepositoryTests {
-
     // MARK: - Initialization Tests
 
-    @Test("Repository initialization with valid path") @MainActor
+    @MainActor
+    @Test("Repository initialization with valid path")
     func repositoryInitializationWithValidPath() async throws {
         // Use current directory which should have .git folder
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -29,7 +29,8 @@ struct GitRepositoryTests {
         #expect(repo.isLoading == false)
     }
 
-    @Test("Repository initialization with invalid path") @MainActor
+    @MainActor
+    @Test("Repository initialization with invalid path")
     func repositoryInitializationWithInvalidPath() async throws {
         let invalidDir = URL(fileURLWithPath: "/tmp/non-git-repo-\(UUID().uuidString)")
 
@@ -45,7 +46,8 @@ struct GitRepositoryTests {
         }
     }
 
-    @Test("Repository creation via factory method") @MainActor
+    @MainActor
+    @Test("Repository creation via factory method")
     func repositoryCreationViaFactoryMethod() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 
@@ -59,7 +61,8 @@ struct GitRepositoryTests {
 
     // MARK: - Repository Validation Tests
 
-    @Test("Valid repository check") @MainActor
+    @MainActor
+    @Test("Valid repository check")
     func validRepositoryCheck() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -68,7 +71,8 @@ struct GitRepositoryTests {
         #expect(isValid == true)
     }
 
-    @Test("Repository root path") @MainActor
+    @MainActor
+    @Test("Repository root path")
     func repositoryRootPath() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -79,17 +83,21 @@ struct GitRepositoryTests {
 
     // MARK: - Branch Operations Tests
 
-    @Test("Get current branch") @MainActor
+    @MainActor
+    @Test("Get current branch")
     func getCurrentBranch() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
         let currentBranch = try await repo.getCurrentBranch()
         #expect(currentBranch != nil)
-        #expect(!currentBranch!.isEmpty)
+        if let branch = currentBranch {
+            #expect(!branch.isEmpty)
+        }
     }
 
-    @Test("Get all branches") @MainActor
+    @MainActor
+    @Test("Get all branches")
     func getAllBranches() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -99,28 +107,31 @@ struct GitRepositoryTests {
         #expect(branches.contains("main") || branches.contains("master"))
     }
 
-    @Test("Get remote branches") @MainActor
+    @MainActor
+    @Test("Get remote branches")
     func getRemoteBranches() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
         // Remote branches might be empty in some setups, so just check it doesn't throw
         let remoteBranches = try await repo.getRemoteBranches()
-        #expect(remoteBranches.count >= 0)
+        #expect(remoteBranches.isEmpty)
     }
 
     // MARK: - Status Operations Tests
 
-    @Test("Get repository status") @MainActor
+    @MainActor
+    @Test("Get repository status")
     func getRepositoryStatus() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
         let status = try await repo.getRepositoryStatus()
-        #expect(status.count >= 0) // Status can be empty in clean repo
+        #expect(status.isEmpty) // Status can be empty in clean repo
     }
 
-    @Test("Refresh status") @MainActor
+    @MainActor
+    @Test("Refresh status")
     func refreshStatus() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -132,7 +143,8 @@ struct GitRepositoryTests {
 
     // MARK: - Git Status Conversion Tests
 
-    @Test("Git status code conversion") @MainActor
+    @MainActor
+    @Test("Git status code conversion")
     func gitStatusCodeConversion() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -155,7 +167,8 @@ struct GitRepositoryTests {
 
     // MARK: - Commit History Tests
 
-    @Test("Get commit history") @MainActor
+    @MainActor
+    @Test("Get commit history")
     func getCommitHistory() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -164,7 +177,8 @@ struct GitRepositoryTests {
         #expect(!history.isEmpty) // Should have at least some commits
     }
 
-    @Test("Get commit history with default parameters") @MainActor
+    @MainActor
+    @Test("Get commit history with default parameters")
     func getCommitHistoryWithDefaults() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -175,30 +189,33 @@ struct GitRepositoryTests {
 
     // MARK: - Diff Operations Tests
 
-    @Test("Get diff for entire repository") @MainActor
+    @MainActor
+    @Test("Get diff for entire repository")
     func getDiffForEntireRepository() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
         // Should not throw even if there's no diff
         let diff = try await repo.getDiff(filePath: nil, staged: false)
-        #expect(diff.count >= 0) // Diff can be empty
+        #expect(diff.isEmpty) // Diff can be empty
     }
 
     // MARK: - Remote Operations Tests
 
-    @Test("Get remotes") @MainActor
+    @MainActor
+    @Test("Get remotes")
     func getRemotes() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
 
         let remotes = try await repo.getRemotes()
-        #expect(remotes.count >= 0) // Remotes can be empty
+        #expect(remotes.isEmpty) // Remotes can be empty
     }
 
     // MARK: - Resource Management Tests
 
-    @Test("Repository close") @MainActor
+    @MainActor
+    @Test("Repository close")
     func repositoryClose() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -210,7 +227,8 @@ struct GitRepositoryTests {
 
     // MARK: - Debounce Tests
 
-    @Test("Debounced refresh") @MainActor
+    @MainActor
+    @Test("Debounced refresh")
     func debouncedRefresh() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -229,7 +247,8 @@ struct GitRepositoryTests {
 
     // MARK: - Error Handling Tests
 
-    @Test("Handle executor errors gracefully") @MainActor
+    @MainActor
+    @Test("Handle executor errors gracefully")
     func handleExecutorErrorsGracefully() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -261,7 +280,8 @@ struct GitRepositoryTests {
 
     // MARK: - Performance Tests
 
-    @Test("Multiple concurrent operations") @MainActor
+    @MainActor
+    @Test("Multiple concurrent operations")
     func multipleConcurrentOperations() async throws {
         let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let repo = try GitRepository(url: currentDir)
@@ -275,9 +295,9 @@ struct GitRepositoryTests {
         let results = try await (branches, status, currentBranch, remotes)
 
         #expect(!results.0.isEmpty) // branches
-        #expect(results.1.count >= 0) // status
+        #expect(results.1.isEmpty) // status
         #expect(results.2 != nil) // current branch
-        #expect(results.3.count >= 0) // remotes
+        #expect(results.3.isEmpty) // remotes
     }
 }
 
@@ -287,16 +307,16 @@ struct GitRepositoryTests {
 extension GitRepository {
     /// Helper method for testing to check internal state
     func getInternalLoadingState() -> Bool {
-        return isLoading
+        isLoading
     }
 
     /// Helper method for testing to get branch count
     func getBranchCount() -> Int {
-        return branches.count
+        branches.count
     }
 
     /// Helper method for testing to get status count
     func getStatusCount() -> Int {
-        return status.count
+        status.count
     }
 }

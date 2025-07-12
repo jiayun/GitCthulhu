@@ -9,7 +9,6 @@ import Foundation
 
 /// Configuration class for Git security policies and validation rules
 public class GitSecurityConfig {
-
     // MARK: - Singleton Pattern
 
     public static let shared = GitSecurityConfig()
@@ -43,13 +42,13 @@ public class GitSecurityConfig {
     public var suspiciousPatterns: Set<String> = ["--exec", "--upload-pack", "--receive-pack"]
 
     /// Dangerous shell characters that should be blocked in arguments
-    public var dangerousChars: CharacterSet = CharacterSet(charactersIn: ";|&$`<>")
+    public var dangerousChars: CharacterSet = .init(charactersIn: ";|&$`<>")
 
     /// Control characters that should be blocked in inputs
-    public var controlChars: CharacterSet = CharacterSet(charactersIn: "\0\r\n")
+    public var controlChars: CharacterSet = .init(charactersIn: "\0\r\n")
 
     /// Characters not allowed in branch names
-    public var invalidBranchChars: CharacterSet = CharacterSet(charactersIn: " ~^:?*[\\")
+    public var invalidBranchChars: CharacterSet = .init(charactersIn: " ~^:?*[\\")
 
     // MARK: - Permission Configuration
 
@@ -77,7 +76,7 @@ public class GitSecurityConfig {
     public func isProtocolAllowed(_ protocolString: String) -> Bool {
         let lowercaseProtocol = protocolString.lowercased()
 
-        // Check if it's explicitly dangerous
+        // Check if protocol is explicitly dangerous
         if dangerousProtocols.contains(where: { lowercaseProtocol.hasPrefix($0) }) {
             return false
         }
@@ -93,22 +92,22 @@ public class GitSecurityConfig {
 
     /// Validates if an argument pattern is suspicious
     public func isSuspiciousPattern(_ argument: String) -> Bool {
-        return suspiciousPatterns.contains(where: { argument.hasPrefix($0) })
+        suspiciousPatterns.contains(where: { argument.hasPrefix($0) })
     }
 
     /// Validates if a string contains dangerous characters
     public func containsDangerousChars(_ input: String) -> Bool {
-        return input.rangeOfCharacter(from: dangerousChars) != nil
+        input.rangeOfCharacter(from: dangerousChars) != nil
     }
 
     /// Validates if a string contains control characters
     public func containsControlChars(_ input: String) -> Bool {
-        return input.rangeOfCharacter(from: controlChars) != nil
+        input.rangeOfCharacter(from: controlChars) != nil
     }
 
     /// Validates if a branch name contains invalid characters
     public func containsInvalidBranchChars(_ branchName: String) -> Bool {
-        return branchName.rangeOfCharacter(from: invalidBranchChars) != nil
+        branchName.rangeOfCharacter(from: invalidBranchChars) != nil
     }
 
     /// Validates if a path is within allowed directory depth
@@ -152,8 +151,8 @@ public class GitSecurityConfig {
         maxFilePathLength = 1000
         maxInputLength = 500
 
-        allowedProtocols = Set(["https://", "ssh://"])  // Only secure protocols
-        dangerousProtocols.insert("git://")  // Block insecure git protocol
+        allowedProtocols = Set(["https://", "ssh://"]) // Only secure protocols
+        dangerousProtocols.insert("git://") // Block insecure git protocol
 
         allowLocalFileAccess = false
         allowHTTPProtocol = false
@@ -198,7 +197,7 @@ public class GitSecurityConfig {
         switch type {
         case .commitMessage:
             maxLength = maxCommitMessageLength
-            if !allowEmptyCommitMessages && trimmed.isEmpty {
+            if !allowEmptyCommitMessages, trimmed.isEmpty {
                 throw GitError.commitFailed("Commit message cannot be empty")
             }
         case .author:
@@ -238,7 +237,6 @@ public class GitSecurityConfig {
 
 /// Security audit functionality
 public extension GitSecurityConfig {
-
     /// Performs a security audit of current configuration
     func performSecurityAudit() -> SecurityAuditResult {
         var issues: [SecurityIssue] = []
@@ -277,20 +275,19 @@ public extension GitSecurityConfig {
 
         // Check for dangerous protocols in allowed list
         for protocolString in allowedProtocols {
-            if dangerousProtocols.contains(protocolString) && protocolString != "http://" {
+            if dangerousProtocols.contains(protocolString), protocolString != "http://" {
                 issues.append(.insecureProtocol("Dangerous protocol '\(protocolString)' is allowed"))
                 recommendations.append("Remove '\(protocolString)' from allowed protocols")
             }
         }
 
         // Determine security level
-        let securityLevel: SecurityLevel
-        if issues.isEmpty {
-            securityLevel = .high
+        let securityLevel: SecurityLevel = if issues.isEmpty {
+            .high
         } else if issues.count <= 2 {
-            securityLevel = .medium
+            .medium
         } else {
-            securityLevel = .low
+            .low
         }
 
         return SecurityAuditResult(
@@ -307,7 +304,7 @@ public extension GitSecurityConfig {
         let recommendations: [String]
 
         var isSecure: Bool {
-            return securityLevel == .high
+            securityLevel == .high
         }
     }
 
@@ -319,9 +316,9 @@ public extension GitSecurityConfig {
 
         var description: String {
             switch self {
-            case .high: return "High - Configuration is secure"
-            case .medium: return "Medium - Minor security concerns"
-            case .low: return "Low - Significant security issues"
+            case .high: "High - Configuration is secure"
+            case .medium: "Medium - Minor security concerns"
+            case .low: "Low - Significant security issues"
             }
         }
     }
@@ -335,10 +332,10 @@ public extension GitSecurityConfig {
 
         var description: String {
             switch self {
-            case .insecureProtocol(let details): return "Insecure Protocol: \(details)"
-            case .localFileAccess(let details): return "Local File Access: \(details)"
-            case .weakValidation(let details): return "Weak Validation: \(details)"
-            case .excessiveLimit(let details): return "Excessive Limit: \(details)"
+            case let .insecureProtocol(details): "Insecure Protocol: \(details)"
+            case let .localFileAccess(details): "Local File Access: \(details)"
+            case let .weakValidation(details): "Weak Validation: \(details)"
+            case let .excessiveLimit(details): "Excessive Limit: \(details)"
             }
         }
     }

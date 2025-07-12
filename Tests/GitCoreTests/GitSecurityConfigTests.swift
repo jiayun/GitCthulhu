@@ -10,7 +10,6 @@ import Foundation
 import Testing
 
 struct GitSecurityConfigTests {
-
     // MARK: - Initialization Tests
 
     @Test("Singleton instance")
@@ -224,7 +223,7 @@ struct GitSecurityConfigTests {
             "file.txt",
             "dir/file.txt",
             "dir1/dir2/file.txt",
-            "dir1/dir2/dir3/file.txt"  // Exactly at limit
+            "dir1/dir2/dir3/file.txt" // Exactly at limit
         ]
 
         for path in validPaths {
@@ -308,7 +307,7 @@ struct GitSecurityConfigTests {
     @Test("Strict security profile")
     func strictSecurityProfile() async throws {
         let config = GitSecurityConfig.shared
-        config.resetToDefaults()  // Start with clean state
+        config.resetToDefaults() // Start with clean state
         config.applyStrictProfile()
 
         #expect(config.maxCommitMessageLength == 2000)
@@ -329,7 +328,7 @@ struct GitSecurityConfigTests {
     @Test("Permissive security profile")
     func permissiveSecurityProfile() async throws {
         let config = GitSecurityConfig.shared
-        config.resetToDefaults()  // Start with clean state
+        config.resetToDefaults() // Start with clean state
         config.applyPermissiveProfile()
 
         #expect(config.maxCommitMessageLength == 10000)

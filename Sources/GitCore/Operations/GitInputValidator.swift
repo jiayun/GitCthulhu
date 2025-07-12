@@ -107,7 +107,7 @@ enum GitInputValidator {
         }
 
         // Basic email format validation if angle brackets are present
-        if trimmed.contains("<") && trimmed.contains(">") {
+        if trimmed.contains("<"), trimmed.contains(">") {
             let emailPattern = #"^[^<>]*<[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}>$"#
             let regex = try NSRegularExpression(pattern: emailPattern)
             let range = NSRange(location: 0, length: trimmed.utf16.count)
@@ -148,10 +148,8 @@ enum GitInputValidator {
 
         // Prevent local file access and dangerous protocols
         let dangerousProtocols = ["file://", "ftp://", "javascript:", "data:"]
-        for dangerous in dangerousProtocols {
-            if trimmed.lowercased().hasPrefix(dangerous) {
-                throw GitError.permissionDenied
-            }
+        for dangerous in dangerousProtocols where trimmed.lowercased().hasPrefix(dangerous) {
+            throw GitError.permissionDenied
         }
 
         return trimmed
@@ -168,10 +166,8 @@ enum GitInputValidator {
             "/opt/local/bin/git"
         ]
 
-        for path in commonPaths {
-            if FileManager.default.isExecutableFile(atPath: path) {
-                return path
-            }
+        for path in commonPaths where FileManager.default.isExecutableFile(atPath: path) {
+            return path
         }
 
         // Fallback to system PATH
@@ -187,12 +183,12 @@ enum GitInputValidator {
 
         // Prevent path traversal and dangerous paths
         if trimmed.contains("../") || trimmed.contains("..\\") ||
-           trimmed.contains(";") || trimmed.contains("|") || trimmed.contains("&") {
+            trimmed.contains(";") || trimmed.contains("|") || trimmed.contains("&") {
             throw GitError.permissionDenied
         }
 
         // Must be an absolute path or just "git"
-        if trimmed != "git" && !trimmed.hasPrefix("/") {
+        if trimmed != "git", !trimmed.hasPrefix("/") {
             throw GitError.invalidRepositoryPath
         }
 
