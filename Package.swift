@@ -32,8 +32,9 @@ let package = Package(
     ],
     dependencies: [
         // Testing framework
-        .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0")
-        // Note: libgit2 dependency will be added in future sprint
+        .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0"),
+        // libgit2 Swift wrapper
+        .package(url: "https://github.com/SwiftGit2/SwiftGit2.git", from: "1.5.3")
     ],
     targets: [
         // MARK: - Main Application
@@ -54,8 +55,8 @@ let package = Package(
         .target(
             name: "GitCore",
             dependencies: [
-                "Utilities"
-                // SwiftGit2 will be added in future sprint
+                "Utilities",
+                .product(name: "SwiftGit2", package: "SwiftGit2")
             ],
             path: "Sources/GitCore"
         ),
