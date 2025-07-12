@@ -361,9 +361,12 @@ struct GitSecurityConfigTests {
     @Test("Permissive security profile")
     func permissiveSecurityProfile() async throws {
         let config = GitSecurityConfig.shared
-        config.resetToDefaults() // Start with clean state
+
+        // Force complete reset and apply permissive profile
+        config.resetToDefaults()
         config.applyPermissiveProfile()
 
+        // Verify the changes took effect immediately
         #expect(config.maxCommitMessageLength == 10000)
         #expect(config.maxAuthorLength == 512)
         #expect(config.maxBranchNameLength == 500)
@@ -377,6 +380,9 @@ struct GitSecurityConfigTests {
         #expect(config.strictAuthorValidation == false)
         #expect(config.allowEmptyCommitMessages == true)
         #expect(config.validateGitPath == false)
+
+        // Reset back to defaults after test to avoid affecting other tests
+        config.resetToDefaults()
     }
 
     @Test("Reset to defaults")

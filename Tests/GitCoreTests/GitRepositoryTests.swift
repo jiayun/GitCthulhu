@@ -106,12 +106,19 @@ struct GitRepositoryTests {
         #expect(!branches.isEmpty)
 
         // Get current branch and verify it's in the branch list
-        let currentBranch = try await repo.getCurrentBranch()
-        if let currentBranch = currentBranch {
-            #expect(branches.contains(currentBranch))
-        } else {
+        guard let currentBranch = try await repo.getCurrentBranch() else {
             // If no current branch (detached HEAD), just verify branches exist
             #expect(!branches.isEmpty)
+            return
+        }
+
+        // Handle detached HEAD state in CI environment
+        if currentBranch == "HEAD" {
+            // In detached HEAD, check if there's a branch describing the detached state
+            let hasDetachedInfo = branches.contains { $0.contains("HEAD detached") }
+            #expect(hasDetachedInfo || branches.contains(currentBranch))
+        } else {
+            #expect(branches.contains(currentBranch))
         }
     }
 
