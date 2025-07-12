@@ -33,10 +33,12 @@ let package = Package(
     dependencies: [
         // Testing framework
         .package(url: "https://github.com/apple/swift-testing.git", from: "0.4.0")
-        // Note: libgit2 dependency will be added in future sprint
+        // TODO: Add libgit2 dependency when SPM support is stable
+        // .package(url: "https://github.com/light-tech/SwiftGit2.git", branch: "spm")
     ],
     targets: [
         // MARK: - Main Application
+
         .executableTarget(
             name: "GitCthulhu",
             dependencies: [
@@ -51,11 +53,13 @@ let package = Package(
         ),
 
         // MARK: - Core Libraries
+
         .target(
             name: "GitCore",
             dependencies: [
                 "Utilities"
-                // SwiftGit2 will be added in future sprint
+                // TODO: Re-enable when libgit2 dependency is working
+                // .product(name: "SwiftGit2", package: "SwiftGit2")
             ],
             path: "Sources/GitCore"
         ),
@@ -76,6 +80,7 @@ let package = Package(
         ),
 
         // MARK: - Tests
+
         .testTarget(
             name: "GitCthulhuTests",
             dependencies: [
@@ -85,7 +90,10 @@ let package = Package(
                 "Utilities",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/GitCthulhuTests"
+            path: "Tests/GitCthulhuTests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         ),
 
         .testTarget(
@@ -95,7 +103,10 @@ let package = Package(
                 "Utilities",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/GitCoreTests"
+            path: "Tests/GitCoreTests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         ),
 
         .testTarget(
@@ -105,7 +116,10 @@ let package = Package(
                 "GitCore",
                 .product(name: "Testing", package: "swift-testing")
             ],
-            path: "Tests/UITests"
+            path: "Tests/UITests",
+            swiftSettings: [
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         )
     ]
 )

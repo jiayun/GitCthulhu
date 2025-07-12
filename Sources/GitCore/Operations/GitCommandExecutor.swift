@@ -18,7 +18,10 @@ public class GitCommandExecutor {
 
     @discardableResult
     public func execute(_ arguments: [String]) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
+        // Validate all arguments before execution
+        try GitInputValidator.validateArguments(arguments)
+
+        return try await withCheckedThrowingContinuation { continuation in
             let process = setupProcess(with: arguments)
             let (pipe, errorPipe) = setupPipes(for: process)
 
@@ -158,20 +161,24 @@ public class GitCommandExecutor {
     }
 
     public func createBranch(_ name: String, from baseBranch: String? = nil) async throws {
-        var args = ["checkout", "-b", name]
+        let sanitizedName = try GitInputValidator.sanitizeBranchName(name)
+        var args = ["checkout", "-b", sanitizedName]
         if let base = baseBranch {
-            args.append(base)
+            let sanitizedBase = try GitInputValidator.sanitizeBranchName(base)
+            args.append(sanitizedBase)
         }
         try await execute(args)
     }
 
     public func switchBranch(_ name: String) async throws {
-        try await execute(["checkout", name])
+        let sanitizedName = try GitInputValidator.sanitizeBranchName(name)
+        try await execute(["checkout", sanitizedName])
     }
 
     public func deleteBranch(_ name: String, force: Bool = false) async throws {
+        let sanitizedName = try GitInputValidator.sanitizeBranchName(name)
         let flag = force ? "-D" : "-d"
-        try await execute(["branch", flag, name])
+        try await execute(["branch", flag, sanitizedName])
     }
 
     // MARK: - Status Operations
@@ -208,7 +215,8 @@ public class GitCommandExecutor {
     // MARK: - Staging Operations
 
     public func stageFile(_ filePath: String) async throws {
-        try await execute(["add", filePath])
+        let sanitizedPath = try GitInputValidator.sanitizeFilePath(filePath)
+        try await execute(["add", sanitizedPath])
     }
 
     public func stageAllFiles() async throws {
@@ -216,7 +224,8 @@ public class GitCommandExecutor {
     }
 
     public func unstageFile(_ filePath: String) async throws {
-        try await execute(["reset", "HEAD", filePath])
+        let sanitizedPath = try GitInputValidator.sanitizeFilePath(filePath)
+        try await execute(["reset", "HEAD", sanitizedPath])
     }
 
     public func unstageAllFiles() async throws {
@@ -226,8 +235,13 @@ public class GitCommandExecutor {
     // MARK: - Commit Operations
 
     public func commit(message: String, author: String? = nil) async throws -> String {
-        var args = ["commit", "-m", message]
+        let sanitizedMessage = try GitInputValidator.sanitizeCommitMessage(message)
+        var args = ["commit", "-m", sanitizedMessage]
         if let author {
+            // Basic validation for author string
+            if author.contains("\0") || author.isEmpty {
+                throw GitError.commitFailed("Invalid author format")
+            }
             args.append(contentsOf: ["--author", author])
         }
         return try await execute(args)
@@ -236,7 +250,8 @@ public class GitCommandExecutor {
     public func amendCommit(message: String? = nil) async throws -> String {
         var args = ["commit", "--amend"]
         if let message {
-            args.append(contentsOf: ["-m", message])
+            let sanitizedMessage = try GitInputValidator.sanitizeCommitMessage(message)
+            args.append(contentsOf: ["-m", sanitizedMessage])
         } else {
             args.append("--no-edit")
         }

@@ -9,6 +9,7 @@ import SwiftUI
 import Testing
 @testable import UIKit
 
+@MainActor
 struct EmptyStateTests {
     @Test
     func emptyStateCreation() async throws {
