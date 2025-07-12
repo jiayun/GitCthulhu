@@ -76,7 +76,7 @@ public class GitSecurityConfig {
     public func isProtocolAllowed(_ protocolString: String) -> Bool {
         let lowercaseProtocol = protocolString.lowercased()
 
-        // Check if protocol is explicitly dangerous
+        // Validate protocol against dangerous patterns
         if dangerousProtocols.contains(where: { lowercaseProtocol.hasPrefix($0) }) {
             return false
         }
