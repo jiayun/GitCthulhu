@@ -46,10 +46,7 @@ let package = Package(
                 "UIKit",
                 "Utilities"
             ],
-            path: "Sources/GitCthulhu",
-            resources: [
-                .process("Resources")
-            ]
+            path: "Sources/GitCthulhu"
         ),
 
         // MARK: - Core Libraries

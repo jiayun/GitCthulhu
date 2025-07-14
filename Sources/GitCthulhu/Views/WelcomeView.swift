@@ -10,7 +10,7 @@ import SwiftUI
 import Utilities
 
 struct WelcomeView: View {
-    @EnvironmentObject private var repositoryManager: RepositoryManager
+    @EnvironmentObject private var appViewModel: AppViewModel
     @State private var isDragOver = false
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -36,7 +36,7 @@ struct WelcomeView: View {
         } message: {
             Text(errorMessage)
         }
-        .onChange(of: repositoryManager.error, perform: handleRepositoryError)
+        .onChange(of: appViewModel.errorMessage, perform: handleRepositoryError)
     }
 
     // MARK: - View Components
@@ -61,18 +61,15 @@ struct WelcomeView: View {
     private var actionButtonsSection: some View {
         VStack(spacing: 16) {
             Button("Open Repository") {
-                Task {
-                    await repositoryManager.openRepositoryWithFileBrowser()
-                }
+                appViewModel.openRepository()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .frame(width: 200)
-            .disabled(repositoryManager.isLoading)
+            .disabled(appViewModel.isLoading)
 
             Button("Clone Repository") {
-                logger.info("Clone Repository button tapped")
-                // Clone repository functionality will be implemented in future sprint
+                appViewModel.cloneRepository()
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
@@ -82,7 +79,7 @@ struct WelcomeView: View {
 
     private var recentRepositoriesSection: some View {
         Group {
-            if !repositoryManager.recentRepositories.isEmpty {
+            if !appViewModel.repositories.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Recent Repositories")
                         .font(.headline)
@@ -90,8 +87,8 @@ struct WelcomeView: View {
 
                     ScrollView {
                         VStack(spacing: 8) {
-                            ForEach(repositoryManager.recentRepositories, id: \.self) { url in
-                                RecentRepositoryRow(url: url)
+                            ForEach(appViewModel.repositories) { repository in
+                                RecentRepositoryRow(repository: repository)
                             }
                         }
                     }
@@ -104,7 +101,7 @@ struct WelcomeView: View {
 
     private var statusSection: some View {
         VStack(spacing: 8) {
-            if repositoryManager.isLoading {
+            if appViewModel.isLoading {
                 HStack {
                     ProgressView()
                         .scaleEffect(0.8)
@@ -146,44 +143,43 @@ struct WelcomeView: View {
         guard let url = url as? URL else { return }
 
         Task { @MainActor in
-            if repositoryManager.validateRepositoryPath(url) {
-                await repositoryManager.openRepository(at: url)
-            } else {
-                errorMessage = "Selected folder is not a Git repository"
+            do {
+                try await appViewModel.loadRepository(at: url.path)
+            } catch {
+                errorMessage = "Failed to open repository: \(error.localizedDescription)"
                 showingError = true
             }
         }
     }
 
-    private func handleRepositoryError(_ newError: GitError?) {
+    private func handleRepositoryError(_ newError: String?) {
         if let error = newError {
-            errorMessage = error.localizedDescription
+            errorMessage = error
             showingError = true
         }
     }
 }
 
 struct RecentRepositoryRow: View {
-    let url: URL
-    @EnvironmentObject private var repositoryManager: RepositoryManager
-    @State private var repositoryInfo: RepositoryInfo?
+    let repository: GitRepository
+    @EnvironmentObject private var appViewModel: AppViewModel
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(repositoryInfo?.name ?? url.lastPathComponent)
+                Text(repository.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
 
                 HStack {
-                    Text(url.path)
+                    Text(repository.url.path)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
 
-                    if let branch = repositoryInfo?.branch {
-                        Text("• \(branch)")
+                    if let branch = repository.currentBranch {
+                        Text("• \(branch.shortName)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -193,9 +189,7 @@ struct RecentRepositoryRow: View {
             Spacer()
 
             Button {
-                Task {
-                    await repositoryManager.openRepository(at: url)
-                }
+                appViewModel.selectRepository(repository)
             } label: {
                 Image(systemName: "arrow.right.circle")
                     .foregroundColor(.blue)
@@ -206,16 +200,11 @@ struct RecentRepositoryRow: View {
         .padding(.vertical, 8)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(8)
-        .onAppear {
-            Task {
-                repositoryInfo = await repositoryManager.getRepositoryInfo(at: url)
-            }
-        }
     }
 }
 
 #Preview {
     WelcomeView()
         .frame(width: 600, height: 400)
-        .environmentObject(RepositoryManager())
+        .environmentObject(AppViewModel())
 }

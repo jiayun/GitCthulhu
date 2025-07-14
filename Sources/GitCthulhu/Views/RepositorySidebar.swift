@@ -9,12 +9,12 @@ import GitCore
 import SwiftUI
 
 struct RepositorySidebar: View {
-    @EnvironmentObject private var repositoryManager: RepositoryManager
+    @EnvironmentObject private var viewModel: RepositorySidebarViewModel
 
     var body: some View {
         List {
             currentRepositorySection
-            recentRepositoriesSection
+            repositoriesSection
             actionsSection
         }
         .navigationTitle("GitCthulhu")
@@ -24,7 +24,7 @@ struct RepositorySidebar: View {
                 Button(action: openRepositoryAction) {
                     Image(systemName: "plus")
                 }
-                .disabled(repositoryManager.isLoading)
+                .disabled(viewModel.isLoading)
             }
         }
     }
@@ -33,14 +33,15 @@ struct RepositorySidebar: View {
 
     private var currentRepositorySection: some View {
         Group {
-            if let currentRepo = repositoryManager.currentRepository {
+            if let selectedRepository = viewModel.repositories
+                .first(where: { $0.id == viewModel.selectedRepositoryId }) {
                 Section("Current Repository") {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(currentRepo.name)
+                        Text(selectedRepository.name)
                             .font(.headline)
                             .foregroundColor(.primary)
 
-                        if let branch = currentRepo.currentBranch {
+                        if let branch = selectedRepository.currentBranch {
                             HStack {
                                 Image(systemName: "arrow.triangle.branch")
                                     .foregroundColor(.blue)
@@ -50,7 +51,7 @@ struct RepositorySidebar: View {
                             }
                         }
 
-                        Text(currentRepo.url.path)
+                        Text(selectedRepository.url.path)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(2)
@@ -61,15 +62,15 @@ struct RepositorySidebar: View {
         }
     }
 
-    private var recentRepositoriesSection: some View {
-        Section("Recent Repositories") {
-            if repositoryManager.recentRepositories.isEmpty {
-                Text("No recent repositories")
+    private var repositoriesSection: some View {
+        Section("Repositories") {
+            if viewModel.repositories.isEmpty {
+                Text("No repositories")
                     .foregroundColor(.secondary)
                     .font(.subheadline)
             } else {
-                ForEach(repositoryManager.recentRepositories, id: \.self) { url in
-                    SidebarRepositoryRow(url: url)
+                ForEach(viewModel.repositories) { repository in
+                    SidebarRepositoryRow(repository: repository)
                 }
             }
         }
@@ -80,63 +81,47 @@ struct RepositorySidebar: View {
             Button(action: openRepositoryAction) {
                 Label("Open Repository", systemImage: "folder.badge.plus")
             }
-            .disabled(repositoryManager.isLoading)
+            .disabled(viewModel.isLoading)
 
             Button(action: cloneRepositoryAction) {
                 Label("Clone Repository", systemImage: "square.and.arrow.down")
             }
-            .disabled(repositoryManager.isLoading)
-
-            if !repositoryManager.recentRepositories.isEmpty {
-                Button(action: clearRecentAction) {
-                    Label("Clear Recent", systemImage: "trash")
-                }
-                .foregroundColor(.red)
-            }
+            .disabled(viewModel.isLoading)
         }
     }
 
     // MARK: - Actions
 
     private func openRepositoryAction() {
-        Task {
-            await repositoryManager.openRepositoryWithFileBrowser()
-        }
+        viewModel.openRepository()
     }
 
     private func cloneRepositoryAction() {
-        // Clone repository functionality will be implemented in future sprint
-    }
-
-    private func clearRecentAction() {
-        repositoryManager.clearRecentRepositories()
+        viewModel.cloneRepository()
     }
 }
 
 struct SidebarRepositoryRow: View {
-    let url: URL
-    @EnvironmentObject private var repositoryManager: RepositoryManager
-    @State private var repositoryInfo: RepositoryInfo?
+    let repository: GitRepository
+    @EnvironmentObject private var viewModel: RepositorySidebarViewModel
 
     var body: some View {
         Button(action: {
-            Task {
-                await repositoryManager.openRepository(at: url)
-            }
+            viewModel.selectRepository(repository)
         }) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(repositoryInfo?.name ?? url.lastPathComponent)
+                    Text(repository.name)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
 
-                    if let branch = repositoryInfo?.branch {
+                    if let branch = repository.currentBranch {
                         HStack {
                             Image(systemName: "arrow.triangle.branch")
                                 .font(.caption)
                                 .foregroundColor(.blue)
-                            Text(branch)
+                            Text(branch.shortName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -145,8 +130,8 @@ struct SidebarRepositoryRow: View {
 
                 Spacer()
 
-                // Show indicator if this is the current repository
-                if repositoryManager.currentRepository?.url == url {
+                // Show indicator if this is the selected repository
+                if viewModel.isSelected(repository) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.caption)
@@ -155,23 +140,19 @@ struct SidebarRepositoryRow: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Remove from Recent") {
-                repositoryManager.removeFromRecentRepositories(url)
+            Button("Remove Repository") {
+                viewModel.removeRepository(repository)
             }
 
             Button("Show in Finder") {
-                NSWorkspace.shared.open(url)
-            }
-        }
-        .onAppear {
-            Task {
-                repositoryInfo = await repositoryManager.getRepositoryInfo(at: url)
+                NSWorkspace.shared.open(repository.url)
             }
         }
     }
 }
 
 #Preview {
-    RepositorySidebar()
-        .environmentObject(RepositoryManager())
+    let appViewModel = AppViewModel()
+    return RepositorySidebar()
+        .environmentObject(RepositorySidebarViewModel(appViewModel: appViewModel))
 }

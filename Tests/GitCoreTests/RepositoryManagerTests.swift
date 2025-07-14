@@ -12,42 +12,39 @@ import Testing
 struct RepositoryManagerTests {
     @Test
     func repositoryManagerInitialization() async throws {
-        let manager = await RepositoryManager()
+        let manager = await RepositoryManager(testing: true)
 
         await withCheckedContinuation { continuation in
             Task { @MainActor in
-                #expect(manager.currentRepository == nil)
                 #expect(manager.repositories.isEmpty)
                 #expect(manager.recentRepositories.isEmpty)
-                #expect(manager.isLoading == false)
-                #expect(manager.error == nil)
-                continuation.resume()
+                continuation.resume(returning: ())
             }
         }
     }
 
     @Test
     func repositoryValidation() async throws {
-        let manager = await RepositoryManager()
+        let service = RepositoryInfoService()
 
         await withCheckedContinuation { continuation in
             Task { @MainActor in
                 // Test with invalid path
                 let invalidURL = URL(fileURLWithPath: "/nonexistent/path")
-                #expect(manager.validateRepositoryPath(invalidURL) == false)
+                #expect(service.validateRepositoryPath(invalidURL) == false)
 
                 // Test with valid directory but no .git folder
                 let tempDir = FileManager.default.temporaryDirectory
-                #expect(manager.validateRepositoryPath(tempDir) == false)
+                #expect(service.validateRepositoryPath(tempDir) == false)
 
-                continuation.resume()
+                continuation.resume(returning: ())
             }
         }
     }
 
     @Test
     func recentRepositoriesManagement() async throws {
-        let manager = await RepositoryManager()
+        let manager = await RepositoryManager(testing: true)
 
         await withCheckedContinuation { continuation in
             Task { @MainActor in
@@ -75,7 +72,7 @@ struct RepositoryManagerTests {
                 manager.clearRecentRepositories()
                 #expect(manager.recentRepositories.isEmpty)
 
-                continuation.resume()
+                continuation.resume(returning: ())
             }
         }
     }

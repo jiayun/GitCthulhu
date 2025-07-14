@@ -10,14 +10,23 @@ import SwiftUI
 import UIKit
 
 struct RepositoryDetailView: View {
-    @EnvironmentObject private var repositoryManager: RepositoryManager
+    @EnvironmentObject private var viewModel: RepositoryDetailViewModel
 
     var body: some View {
-        if let currentRepository = repositoryManager.currentRepository {
+        if let selectedRepository = viewModel.selectedRepository {
             VStack(alignment: .leading, spacing: 20) {
                 // Repository Information Panel
-                RepositoryInfoPanel(repository: currentRepository)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let repositoryInfo = viewModel.repositoryInfo {
+                    RepositoryInfoPanel(repository: selectedRepository, repositoryInfo: repositoryInfo)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else if viewModel.isInfoLoading {
+                    ProgressView("Loading repository information...")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else {
+                    Text("Failed to load repository information")
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
 
                 Divider()
 
@@ -41,6 +50,15 @@ struct RepositoryDetailView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Refresh") {
+                        Task {
+                            await viewModel.refreshRepositoryInfo()
+                        }
+                    }
+                }
+            }
         } else {
             // This should not happen as ContentView handles this case
             EmptyState(
