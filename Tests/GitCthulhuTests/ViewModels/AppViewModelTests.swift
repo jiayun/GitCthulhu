@@ -39,8 +39,12 @@ struct AppViewModelTests {
         // Wait for the repositories to be updated
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
 
+        // Verify repository was added to ViewModel
+        #expect(viewModel.repositories.count == 1)
+        #expect(viewModel.repositories.contains { $0.id == testRepo.id })
+
         // Select repository
-        viewModel.selectRepository(testRepo)
+        await viewModel.selectRepository(testRepo)
 
         #expect(viewModel.selectedRepositoryId == testRepo.id)
         #expect(viewModel.selectedRepository?.id == testRepo.id)

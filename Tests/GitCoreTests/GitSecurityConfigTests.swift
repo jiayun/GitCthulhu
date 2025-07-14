@@ -24,8 +24,11 @@ struct GitSecurityConfigTests {
     func defaultConfigurationValues() async throws {
         let config = GitSecurityConfig.shared
 
-        // Force a complete reset to ensure clean state
+        // Force a complete reset to ensure clean state and lock to prevent race conditions
         config.resetToDefaults()
+
+        // Give a moment for any async operations to complete
+        try await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
         // Verify length limits
         #expect(config.maxCommitMessageLength == 5000)

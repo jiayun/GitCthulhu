@@ -72,6 +72,7 @@ public class RepositoryManager: ObservableObject {
 
     // MARK: - Repository Management
 
+    @MainActor
     public func loadRepository(at path: String) async throws -> GitRepository {
         let url = URL(fileURLWithPath: path)
         let repository = try await GitRepository.create(url: url)
@@ -87,10 +88,12 @@ public class RepositoryManager: ObservableObject {
         return repository
     }
 
+    @MainActor
     public func selectRepository(_ repository: GitRepository) {
         selectedRepositoryId = repository.id
     }
 
+    @MainActor
     public func removeRepository(_ repository: GitRepository) {
         repositories.removeAll { $0.id == repository.id }
 
@@ -122,6 +125,7 @@ public class RepositoryManager: ObservableObject {
         }
     }
 
+    @MainActor
     private func loadRecentRepositoriesAsGitRepositories() async {
         var loadedRepositories: [GitRepository] = []
 
@@ -164,12 +168,14 @@ public class RepositoryManager: ObservableObject {
         saveRecentRepositories()
     }
 
+    @MainActor
     public func clearRecentRepositories() {
         recentRepositories.removeAll()
         repositories.removeAll()
         saveRecentRepositories()
     }
 
+    @MainActor
     public func refreshRepositoriesFromRecent() async {
         await loadRecentRepositoriesAsGitRepositories()
     }
