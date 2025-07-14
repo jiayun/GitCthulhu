@@ -80,6 +80,9 @@ struct DependencyContainerTests {
     func serviceInjection() async throws {
         let container = DependencyContainer.shared
 
+        // Clear any existing repositories for clean test
+        await container.repositoryManager.clearRecentRepositories()
+
         // Test that the same repository manager instance is used
         let detailViewModel = container.makeRepositoryDetailViewModel()
 
