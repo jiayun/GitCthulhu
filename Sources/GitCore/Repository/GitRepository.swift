@@ -44,6 +44,15 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         // to avoid race conditions
     }
 
+    /// Testing initializer that skips validation
+    public init(url: URL, skipValidation: Bool) {
+        self.url = url
+        name = url.lastPathComponent
+        gitExecutor = GitCommandExecutor(repositoryURL: url)
+
+        // Skip validation for testing
+    }
+
     /// Factory method to create and initialize a GitRepository
     @MainActor
     public static func create(url: URL) async throws -> GitRepository {

@@ -173,4 +173,11 @@ public class RepositoryManager: ObservableObject {
     public func refreshRepositoriesFromRecent() async {
         await loadRecentRepositoriesAsGitRepositories()
     }
+
+    // MARK: - Testing Support
+
+    @MainActor
+    public func addTestRepository(_ repository: GitRepository) async {
+        repositories.append(repository)
+    }
 }
