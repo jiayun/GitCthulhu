@@ -51,7 +51,7 @@ final class DependencyContainer: ObservableObject {
 
 // MARK: - Environment Key
 
-struct DependencyContainerKey: EnvironmentKey {
+struct DependencyContainerKey: @preconcurrency EnvironmentKey {
     static let defaultValue = DependencyContainer.shared
 }
 

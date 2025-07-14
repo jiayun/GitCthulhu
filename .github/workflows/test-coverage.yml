@@ -33,6 +33,10 @@ jobs:
 
     - name: Run Tests with Coverage
       run: |
+        # 設定環境變數避免權限問題
+        export LLVM_PROFILE_FILE=default_%m.profraw
+        # 建立覆蓋率檔案目錄
+        mkdir -p .build/debug/codecov
         swift test --enable-code-coverage
 
     - name: Generate Coverage Report

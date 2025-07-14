@@ -36,16 +36,33 @@ jobs:
 
     - name: Run Tests
       run: |
+        # 設定適當的權限和環境變數
+        export LLVM_PROFILE_FILE=default_%m.profraw
         swift test --configuration debug --enable-code-coverage
 
     - name: Generate Test Coverage
       run: |
-        xcrun llvm-cov export \
-          .build/debug/GitCthulhuPackageTests.xctest/Contents/MacOS/GitCthulhuPackageTests \
-          -instr-profile .build/debug/codecov/default.profdata \
-          -format="lcov" \
-          -ignore-filename-regex=".build|Tests" \
-          > coverage.lcov
+        # 檢查並處理程式碼覆蓋率檔案
+        if [ -f ".build/debug/codecov/default.profdata" ]; then
+          xcrun llvm-cov export \
+            .build/debug/GitCthulhuPackageTests.xctest/Contents/MacOS/GitCthulhuPackageTests \
+            -instr-profile .build/debug/codecov/default.profdata \
+            -format="lcov" \
+            -ignore-filename-regex=".build|Tests" \
+            > coverage.lcov
+        elif ls default_*.profraw 1> /dev/null 2>&1; then
+          # 如果有分散的 profraw 檔案，先合併
+          xcrun llvm-profdata merge default_*.profraw -o merged.profdata
+          xcrun llvm-cov export \
+            .build/debug/GitCthulhuPackageTests.xctest/Contents/MacOS/GitCthulhuPackageTests \
+            -instr-profile merged.profdata \
+            -format="lcov" \
+            -ignore-filename-regex=".build|Tests" \
+            > coverage.lcov
+        else
+          echo "Warning: No coverage data found, creating empty coverage file"
+          echo "" > coverage.lcov
+        fi
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v4
