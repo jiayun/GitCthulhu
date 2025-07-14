@@ -11,7 +11,7 @@ import SwiftUI
 
 @main
 struct GitCthulhuApp: App {
-    @StateObject private var repositoryManager = RepositoryManager()
+    @StateObject private var dependencyContainer = DependencyContainer.shared
 
     init() {
         // Force the app to appear as a regular macOS application
@@ -27,7 +27,7 @@ struct GitCthulhuApp: App {
     var body: some Scene {
         WindowGroup("GitCthulhu") {
             ContentView()
-                .environmentObject(repositoryManager)
+                .environment(\.dependencyContainer, dependencyContainer)
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
@@ -43,19 +43,16 @@ struct GitCthulhuApp: App {
 
             CommandGroup(replacing: .newItem) {
                 Button("Open Repository...") {
-                    Task {
-                        await repositoryManager.openRepositoryWithFileBrowser()
-                    }
+                    dependencyContainer.appViewModel.openRepository()
                 }
                 .keyboardShortcut("o", modifiers: .command)
             }
 
             CommandGroup(after: .newItem) {
-                Button("Close Repository") {
-                    repositoryManager.closeRepository()
+                Button("Clone Repository...") {
+                    dependencyContainer.appViewModel.cloneRepository()
                 }
-                .keyboardShortcut("w", modifiers: [.command, .shift])
-                .disabled(repositoryManager.currentRepository == nil)
+                .keyboardShortcut("c", modifiers: [.command, .shift])
             }
         }
     }

@@ -10,11 +10,12 @@ import SwiftUI
 
 public struct RepositoryInfoPanel: View {
     let repository: GitRepository
-    @State private var repositoryInfo: RepositoryInfo?
-    @State private var isLoading = true
+    let repositoryInfo: RepositoryInfo?
+    @State private var isLoading = false
 
-    public init(repository: GitRepository) {
+    public init(repository: GitRepository, repositoryInfo: RepositoryInfo? = nil) {
         self.repository = repository
+        self.repositoryInfo = repositoryInfo
     }
 
     public var body: some View {
@@ -27,12 +28,6 @@ public struct RepositoryInfoPanel: View {
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(12)
-        .onAppear {
-            loadRepositoryInfo()
-        }
-        .onChange(of: repository.url) { _ in
-            loadRepositoryInfo()
-        }
         .id(repository.url.path)
     }
 
@@ -282,20 +277,6 @@ public struct RepositoryInfoPanel: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
-    }
-
-    private func loadRepositoryInfo() {
-        isLoading = true
-
-        Task {
-            let manager = RepositoryManager()
-            let info = await manager.getRepositoryInfo(at: repository.url)
-
-            await MainActor.run {
-                repositoryInfo = info
-                isLoading = false
-            }
-        }
     }
 }
 

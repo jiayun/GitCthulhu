@@ -5,7 +5,6 @@
 // Created by GitCthulhu Team on 2025-07-11.
 //
 
-import AppKit
 import Combine
 import Foundation
 
@@ -43,61 +42,62 @@ public struct RepositoryInfo {
 
 @MainActor
 public class RepositoryManager: ObservableObject {
-    @Published public var currentRepository: GitRepository?
     @Published public var repositories: [GitRepository] = []
+    @Published public var selectedRepositoryId: UUID?
     @Published public var recentRepositories: [URL] = []
-    @Published public var isLoading = false
-    @Published public var error: GitError?
 
     private let userDefaults = UserDefaults.standard
     private let maxRecentRepositories = 10
     private let recentRepositoriesKey = "RecentRepositories"
 
-    public init() {
+    public static let shared = RepositoryManager()
+
+    private init() {
         loadRecentRepositories()
     }
 
-    // MARK: - Repository Opening
+    // MARK: - Testing Support
 
-    public func openRepository(at url: URL) async {
-        isLoading = true
-        error = nil
-
-        do {
-            let repository = try await GitRepository.create(url: url)
-            currentRepository = repository
-
-            // Add to repositories list if not already present
-            if !repositories.contains(where: { $0.url == url }) {
-                repositories.append(repository)
-            }
-
-            // Add to recent repositories
-            addToRecentRepositories(url)
-        } catch {
-            self.error = GitError.failedToOpenRepository(error.localizedDescription)
-        }
-
-        isLoading = false
-    }
-
-    public func openRepositoryWithFileBrowser() async {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Open Repository"
-        panel.message = "Select a Git repository folder"
-
-        let response = await panel.begin()
-
-        if response == .OK, let url = panel.url {
-            await openRepository(at: url)
+    public init(testing: Bool) {
+        // For testing purposes only
+        if !testing {
+            loadRecentRepositories()
         }
     }
 
-    public func closeRepository() {
-        currentRepository = nil
+    public var selectedRepository: GitRepository? {
+        guard let selectedId = selectedRepositoryId else { return nil }
+        return repositories.first { $0.id == selectedId }
+    }
+
+    // MARK: - Repository Management
+
+    public func loadRepository(at path: String) async throws -> GitRepository {
+        let url = URL(fileURLWithPath: path)
+        let repository = try await GitRepository.create(url: url)
+
+        // Add to repositories list if not already present
+        if !repositories.contains(where: { $0.url == url }) {
+            repositories.append(repository)
+        }
+
+        // Add to recent repositories
+        addToRecentRepositories(url)
+
+        return repository
+    }
+
+    public func selectRepository(_ repository: GitRepository) {
+        selectedRepositoryId = repository.id
+    }
+
+    public func removeRepository(_ repository: GitRepository) {
+        repositories.removeAll { $0.id == repository.id }
+
+        // Remove from recent repositories if present
+        if let url = repositories.first(where: { $0.id == repository.id })?.url {
+            removeFromRecentRepositories(url)
+        }
     }
 
     // MARK: - Recent Repositories Management
@@ -114,7 +114,28 @@ public class RepositoryManager: ObservableObject {
             if recentRepositories.count != urls.count {
                 saveRecentRepositories()
             }
+
+            // Load recent repositories as GitRepository objects
+            Task { @MainActor in
+                await loadRecentRepositoriesAsGitRepositories()
+            }
         }
+    }
+
+    private func loadRecentRepositoriesAsGitRepositories() async {
+        var loadedRepositories: [GitRepository] = []
+
+        for url in recentRepositories {
+            do {
+                let repository = try await GitRepository.create(url: url)
+                loadedRepositories.append(repository)
+            } catch {
+                // Remove invalid repositories from recent list
+                removeFromRecentRepositories(url)
+            }
+        }
+
+        repositories = loadedRepositories
     }
 
     private func saveRecentRepositories() {
@@ -145,45 +166,11 @@ public class RepositoryManager: ObservableObject {
 
     public func clearRecentRepositories() {
         recentRepositories.removeAll()
+        repositories.removeAll()
         saveRecentRepositories()
     }
 
-    // MARK: - Repository Validation
-
-    public func validateRepositoryPath(_ url: URL) -> Bool {
-        let gitDir = url.appendingPathComponent(".git")
-        return FileManager.default.fileExists(atPath: gitDir.path)
-    }
-
-    public func getRepositoryInfo(at url: URL) async -> RepositoryInfo? {
-        guard validateRepositoryPath(url) else { return nil }
-
-        let executor = GitCommandExecutor(repositoryURL: url)
-
-        async let branch = try? await executor.getCurrentBranch()
-        async let latestCommit = try? await executor.getLatestCommit()
-        async let remoteInfo = try? await executor.getRemoteInfo()
-        async let commitCount = try? await executor.getCommitCount()
-        async let workingDirectoryStatus = try? await executor.getDetailedStatus()
-
-        let branchResult = await branch
-        let latestCommitResult = await latestCommit
-        let remoteInfoResult = await remoteInfo ?? []
-        let commitCountResult = await commitCount ?? 0
-        let workingDirectoryStatusResult = await workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(
-            staged: 0,
-            unstaged: 0,
-            untracked: 0
-        )
-
-        return RepositoryInfo(
-            name: url.lastPathComponent,
-            path: url.path,
-            branch: branchResult,
-            latestCommit: latestCommitResult,
-            remoteInfo: remoteInfoResult,
-            commitCount: commitCountResult,
-            workingDirectoryStatus: workingDirectoryStatusResult
-        )
+    public func refreshRepositoriesFromRecent() async {
+        await loadRecentRepositoriesAsGitRepositories()
     }
 }
