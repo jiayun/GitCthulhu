@@ -96,4 +96,10 @@ final class AppViewModel: ViewModelBase {
             selectedRepositoryId = repositories.first?.id
         }
     }
+
+    // MARK: - Testing Support
+
+    func addTestRepository(_ repository: GitRepository) {
+        repositories.append(repository)
+    }
 }

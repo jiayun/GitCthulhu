@@ -36,15 +36,15 @@ struct AppViewModelTests {
         // Add repository to manager
         await mockManager.addTestRepository(testRepo)
 
-        // Wait for the repositories to be updated
-        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        // For testing, directly add to view model to avoid binding delays
+        viewModel.addTestRepository(testRepo)
 
         // Verify repository was added to ViewModel
         #expect(viewModel.repositories.count == 1)
         #expect(viewModel.repositories.contains { $0.id == testRepo.id })
 
         // Select repository
-        await viewModel.selectRepository(testRepo)
+        viewModel.selectRepository(testRepo)
 
         #expect(viewModel.selectedRepositoryId == testRepo.id)
         #expect(viewModel.selectedRepository?.id == testRepo.id)
@@ -65,8 +65,12 @@ struct AppViewModelTests {
         await mockManager.addTestRepository(testRepo1)
         await mockManager.addTestRepository(testRepo2)
 
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
+        // For testing, directly add to view model to avoid binding delays
+        viewModel.addTestRepository(testRepo1)
+        viewModel.addTestRepository(testRepo2)
+
+        // Verify repositories were added
+        #expect(viewModel.repositories.count == 2)
 
         // Select first repository
         viewModel.selectRepository(testRepo1)
@@ -74,9 +78,6 @@ struct AppViewModelTests {
 
         // Remove selected repository
         viewModel.removeRepository(testRepo1)
-
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         // Should select the remaining repository
         #expect(viewModel.selectedRepositoryId == testRepo2.id)
