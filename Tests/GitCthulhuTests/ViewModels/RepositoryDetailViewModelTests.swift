@@ -5,14 +5,13 @@
 // Created by GitCthulhu Team on 2025-07-14.
 //
 
-import Testing
 import Foundation
 import GitCore
 @testable import GitCthulhu
+import Testing
 
 @MainActor
 struct RepositoryDetailViewModelTests {
-
     @Test("ViewModel initializes correctly")
     func viewModelInitialization() async throws {
         let mockManager = RepositoryManager(testing: true)

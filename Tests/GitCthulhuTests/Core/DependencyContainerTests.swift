@@ -5,14 +5,13 @@
 // Created by GitCthulhu Team on 2025-07-14.
 //
 
-import Testing
 import Foundation
 import GitCore
 @testable import GitCthulhu
+import Testing
 
 @MainActor
 struct DependencyContainerTests {
-
     @Test("Singleton instance works correctly")
     func singletonInstance() async throws {
         let container1 = DependencyContainer.shared

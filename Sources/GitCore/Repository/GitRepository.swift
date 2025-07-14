@@ -45,7 +45,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     }
 
     /// Testing initializer that skips validation
-    public init(url: URL, skipValidation: Bool) {
+    public init(url: URL, skipValidation _: Bool) {
         self.url = url
         name = url.lastPathComponent
         gitExecutor = GitCommandExecutor(repositoryURL: url)
