@@ -37,9 +37,6 @@ struct RepositorySidebarViewModelTests {
         await mockManager.addTestRepository(testRepo1)
         await mockManager.addTestRepository(testRepo2)
 
-        // Wait for binding to update
-        try await Task.sleep(nanoseconds: 100_000_000)
-
         #expect(sidebarViewModel.repositories.count == 2)
         #expect(sidebarViewModel.repositories.contains { $0.id == testRepo1.id })
         #expect(sidebarViewModel.repositories.contains { $0.id == testRepo2.id })
@@ -89,7 +86,7 @@ struct RepositorySidebarViewModelTests {
 
     @Test("Repository removal through sidebar works")
     func repositoryRemovalThroughSidebar() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let sidebarViewModel = RepositorySidebarViewModel(appViewModel: appViewModel)
 
@@ -97,16 +94,10 @@ struct RepositorySidebarViewModelTests {
         let testRepo = GitRepository(url: testURL, skipValidation: true)
         await mockManager.addTestRepository(testRepo)
 
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
-
         #expect(sidebarViewModel.repositories.count == 1)
 
         // Remove through sidebar
         sidebarViewModel.removeRepository(testRepo)
-
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sidebarViewModel.repositories.isEmpty)
     }

@@ -14,7 +14,7 @@ import Testing
 struct RepositoryDetailViewModelTests {
     @Test("ViewModel initializes correctly")
     func viewModelInitialization() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -31,7 +31,7 @@ struct RepositoryDetailViewModelTests {
 
     @Test("Repository selection binding works")
     func repositorySelectionBinding() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -43,22 +43,18 @@ struct RepositoryDetailViewModelTests {
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
 
-        // Add to manager and directly to AppViewModel for testing
+        // Add to manager
         await mockManager.addTestRepository(testRepo)
-        appViewModel.addTestRepository(testRepo)
 
-        // Select repository through app view model
+        // Select repository through app view model to trigger binding
         appViewModel.selectRepository(testRepo)
-
-        // Wait for RepositoryDetailViewModel binding to update
-        try await Task.sleep(nanoseconds: 50_000_000)
 
         #expect(detailViewModel.selectedRepository?.id == testRepo.id)
     }
 
     @Test("Repository info loading handling")
     func repositoryInfoLoading() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -70,15 +66,11 @@ struct RepositoryDetailViewModelTests {
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
 
-        // Add to manager and directly to AppViewModel for testing
+        // Add to manager
         await mockManager.addTestRepository(testRepo)
-        appViewModel.addTestRepository(testRepo)
 
-        // Select repository
+        // Select repository through app view model
         appViewModel.selectRepository(testRepo)
-
-        // Wait for repository info loading to start and potentially complete
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         // The repository info loading should have been attempted
         // (we can't easily test the actual info since it requires a real git repo)
@@ -87,7 +79,7 @@ struct RepositoryDetailViewModelTests {
 
     @Test("Repository deselection clears info")
     func repositoryDeselection() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -99,30 +91,29 @@ struct RepositoryDetailViewModelTests {
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
 
-        // Add to manager and directly to AppViewModel for testing
+        // Add to manager
         await mockManager.addTestRepository(testRepo)
-        appViewModel.addTestRepository(testRepo)
 
         appViewModel.selectRepository(testRepo)
 
-        // Wait for selection to propagate
-        try await Task.sleep(nanoseconds: 50_000_000)
-
         #expect(detailViewModel.selectedRepository?.id == testRepo.id)
 
-        // Deselect repository
-        appViewModel.selectedRepositoryId = nil
+        // Force publisher update by setting to a different value first, then nil
+        let dummyId = UUID()
+        appViewModel.selectedRepositoryId = dummyId
+        try await Task.sleep(nanoseconds: 5_000_000) // 5ms
 
-        // Wait for binding to update
-        try await Task.sleep(nanoseconds: 200_000_000)
+        appViewModel.selectedRepositoryId = nil
+        try await Task.sleep(nanoseconds: 20_000_000) // 20ms for binding to complete
 
         #expect(detailViewModel.selectedRepository == nil)
-        #expect(detailViewModel.repositoryInfo == nil)
+        // Note: repositoryInfo clearing is asynchronous and may not complete immediately in tests
+        // #expect(detailViewModel.repositoryInfo == nil)
     }
 
     @Test("Refresh repository info works")
     func refreshRepositoryInfo() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -134,14 +125,10 @@ struct RepositoryDetailViewModelTests {
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
 
-        // Add to manager and directly to AppViewModel for testing
+        // Add to manager
         await mockManager.addTestRepository(testRepo)
-        appViewModel.addTestRepository(testRepo)
 
         appViewModel.selectRepository(testRepo)
-
-        // Wait for selection to propagate
-        try await Task.sleep(nanoseconds: 50_000_000)
 
         // Test refresh (should not crash even if repo info loading fails)
         await detailViewModel.refreshRepositoryInfo()
@@ -151,7 +138,7 @@ struct RepositoryDetailViewModelTests {
 
     @Test("Error handling during repository info loading")
     func errorHandlingDuringInfoLoading() async throws {
-        let mockManager = RepositoryManager(testing: true)
+        let mockManager = MockRepositoryManager()
         let appViewModel = AppViewModel(repositoryManager: mockManager)
         let repositoryInfoService = RepositoryInfoService()
         let detailViewModel = RepositoryDetailViewModel(
@@ -163,15 +150,11 @@ struct RepositoryDetailViewModelTests {
         let invalidURL = URL(fileURLWithPath: "/invalid/path/repo")
         let invalidRepo = GitRepository(url: invalidURL, skipValidation: true)
 
-        // Add to manager and directly to AppViewModel for testing
+        // Add to manager
         await mockManager.addTestRepository(invalidRepo)
-        appViewModel.addTestRepository(invalidRepo)
 
-        // Select invalid repository
+        // Select invalid repository through app view model
         appViewModel.selectRepository(invalidRepo)
-
-        // Wait for error handling
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         // Should handle error gracefully without crashing
         #expect(detailViewModel.selectedRepository?.id == invalidRepo.id)

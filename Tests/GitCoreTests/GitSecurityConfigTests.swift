@@ -9,6 +9,7 @@ import Foundation
 @testable import GitCore
 import Testing
 
+@Suite(.serialized)
 struct GitSecurityConfigTests {
     // MARK: - Initialization Tests
 
@@ -24,11 +25,8 @@ struct GitSecurityConfigTests {
     func defaultConfigurationValues() async throws {
         let config = GitSecurityConfig.shared
 
-        // Force a complete reset to ensure clean state and lock to prevent race conditions
+        // Force a complete reset to ensure clean state
         config.resetToDefaults()
-
-        // Give a moment for any async operations to complete
-        try await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
         // Verify length limits
         #expect(config.maxCommitMessageLength == 5000)
@@ -325,34 +323,7 @@ struct GitSecurityConfigTests {
         let config = GitSecurityConfig.shared
         config.resetToDefaults() // Start with clean state
 
-        // Store original values for cleanup
-        let originalMaxCommitLength = config.maxCommitMessageLength
-        let originalMaxAuthorLength = config.maxAuthorLength
-        let originalMaxBranchLength = config.maxBranchNameLength
-        let originalMaxDirectoryDepth = config.maxDirectoryDepth
-        let originalAllowedProtocols = config.allowedProtocols
-        let originalDangerousProtocols = config.dangerousProtocols
-
         config.applyStrictProfile()
-
-        defer {
-            // Restore original values
-            config.maxCommitMessageLength = originalMaxCommitLength
-            config.maxAuthorLength = originalMaxAuthorLength
-            config.maxBranchNameLength = originalMaxBranchLength
-            config.maxDirectoryDepth = originalMaxDirectoryDepth
-            config.allowedProtocols = originalAllowedProtocols
-            config.dangerousProtocols = originalDangerousProtocols
-            // Reset all other flags too
-            config.allowLocalFileAccess = false
-            config.allowHTTPProtocol = false
-            config.strictAuthorValidation = true
-            config.allowEmptyCommitMessages = false
-            config.validateGitPath = true
-            // Also reset missing properties
-            config.maxFilePathLength = 4096
-            config.maxInputLength = 1000
-        }
 
         #expect(config.maxCommitMessageLength == 2000)
         #expect(config.maxAuthorLength == 128)
@@ -367,6 +338,9 @@ struct GitSecurityConfigTests {
         #expect(config.allowHTTPProtocol == false)
         #expect(config.strictAuthorValidation == true)
         #expect(config.allowEmptyCommitMessages == false)
+
+        // Reset to defaults after test to avoid affecting other tests
+        config.resetToDefaults()
     }
 
     @Test("Permissive security profile")

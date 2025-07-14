@@ -17,7 +17,7 @@ final class AppViewModel: ViewModelBase {
     @Published var isShowingOpenPanel = false
     @Published var isShowingClonePanel = false
 
-    private let repositoryManager: RepositoryManager
+    private let repositoryManager: any RepositoryManagerProtocol
     private let repositoryInfoService = RepositoryInfoService()
 
     var selectedRepository: GitRepository? {
@@ -25,7 +25,7 @@ final class AppViewModel: ViewModelBase {
         return repositories.first { $0.id == selectedId }
     }
 
-    init(repositoryManager: RepositoryManager? = nil) {
+    init(repositoryManager: (any RepositoryManagerProtocol)? = nil) {
         self.repositoryManager = repositoryManager ?? RepositoryManager.shared
         super.init()
         setupBindings()
@@ -37,10 +37,10 @@ final class AppViewModel: ViewModelBase {
     }
 
     private func setupBindings() {
-        repositoryManager.$repositories
+        repositoryManager.repositoriesPublisher
             .assign(to: &$repositories)
 
-        repositoryManager.$selectedRepositoryId
+        repositoryManager.selectedRepositoryIdPublisher
             .assign(to: &$selectedRepositoryId)
     }
 

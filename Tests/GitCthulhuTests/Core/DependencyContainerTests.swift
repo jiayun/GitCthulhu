@@ -33,6 +33,9 @@ struct DependencyContainerTests {
     func viewModelFactoryMethods() async throws {
         let container = DependencyContainer.shared
 
+        // Clear any existing repositories for clean test
+        await container.repositoryManager.clearRecentRepositories()
+
         // Test ContentViewModel creation
         let contentViewModel = container.makeContentViewModel()
         #expect(contentViewModel != nil)
@@ -58,21 +61,14 @@ struct DependencyContainerTests {
         let detailViewModel = container.makeRepositoryDetailViewModel()
 
         // All ViewModels should reference the same AppViewModel instance
-        // We can't directly access the internal appViewModel references,
-        // but we can test that changes in one affect others through the shared state
+        // We can test this by creating repositories and verifying shared state
 
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
         await container.repositoryManager.addTestRepository(testRepo)
 
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
-
         // Select through the container's app view model
         container.appViewModel.selectRepository(testRepo)
-
-        // Wait for binding updates
-        try await Task.sleep(nanoseconds: 200_000_000)
 
         // All view models should reflect the same state
         #expect(!contentViewModel.isShowingWelcomeView)
@@ -91,9 +87,6 @@ struct DependencyContainerTests {
         let testURL = URL(fileURLWithPath: "/tmp/test-repo")
         let testRepo = GitRepository(url: testURL, skipValidation: true)
         await container.repositoryManager.addTestRepository(testRepo)
-
-        // Wait for updates
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         // The AppViewModel should see the repository
         #expect(container.appViewModel.repositories.count == 1)

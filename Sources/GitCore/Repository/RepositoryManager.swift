@@ -40,8 +40,29 @@ public struct RepositoryInfo {
     }
 }
 
+// Protocol for repository manager interface (for testing)
 @MainActor
-public class RepositoryManager: ObservableObject {
+public protocol RepositoryManagerProtocol: ObservableObject {
+    var repositories: [GitRepository] { get }
+    var selectedRepositoryId: UUID? { get set }
+    var recentRepositories: [URL] { get }
+    var selectedRepository: GitRepository? { get }
+
+    // Publishers for binding
+    var repositoriesPublisher: Published<[GitRepository]>.Publisher { get }
+    var selectedRepositoryIdPublisher: Published<UUID?>.Publisher { get }
+
+    func loadRepository(at path: String) async throws -> GitRepository
+    func selectRepository(_ repository: GitRepository)
+    func removeRepository(_ repository: GitRepository)
+    func removeFromRecentRepositories(_ url: URL)
+    func clearRecentRepositories()
+    func refreshRepositoriesFromRecent() async
+    func addTestRepository(_ repository: GitRepository) async
+}
+
+@MainActor
+public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
     @Published public var repositories: [GitRepository] = []
     @Published public var selectedRepositoryId: UUID?
     @Published public var recentRepositories: [URL] = []
@@ -68,6 +89,15 @@ public class RepositoryManager: ObservableObject {
     public var selectedRepository: GitRepository? {
         guard let selectedId = selectedRepositoryId else { return nil }
         return repositories.first { $0.id == selectedId }
+    }
+
+    // Publishers for protocol conformance
+    public var repositoriesPublisher: Published<[GitRepository]>.Publisher {
+        $repositories
+    }
+
+    public var selectedRepositoryIdPublisher: Published<UUID?>.Publisher {
+        $selectedRepositoryId
     }
 
     // MARK: - Repository Management
