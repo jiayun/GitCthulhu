@@ -10,8 +10,7 @@ import SwiftUI
 import UIKit
 
 struct ContentView: View {
-    @Environment(\.dependencyContainer)
-    private var container
+    @Environment(\.dependencyContainer) private var container
     @StateObject private var contentViewModel: ContentViewModel
     @StateObject private var sidebarViewModel: RepositorySidebarViewModel
     @StateObject private var detailViewModel: RepositoryDetailViewModel

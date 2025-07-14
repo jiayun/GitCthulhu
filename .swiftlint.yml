@@ -24,7 +24,6 @@ disabled_rules:
 # 可選規則（預設未啟用但我們要啟用）
 opt_in_rules:
   - array_init
-  - attributes
   - closure_body_length
   - closure_spacing
   - collection_alignment
