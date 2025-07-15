@@ -51,7 +51,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
             .sink { [weak self] _ in
                 let repository = self?.appViewModel.selectedRepository
                 self?.selectedRepository = repository
-                self?.setupRepositoryObservation(repository)
+                // Repository observation is already set up in setupBindings
                 if let repository {
                     Task {
                         await self?.loadRepositoryInfo(for: repository)
