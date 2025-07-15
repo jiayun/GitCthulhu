@@ -5,11 +5,10 @@
 // Created by GitCthulhu Team on 2025-07-15.
 //
 
-import XCTest
 @testable import GitCore
+import XCTest
 
 final class GitStatusEntryTests: XCTestCase {
-
     func testFromPorcelainLine_ModifiedFile() {
         let line = " M test.txt"
         let entry = GitStatusEntry.fromPorcelainLine(line)

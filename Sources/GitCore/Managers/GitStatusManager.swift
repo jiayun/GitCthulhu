@@ -21,12 +21,12 @@ public class GitStatusManager {
 
     public init(repositoryURL: URL) {
         self.repositoryURL = repositoryURL
-        self.gitExecutor = GitCommandExecutor(repositoryURL: repositoryURL)
+        gitExecutor = GitCommandExecutor(repositoryURL: repositoryURL)
     }
 
     /// Gets the complete repository status with detailed information
     public func getDetailedStatus(useCache: Bool = true) async throws -> [GitStatusEntry] {
-        if useCache && isCacheValid() {
+        if useCache, isCacheValid() {
             logger.debug("Using cached status entries")
             return Array(statusCache.values)
         }
@@ -56,7 +56,7 @@ public class GitStatusManager {
         let entry = entries.first { $0.filePath == filePath }
 
         // Update cache for this file
-        if let entry = entry {
+        if let entry {
             statusCache[filePath] = entry
         }
 
@@ -66,25 +66,25 @@ public class GitStatusManager {
     /// Gets only staged files
     public func getStagedFiles() async throws -> [GitStatusEntry] {
         let allEntries = try await getDetailedStatus()
-        return allEntries.filter { $0.isStaged }
+        return allEntries.filter(\.isStaged)
     }
 
     /// Gets only unstaged files (working directory changes)
     public func getUnstagedFiles() async throws -> [GitStatusEntry] {
         let allEntries = try await getDetailedStatus()
-        return allEntries.filter { $0.hasWorkingDirectoryChanges }
+        return allEntries.filter(\.hasWorkingDirectoryChanges)
     }
 
     /// Gets only untracked files
     public func getUntrackedFiles() async throws -> [GitStatusEntry] {
         let allEntries = try await getDetailedStatus()
-        return allEntries.filter { $0.isUntracked }
+        return allEntries.filter(\.isUntracked)
     }
 
     /// Gets files with conflicts
     public func getConflictedFiles() async throws -> [GitStatusEntry] {
         let allEntries = try await getDetailedStatus()
-        return allEntries.filter { $0.hasConflicts }
+        return allEntries.filter(\.hasConflicts)
     }
 
     /// Checks if the repository is clean (no changes)
@@ -97,10 +97,10 @@ public class GitStatusManager {
     public func getStatusSummary() async throws -> GitStatusSummary {
         let entries = try await getDetailedStatus()
 
-        let staged = entries.filter { $0.isStaged }
-        let unstaged = entries.filter { $0.hasWorkingDirectoryChanges }
-        let untracked = entries.filter { $0.isUntracked }
-        let conflicted = entries.filter { $0.hasConflicts }
+        let staged = entries.filter(\.isStaged)
+        let unstaged = entries.filter(\.hasWorkingDirectoryChanges)
+        let untracked = entries.filter(\.isUntracked)
+        let conflicted = entries.filter(\.hasConflicts)
 
         return GitStatusSummary(
             stagedCount: staged.count,

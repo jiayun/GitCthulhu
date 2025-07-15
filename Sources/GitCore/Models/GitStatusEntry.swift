@@ -153,21 +153,21 @@ public enum GitIndexStatus: String, CaseIterable {
     static func fromStatusChar(_ char: Character) -> GitIndexStatus {
         switch char {
         case " ":
-            return .unmodified
+            .unmodified
         case "A":
-            return .added
+            .added
         case "M":
-            return .modified
+            .modified
         case "D":
-            return .deleted
+            .deleted
         case "R":
-            return .renamed
+            .renamed
         case "C":
-            return .copied
+            .copied
         case "U":
-            return .unmerged
+            .unmerged
         default:
-            return .modified
+            .modified
         }
     }
 }
@@ -184,19 +184,19 @@ public enum GitWorkingDirectoryStatus: String, CaseIterable {
     static func fromStatusChar(_ char: Character) -> GitWorkingDirectoryStatus {
         switch char {
         case " ":
-            return .unmodified
+            .unmodified
         case "M":
-            return .modified
+            .modified
         case "D":
-            return .deleted
+            .deleted
         case "?":
-            return .untracked
+            .untracked
         case "!":
-            return .ignored
+            .ignored
         case "U":
-            return .unmerged
+            .unmerged
         default:
-            return .modified
+            .modified
         }
     }
 }

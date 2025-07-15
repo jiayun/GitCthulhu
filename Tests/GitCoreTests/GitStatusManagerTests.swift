@@ -5,11 +5,10 @@
 // Created by GitCthulhu Team on 2025-07-15.
 //
 
-import XCTest
 @testable import GitCore
+import XCTest
 
 final class GitStatusManagerTests: XCTestCase {
-
     var tempRepoURL: URL!
     var statusManager: GitStatusManager!
 
@@ -70,7 +69,10 @@ final class GitStatusManagerTests: XCTestCase {
         let entries = try await statusManager.getDetailedStatus()
         XCTAssertEqual(entries.count, 1)
 
-        let entry = entries.first!
+        guard let entry = entries.first else {
+            XCTFail("Expected to find an entry")
+            return
+        }
         XCTAssertEqual(entry.filePath, "test.txt")
         XCTAssertEqual(entry.displayStatus, .untracked)
         XCTAssertTrue(entry.isUntracked)
@@ -92,7 +94,10 @@ final class GitStatusManagerTests: XCTestCase {
         let entries = try await statusManager.getDetailedStatus()
         XCTAssertEqual(entries.count, 1)
 
-        let entry = entries.first!
+        guard let entry = entries.first else {
+            XCTFail("Expected to find an entry")
+            return
+        }
         XCTAssertEqual(entry.filePath, "staged.txt")
         XCTAssertEqual(entry.displayStatus, .added)
         XCTAssertTrue(entry.isStaged)

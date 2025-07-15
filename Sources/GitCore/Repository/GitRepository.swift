@@ -27,7 +27,13 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
 
     @Published public var status: [String: GitFileStatus] = [:]
     @Published public var statusEntries: [GitStatusEntry] = []
-    @Published public var statusSummary: GitStatusSummary = GitStatusSummary(stagedCount: 0, unstagedCount: 0, untrackedCount: 0, conflictedCount: 0, isClean: true)
+    @Published public var statusSummary = GitStatusSummary(
+        stagedCount: 0,
+        unstagedCount: 0,
+        untrackedCount: 0,
+        conflictedCount: 0,
+        isClean: true
+    )
     @Published public var branches: [GitBranch] = []
     @Published public var currentBranch: GitBranch?
     @Published public var isLoading = false
