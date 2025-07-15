@@ -30,12 +30,59 @@ final class RepositoryDetailViewModel: ViewModelBase {
             .sink { [weak self] _ in
                 let repository = self?.appViewModel.selectedRepository
                 self?.selectedRepository = repository
+                self?.setupRepositoryObservation(repository)
                 if let repository {
                     Task {
                         await self?.loadRepositoryInfo(for: repository)
                     }
                 } else {
                     self?.repositoryInfo = nil
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func setupRepositoryObservation(_ repository: GitRepository?) {
+        // Clear previous repository observation
+        cancellables = Set<AnyCancellable>()
+
+        // Re-establish AppViewModel binding
+        appViewModel.$selectedRepositoryId
+            .sink { [weak self] _ in
+                let repository = self?.appViewModel.selectedRepository
+                self?.selectedRepository = repository
+                self?.setupRepositoryObservation(repository)
+                if let repository {
+                    Task {
+                        await self?.loadRepositoryInfo(for: repository)
+                    }
+                } else {
+                    self?.repositoryInfo = nil
+                }
+            }
+            .store(in: &cancellables)
+
+        // Observe repository changes if we have a selected repository
+        guard let repository else { return }
+
+        // Observe repository's objectWillChange to refresh info when repository state changes
+        repository.objectWillChange
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = self.selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &cancellables)
+
+        // Also observe specific properties for immediate updates
+        repository.$currentBranch
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = self.selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
                 }
             }
             .store(in: &cancellables)
