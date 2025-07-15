@@ -71,6 +71,25 @@ rm -rf .build
 - 簡短描述變更內容
 - 必要時加入詳細說明
 
+### 分支管理和 PR 流程
+**標準實作流程**：
+1. **開始實作前**：從 main 分支建立新的 feature branch
+2. **分支命名規則**：`feature/task-{number}-{description}`
+   - 例如：`feature/task-32-git-status-check`
+3. **完成實作後**：開啟 Pull Request 到 main 分支
+4. **PR 要求**：
+   - 詳細描述變更內容和目的
+   - 確保所有測試通過
+   - 程式碼覆蓋率達標
+   - 通過 CI/CD 管道驗證
+5. **合併策略**：使用 Squash and Merge 保持 commit history 清潔
+6. **合併後**：刪除 feature branch
+
+**禁止的做法**：
+- ❌ 直接 commit 到 main 分支
+- ❌ 跳過 PR 流程
+- ❌ 在測試失敗時強制合併
+
 ### 測試要求
 - 所有 GitCore 功能必須有單元測試
 - UI 元件使用 Preview 進行視覺測試
