@@ -128,12 +128,10 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
         // Stop file system monitoring before removing
         repository.stopFileSystemMonitoring()
 
-        repositories.removeAll { $0.id == repository.id }
-
         // Remove from recent repositories if present
-        if let url = repositories.first(where: { $0.id == repository.id })?.url {
-            removeFromRecentRepositories(url)
-        }
+        removeFromRecentRepositories(repository.url)
+
+        repositories.removeAll { $0.id == repository.id }
     }
 
     // MARK: - Recent Repositories Management
