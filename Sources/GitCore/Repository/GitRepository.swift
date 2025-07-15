@@ -363,14 +363,37 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         // Calculate relative path using URL relationship
         guard let relativePath = getRelativePath(from: url, to: eventURL) else { return false }
 
-        // Skip if it's within .git directory but not index or HEAD
-        if relativePath.hasPrefix(".git/"),
-           !relativePath.contains("HEAD"),
-           !relativePath.contains("index") {
-            return false
+        logger.info("Evaluating event for refresh: \(relativePath)")
+
+        // Always refresh for working directory changes (not in .git)
+        if !relativePath.hasPrefix(".git/") {
+            logger.info("  -> Working directory change, will refresh")
+            return true
         }
 
-        return true
+        // For .git directory changes, only monitor specific important files
+        // that affect repository state, branches, or staging
+        let gitRefreshPaths = [
+            ".git/HEAD", // Current branch pointer
+            ".git/index", // Staging area
+            ".git/refs/heads/", // Local branches
+            ".git/refs/remotes/", // Remote branches
+            ".git/refs/tags/", // Tags
+            ".git/MERGE_HEAD", // Merge state
+            ".git/CHERRY_PICK_HEAD", // Cherry-pick state
+            ".git/REBASE_HEAD" // Rebase state
+        ]
+
+        let shouldRefresh = gitRefreshPaths.contains { gitPath in
+            if gitPath.hasSuffix("/") {
+                relativePath.hasPrefix(gitPath)
+            } else {
+                relativePath == gitPath
+            }
+        }
+
+        logger.info("  -> Git file \(relativePath): \(shouldRefresh ? "will refresh" : "ignoring")")
+        return shouldRefresh
     }
 
     /// Safely calculates relative path between URLs

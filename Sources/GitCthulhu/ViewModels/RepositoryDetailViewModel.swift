@@ -17,6 +17,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
 
     private let appViewModel: AppViewModel
     private let repositoryInfoService: RepositoryInfoService
+    private var repositorySubscriptions: AnyCancellable?
 
     init(appViewModel: AppViewModel, repositoryInfoService: RepositoryInfoService = RepositoryInfoService()) {
         self.appViewModel = appViewModel
@@ -30,6 +31,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
             .sink { [weak self] _ in
                 let repository = self?.appViewModel.selectedRepository
                 self?.selectedRepository = repository
+                self?.setupRepositoryObservation(repository)
                 if let repository {
                     Task {
                         await self?.loadRepositoryInfo(for: repository)
@@ -39,6 +41,65 @@ final class RepositoryDetailViewModel: ViewModelBase {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func setupRepositoryObservation(_ repository: GitRepository?) {
+        // Clear only repository-specific subscriptions
+        repositorySubscriptions?.cancel()
+        repositorySubscriptions = nil
+
+        guard let repository else { return }
+
+        var repoSubscriptions = Set<AnyCancellable>()
+
+        // Observe repository's objectWillChange to refresh info when repository state changes
+        repository.objectWillChange
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Observe specific properties for immediate updates
+        repository.$currentBranch
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Observe repository status changes
+        repository.$status
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Observe repository branches changes
+        repository.$branches
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Store repository subscriptions separately from main cancellables
+        repositorySubscriptions = AnyCancellable {
+            repoSubscriptions.forEach { $0.cancel() }
+        }
     }
 
     func loadRepositoryInfo(for repository: GitRepository) async {

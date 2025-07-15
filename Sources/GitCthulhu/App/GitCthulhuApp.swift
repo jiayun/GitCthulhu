@@ -17,11 +17,6 @@ struct GitCthulhuApp: App {
         // Force the app to appear as a regular macOS application
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
-
-        // Prevent multiple windows
-        if NSApp.windows.count > 1 {
-            NSApp.windows.dropFirst().forEach { $0.close() }
-        }
     }
 
     var body: some Scene {

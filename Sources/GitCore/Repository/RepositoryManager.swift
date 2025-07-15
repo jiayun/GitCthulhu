@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import Utilities
 
 public struct RepositoryInfo {
     public let name: String
@@ -70,6 +71,10 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
     private let userDefaults = UserDefaults.standard
     private let maxRecentRepositories = 10
     private let recentRepositoriesKey = "RecentRepositories"
+    private let logger = Logger(category: "RepositoryManager")
+
+    // Combine subscriptions for observing repository changes
+    private var repositorySubscriptions: [UUID: Set<AnyCancellable>] = [:]
 
     public static let shared = RepositoryManager()
 
@@ -100,6 +105,60 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
         $selectedRepositoryId
     }
 
+    // MARK: - Repository Change Observation
+
+    /// Subscribe to changes in a repository to trigger UI updates
+    @MainActor
+    private func observeRepositoryChanges(_ repository: GitRepository) {
+        logger.info("Starting to observe changes for repository: \(repository.name)")
+
+        var subscriptions = Set<AnyCancellable>()
+
+        // Observe all @Published properties of the repository
+        repository.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.logger.info("Repository '\(repository.name)' changed, triggering RepositoryManager update")
+                self?.objectWillChange.send()
+            }
+            .store(in: &subscriptions)
+
+        // Also observe specific property changes for debugging
+        repository.$currentBranch
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newBranch in
+                self?.logger.info("Repository '\(repository.name)' branch changed to: \(newBranch?.name ?? "nil")")
+                self?.objectWillChange.send()
+            }
+            .store(in: &subscriptions)
+
+        repository.$status
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newStatus in
+                self?.logger.info("Repository '\(repository.name)' status changed (\(newStatus.count) files)")
+                self?.objectWillChange.send()
+            }
+            .store(in: &subscriptions)
+
+        repository.$branches
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newBranches in
+                self?.logger.info("Repository '\(repository.name)' branches changed (\(newBranches.count) branches)")
+                self?.objectWillChange.send()
+            }
+            .store(in: &subscriptions)
+
+        // Store subscriptions for this repository
+        repositorySubscriptions[repository.id] = subscriptions
+    }
+
+    /// Stop observing changes for a repository
+    @MainActor
+    private func stopObservingRepositoryChanges(_ repository: GitRepository) {
+        logger.info("Stopping observation for repository: \(repository.name)")
+        repositorySubscriptions.removeValue(forKey: repository.id)
+    }
+
     // MARK: - Repository Management
 
     @MainActor
@@ -110,6 +169,7 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
         // Add to repositories list if not already present
         if !repositories.contains(where: { $0.url == url }) {
             repositories.append(repository)
+            observeRepositoryChanges(repository)
         }
 
         // Add to recent repositories
@@ -125,6 +185,9 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func removeRepository(_ repository: GitRepository) {
+        // Stop observing changes before removing
+        stopObservingRepositoryChanges(repository)
+
         // Stop file system monitoring before removing
         repository.stopFileSystemMonitoring()
 
@@ -158,13 +221,22 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     private func loadRecentRepositoriesAsGitRepositories() async {
+        // Clear existing subscriptions first
+        for repository in repositories {
+            stopObservingRepositoryChanges(repository)
+            repository.stopFileSystemMonitoring()
+        }
+
         var loadedRepositories: [GitRepository] = []
 
         for url in recentRepositories {
             do {
                 let repository = try await GitRepository.create(url: url)
                 loadedRepositories.append(repository)
+                observeRepositoryChanges(repository)
+                logger.info("Successfully loaded and observing repository: \(repository.name)")
             } catch {
+                logger.error("Failed to load repository at \(url.path): \(error.localizedDescription)")
                 // Remove invalid repositories from recent list
                 removeFromRecentRepositories(url)
             }
@@ -201,8 +273,9 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func clearRecentRepositories() {
-        // Stop monitoring for all repositories before clearing
+        // Stop observing and monitoring for all repositories before clearing
         for repository in repositories {
+            stopObservingRepositoryChanges(repository)
             repository.stopFileSystemMonitoring()
         }
 
@@ -221,5 +294,6 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
     @MainActor
     public func addTestRepository(_ repository: GitRepository) async {
         repositories.append(repository)
+        observeRepositoryChanges(repository)
     }
 }
