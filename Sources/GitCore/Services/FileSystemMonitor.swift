@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-15.
 //
 
-import Foundation
 import Combine
 import CoreFoundation
+import Foundation
 import Utilities
 
 /// File system event for repository monitoring
@@ -62,7 +62,7 @@ public class FileSystemMonitor: ObservableObject {
 
     deinit {
         // Cleanup file system monitoring without accessing MainActor properties
-        if let eventStream = eventStream {
+        if let eventStream {
             FSEventStreamStop(eventStream)
             FSEventStreamInvalidate(eventStream)
             FSEventStreamRelease(eventStream)
@@ -93,14 +93,14 @@ public class FileSystemMonitor: ObservableObject {
         let latency: CFTimeInterval = 0.3
         let flags: FSEventStreamCreateFlags = UInt32(
             kFSEventStreamCreateFlagUseCFTypes |
-            kFSEventStreamCreateFlagFileEvents |
-            kFSEventStreamCreateFlagIgnoreSelf
+                kFSEventStreamCreateFlagFileEvents |
+                kFSEventStreamCreateFlagIgnoreSelf
         )
 
         eventStream = FSEventStreamCreate(
             nil,
-            { (streamRef, clientCallBackInfo, numEvents, eventPaths, eventFlags, eventIds) in
-                guard let clientCallBackInfo = clientCallBackInfo else { return }
+            { _, clientCallBackInfo, numEvents, eventPaths, eventFlags, _ in
+                guard let clientCallBackInfo else { return }
                 let monitor = Unmanaged<FileSystemMonitor>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
                 monitor.handleFSEvents(
                     numEvents: numEvents,
@@ -115,7 +115,7 @@ public class FileSystemMonitor: ObservableObject {
             flags
         )
 
-        guard let eventStream = eventStream else {
+        guard let eventStream else {
             logger.error("Failed to create FSEventStream for \(repositoryPath.path)")
             return
         }
@@ -134,7 +134,7 @@ public class FileSystemMonitor: ObservableObject {
 
     /// Stop monitoring file system events
     public func stopMonitoring() {
-        guard isMonitoring, let eventStream = eventStream else { return }
+        guard isMonitoring, let eventStream else { return }
 
         FSEventStreamStop(eventStream)
         FSEventStreamInvalidate(eventStream)
@@ -153,19 +153,22 @@ public class FileSystemMonitor: ObservableObject {
 
     // MARK: - Event Handling
 
-    private func handleFSEvents(numEvents: Int, eventPaths: UnsafeRawPointer, eventFlags: UnsafePointer<FSEventStreamEventFlags>) {
-        let paths = Unmanaged<CFArray>.fromOpaque(eventPaths).takeUnretainedValue() as! [String]
+    private func handleFSEvents(
+        numEvents: Int,
+        eventPaths: UnsafeRawPointer,
+        eventFlags: UnsafePointer<FSEventStreamEventFlags>
+    ) {
+        guard let pathsArray = Unmanaged<CFArray>.fromOpaque(eventPaths).takeUnretainedValue() as? [String] else {
+            logger.error("Failed to cast FSEvent paths to [String]")
+            return
+        }
 
         var filteredEvents: [FileSystemEvent] = []
 
-        for i in 0..<numEvents {
-            let path = paths[i]
-            let flags = eventFlags[i]
-
-            // Filter out irrelevant events
-            if shouldIgnoreEvent(path: path, flags: flags) {
-                continue
-            }
+        for eventIndex in 0 ..< numEvents
+            where !shouldIgnoreEvent(path: pathsArray[eventIndex], flags: eventFlags[eventIndex]) {
+            let path = pathsArray[eventIndex]
+            let flags = eventFlags[eventIndex]
 
             let event = FileSystemEvent(path: path, eventFlags: flags)
             filteredEvents.append(event)
@@ -182,10 +185,8 @@ public class FileSystemMonitor: ObservableObject {
         let relativePath = path.replacingOccurrences(of: repositoryPath.path + "/", with: "")
 
         // Ignore Git internal paths that don't affect working directory status
-        for gitPath in gitInternalPaths {
-            if relativePath.hasPrefix(gitPath) {
-                return true
-            }
+        for gitPath in gitInternalPaths where relativePath.hasPrefix(gitPath) {
+            return true
         }
 
         // Ignore files with certain extensions

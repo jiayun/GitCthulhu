@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-11.
 //
 
+import Combine
 import Foundation
 import Utilities
-import Combine
 
 /// CLI-based implementation of GitRepositoryProtocol
 /// This implementation uses the git command-line interface
@@ -326,8 +326,8 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
             let relativePath = event.path.replacingOccurrences(of: url.path + "/", with: "")
 
             // Skip if it's within .git directory but not index or HEAD
-            if relativePath.hasPrefix(".git/") &&
-               !relativePath.contains("HEAD") &&
+            if relativePath.hasPrefix(".git/"),
+               !relativePath.contains("HEAD"),
                !relativePath.contains("index") {
                 return false
             }
