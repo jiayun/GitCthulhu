@@ -83,69 +83,11 @@ public class FileSystemMonitor: ObservableObject {
             return
         }
 
-        // Validate repository path exists and is accessible
-        guard FileManager.default.fileExists(atPath: repositoryPath.path) else {
-            logger.error("Repository path does not exist: \(repositoryPath.path)")
-            return
-        }
+        guard validateRepositoryPath() else { return }
 
-        // Check if path is readable
-        guard FileManager.default.isReadableFile(atPath: repositoryPath.path) else {
-            logger.error("Repository path is not readable: \(repositoryPath.path)")
-            return
-        }
+        guard let eventStream = createEventStream() else { return }
 
-        let pathsToWatch = [repositoryPath.path as NSString]
-        let pathsArray = NSArray(array: pathsToWatch)
-
-        var context = FSEventStreamContext(
-            version: 0,
-            info: Unmanaged.passUnretained(self).toOpaque(),
-            retain: nil,
-            release: nil,
-            copyDescription: nil
-        )
-
-        let latency: CFTimeInterval = 0.3
-        let flags: FSEventStreamCreateFlags = UInt32(
-            kFSEventStreamCreateFlagUseCFTypes |
-                kFSEventStreamCreateFlagFileEvents |
-                kFSEventStreamCreateFlagIgnoreSelf
-        )
-
-        eventStream = FSEventStreamCreate(
-            nil,
-            { _, clientCallBackInfo, numEvents, eventPaths, eventFlags, _ in
-                guard let clientCallBackInfo else { return }
-                let monitor = Unmanaged<FileSystemMonitor>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
-                monitor.handleFSEvents(
-                    numEvents: numEvents,
-                    eventPaths: eventPaths,
-                    eventFlags: eventFlags
-                )
-            },
-            &context,
-            pathsArray,
-            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
-            latency,
-            flags
-        )
-
-        guard let eventStream else {
-            logger.error("Failed to create FSEventStream for \(repositoryPath.path)")
-            return
-        }
-
-        FSEventStreamSetDispatchQueue(eventStream, DispatchQueue.global(qos: .background))
-
-        if FSEventStreamStart(eventStream) {
-            isMonitoring = true
-            logger.info("Started file system monitoring for \(repositoryPath.path)")
-        } else {
-            logger.error("Failed to start FSEventStream for \(repositoryPath.path)")
-            FSEventStreamRelease(eventStream)
-            self.eventStream = nil
-        }
+        configureAndStartEventStream(eventStream)
     }
 
     /// Stop monitoring file system events
@@ -165,6 +107,82 @@ public class FileSystemMonitor: ObservableObject {
         pendingEvents.removeAll()
 
         logger.info("Stopped file system monitoring for \(repositoryPath.path)")
+    }
+
+    // MARK: - Private Helper Methods
+
+    private func validateRepositoryPath() -> Bool {
+        // Validate repository path exists and is accessible
+        guard FileManager.default.fileExists(atPath: repositoryPath.path) else {
+            logger.error("Repository path does not exist: \(repositoryPath.path)")
+            return false
+        }
+
+        // Check if path is readable
+        guard FileManager.default.isReadableFile(atPath: repositoryPath.path) else {
+            logger.error("Repository path is not readable: \(repositoryPath.path)")
+            return false
+        }
+
+        return true
+    }
+
+    private func createEventStream() -> FSEventStreamRef? {
+        let pathsToWatch = [repositoryPath.path as NSString]
+        let pathsArray = NSArray(array: pathsToWatch)
+
+        var context = FSEventStreamContext(
+            version: 0,
+            info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil,
+            release: nil,
+            copyDescription: nil
+        )
+
+        let latency: CFTimeInterval = 0.3
+        let flags: FSEventStreamCreateFlags = UInt32(
+            kFSEventStreamCreateFlagUseCFTypes |
+                kFSEventStreamCreateFlagFileEvents |
+                kFSEventStreamCreateFlagIgnoreSelf
+        )
+
+        let stream = FSEventStreamCreate(
+            nil,
+            { _, clientCallBackInfo, numEvents, eventPaths, eventFlags, _ in
+                guard let clientCallBackInfo else { return }
+                let monitor = Unmanaged<FileSystemMonitor>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
+                monitor.handleFSEvents(
+                    numEvents: numEvents,
+                    eventPaths: eventPaths,
+                    eventFlags: eventFlags
+                )
+            },
+            &context,
+            pathsArray,
+            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+            latency,
+            flags
+        )
+
+        guard let stream else {
+            logger.error("Failed to create FSEventStream for \(repositoryPath.path)")
+            return nil
+        }
+
+        return stream
+    }
+
+    private func configureAndStartEventStream(_ stream: FSEventStreamRef) {
+        FSEventStreamSetDispatchQueue(stream, DispatchQueue.global(qos: .background))
+
+        if FSEventStreamStart(stream) {
+            eventStream = stream
+            isMonitoring = true
+            logger.info("Started file system monitoring for \(repositoryPath.path)")
+        } else {
+            logger.error("Failed to start FSEventStream for \(repositoryPath.path)")
+            FSEventStreamRelease(stream)
+        }
     }
 
     // MARK: - Event Handling
