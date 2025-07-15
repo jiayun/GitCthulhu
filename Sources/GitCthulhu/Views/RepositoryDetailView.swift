@@ -30,23 +30,19 @@ struct RepositoryDetailView: View {
 
                 Divider()
 
-                // Future features will be added here
-                VStack {
-                    Text("More repository features coming soon...")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Text("• File status and staging")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("• Commit history")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("• Branch management")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                // File List Section
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Working Directory")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                    }
+                    
+                    FileListView(repository: selectedRepository)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
