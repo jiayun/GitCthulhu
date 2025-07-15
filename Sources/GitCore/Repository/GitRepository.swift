@@ -7,6 +7,7 @@
 
 import Foundation
 import Utilities
+import Combine
 
 /// CLI-based implementation of GitRepositoryProtocol
 /// This implementation uses the git command-line interface
@@ -18,6 +19,10 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
 
     private let gitExecutor: GitCommandExecutor
     private let logger = Logger(category: "GitRepository")
+
+    // File system monitoring
+    private let fileSystemMonitor: FileSystemMonitor
+    private var fileSystemSubscription: AnyCancellable?
 
     @Published public var status: [String: GitFileStatus] = [:]
     @Published public var branches: [GitBranch] = []
@@ -33,6 +38,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         self.url = url
         name = url.lastPathComponent
         gitExecutor = GitCommandExecutor(repositoryURL: url)
+        fileSystemMonitor = FileSystemMonitor(repositoryPath: url)
 
         // Validate that this is a git repository
         let gitDir = url.appendingPathComponent(".git")
@@ -49,6 +55,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         self.url = url
         name = url.lastPathComponent
         gitExecutor = GitCommandExecutor(repositoryURL: url)
+        fileSystemMonitor = FileSystemMonitor(repositoryPath: url)
 
         // Skip validation for testing
     }
@@ -58,6 +65,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     public static func create(url: URL) async throws -> GitRepository {
         let repository = try GitRepository(url: url)
         await repository.loadRepositoryData()
+        await repository.startFileSystemMonitoring()
         return repository
     }
 
@@ -287,12 +295,68 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         }
     }
 
+    // MARK: - File System Monitoring
+
+    @MainActor
+    private func startFileSystemMonitoring() async {
+        await setupFileSystemEventSubscription()
+        fileSystemMonitor.startMonitoring()
+        logger.info("File system monitoring started for repository: \(name)")
+    }
+
+    @MainActor
+    private func setupFileSystemEventSubscription() async {
+        fileSystemSubscription = fileSystemMonitor.eventPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] events in
+                Task { @MainActor in
+                    await self?.handleFileSystemEvents(events)
+                }
+            }
+    }
+
+    @MainActor
+    private func handleFileSystemEvents(_ events: [FileSystemEvent]) async {
+        guard !events.isEmpty else { return }
+
+        logger.info("Received \(events.count) file system events for repository: \(name)")
+
+        // Check if any events affect Git status
+        let shouldRefresh = events.contains { event in
+            let relativePath = event.path.replacingOccurrences(of: url.path + "/", with: "")
+
+            // Skip if it's within .git directory but not index or HEAD
+            if relativePath.hasPrefix(".git/") &&
+               !relativePath.contains("HEAD") &&
+               !relativePath.contains("index") {
+                return false
+            }
+
+            return true
+        }
+
+        if shouldRefresh {
+            logger.info("File system changes detected, refreshing repository status")
+            refreshWithDebounce()
+        }
+    }
+
+    @MainActor
+    public func stopFileSystemMonitoring() {
+        fileSystemSubscription?.cancel()
+        fileSystemSubscription = nil
+        fileSystemMonitor.stopMonitoring()
+        logger.info("File system monitoring stopped for repository: \(name)")
+    }
+
     deinit {
         refreshTask?.cancel()
+        fileSystemSubscription?.cancel()
     }
 
     public func close() async {
         refreshTask?.cancel()
+        stopFileSystemMonitoring()
         logger.info("Repository closed")
     }
 }

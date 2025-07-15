@@ -125,6 +125,9 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func removeRepository(_ repository: GitRepository) {
+        // Stop file system monitoring before removing
+        repository.stopFileSystemMonitoring()
+
         repositories.removeAll { $0.id == repository.id }
 
         // Remove from recent repositories if present
@@ -200,6 +203,11 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func clearRecentRepositories() {
+        // Stop monitoring for all repositories before clearing
+        for repository in repositories {
+            repository.stopFileSystemMonitoring()
+        }
+
         recentRepositories.removeAll()
         repositories.removeAll()
         saveRecentRepositories()
