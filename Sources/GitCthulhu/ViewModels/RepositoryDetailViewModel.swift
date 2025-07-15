@@ -17,6 +17,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
 
     private let appViewModel: AppViewModel
     private let repositoryInfoService: RepositoryInfoService
+    private var repositorySubscriptions: AnyCancellable?
 
     init(appViewModel: AppViewModel, repositoryInfoService: RepositoryInfoService = RepositoryInfoService()) {
         self.appViewModel = appViewModel
@@ -43,27 +44,13 @@ final class RepositoryDetailViewModel: ViewModelBase {
     }
 
     private func setupRepositoryObservation(_ repository: GitRepository?) {
-        // Clear previous repository observation
-        cancellables = Set<AnyCancellable>()
+        // Clear only repository-specific subscriptions
+        repositorySubscriptions?.cancel()
+        repositorySubscriptions = nil
 
-        // Re-establish AppViewModel binding
-        appViewModel.$selectedRepositoryId
-            .sink { [weak self] _ in
-                let repository = self?.appViewModel.selectedRepository
-                self?.selectedRepository = repository
-                // Repository observation is already set up in setupBindings
-                if let repository {
-                    Task {
-                        await self?.loadRepositoryInfo(for: repository)
-                    }
-                } else {
-                    self?.repositoryInfo = nil
-                }
-            }
-            .store(in: &cancellables)
-
-        // Observe repository changes if we have a selected repository
         guard let repository else { return }
+
+        var repoSubscriptions = Set<AnyCancellable>()
 
         // Observe repository's objectWillChange to refresh info when repository state changes
         repository.objectWillChange
@@ -74,9 +61,9 @@ final class RepositoryDetailViewModel: ViewModelBase {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &repoSubscriptions)
 
-        // Also observe specific properties for immediate updates
+        // Observe specific properties for immediate updates
         repository.$currentBranch
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -85,7 +72,34 @@ final class RepositoryDetailViewModel: ViewModelBase {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &repoSubscriptions)
+
+        // Observe repository status changes
+        repository.$status
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = self.selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Observe repository branches changes
+        repository.$branches
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let currentRepo = self.selectedRepository else { return }
+                Task {
+                    await self.loadRepositoryInfo(for: currentRepo)
+                }
+            }
+            .store(in: &repoSubscriptions)
+
+        // Store repository subscriptions separately from main cancellables
+        repositorySubscriptions = AnyCancellable {
+            repoSubscriptions.forEach { $0.cancel() }
+        }
     }
 
     func loadRepositoryInfo(for repository: GitRepository) async {
