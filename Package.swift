@@ -28,6 +28,11 @@ let package = Package(
         .library(
             name: "Utilities",
             targets: ["Utilities"]
+        ),
+        // Test utilities library
+        .library(
+            name: "TestUtilities",
+            targets: ["TestUtilities"]
         )
     ],
     dependencies: [
@@ -76,6 +81,17 @@ let package = Package(
             path: "Sources/Utilities"
         ),
 
+        // MARK: - Test Utilities
+
+        .target(
+            name: "TestUtilities",
+            dependencies: [
+                "GitCore",
+                "Utilities"
+            ],
+            path: "Tests/TestUtilities"
+        ),
+
         // MARK: - Tests
 
         .testTarget(
@@ -85,6 +101,7 @@ let package = Package(
                 "GitCore",
                 "UIKit",
                 "Utilities",
+                "TestUtilities",
                 .product(name: "Testing", package: "swift-testing")
             ],
             path: "Tests/GitCthulhuTests",
