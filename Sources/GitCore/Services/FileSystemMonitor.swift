@@ -48,9 +48,9 @@ public class FileSystemMonitor: ObservableObject {
     // Note: We exclude certain .git paths that don't affect repository state
     // but keep important ones like refs/heads and HEAD for branch detection
     private let gitInternalPaths: Set<String> = [
-        ".git/objects",     // Object database changes don't affect working state
-        ".git/logs",        // Log files don't affect current state
-        ".git/index.lock",  // Lock files are temporary
+        ".git/objects", // Object database changes don't affect working state
+        ".git/logs", // Log files don't affect current state
+        ".git/index.lock" // Lock files are temporary
     ]
 
     private let ignoredExtensions: Set<String> = [

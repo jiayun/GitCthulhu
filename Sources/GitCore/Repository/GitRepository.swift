@@ -374,21 +374,21 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         // For .git directory changes, only monitor specific important files
         // that affect repository state, branches, or staging
         let gitRefreshPaths = [
-            ".git/HEAD",           // Current branch pointer
-            ".git/index",          // Staging area
-            ".git/refs/heads/",    // Local branches
-            ".git/refs/remotes/",  // Remote branches
-            ".git/refs/tags/",     // Tags
-            ".git/MERGE_HEAD",     // Merge state
+            ".git/HEAD", // Current branch pointer
+            ".git/index", // Staging area
+            ".git/refs/heads/", // Local branches
+            ".git/refs/remotes/", // Remote branches
+            ".git/refs/tags/", // Tags
+            ".git/MERGE_HEAD", // Merge state
             ".git/CHERRY_PICK_HEAD", // Cherry-pick state
-            ".git/REBASE_HEAD",    // Rebase state
+            ".git/REBASE_HEAD" // Rebase state
         ]
 
         let shouldRefresh = gitRefreshPaths.contains { gitPath in
             if gitPath.hasSuffix("/") {
-                return relativePath.hasPrefix(gitPath)
+                relativePath.hasPrefix(gitPath)
             } else {
-                return relativePath == gitPath
+                relativePath == gitPath
             }
         }
 

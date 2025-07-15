@@ -56,7 +56,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
         repository.objectWillChange
             .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self, let currentRepo = self.selectedRepository else { return }
+                guard let self, let currentRepo = selectedRepository else { return }
                 Task {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
@@ -67,7 +67,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
         repository.$currentBranch
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self, let currentRepo = self.selectedRepository else { return }
+                guard let self, let currentRepo = selectedRepository else { return }
                 Task {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
@@ -78,7 +78,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
         repository.$status
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self, let currentRepo = self.selectedRepository else { return }
+                guard let self, let currentRepo = selectedRepository else { return }
                 Task {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
@@ -89,7 +89,7 @@ final class RepositoryDetailViewModel: ViewModelBase {
         repository.$branches
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self, let currentRepo = self.selectedRepository else { return }
+                guard let self, let currentRepo = selectedRepository else { return }
                 Task {
                     await self.loadRepositoryInfo(for: currentRepo)
                 }
