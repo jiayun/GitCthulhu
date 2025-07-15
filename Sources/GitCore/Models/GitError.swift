@@ -24,6 +24,9 @@ public enum GitError: Error, LocalizedError, Equatable {
     case pushFailed(String)
     case pullFailed(String)
     case checkoutFailed(String)
+    case stagingFailed(String)
+    case unstagingFailed(String)
+    case statusFailed(String)
     case indexCorrupted
     case headDetached
     case noChangesToCommit
@@ -64,6 +67,12 @@ public enum GitError: Error, LocalizedError, Equatable {
             "Pull failed: \(message)"
         case let .checkoutFailed(message):
             "Checkout failed: \(message)"
+        case let .stagingFailed(message):
+            "Staging failed: \(message)"
+        case let .unstagingFailed(message):
+            "Unstaging failed: \(message)"
+        case let .statusFailed(message):
+            "Status check failed: \(message)"
         case .indexCorrupted:
             "Repository index is corrupted"
         case .headDetached:
@@ -111,6 +120,12 @@ public enum GitError: Error, LocalizedError, Equatable {
             "Commit or stash local changes first"
         case .checkoutFailed:
             "Commit or stash changes before switching branches"
+        case .stagingFailed:
+            "Check file permissions and repository state"
+        case .unstagingFailed:
+            "Verify files exist and are staged"
+        case .statusFailed:
+            "Check repository state and try again"
         case .indexCorrupted:
             "Try running 'git fsck' to repair the repository"
         case .headDetached:
