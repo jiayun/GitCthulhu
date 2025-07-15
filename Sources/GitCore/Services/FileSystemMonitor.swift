@@ -45,11 +45,12 @@ public class FileSystemMonitor: ObservableObject {
     @Published public private(set) var isMonitoring = false
 
     // Git-related file patterns to filter
+    // Note: We exclude certain .git paths that don't affect repository state
+    // but keep important ones like refs/heads and HEAD for branch detection
     private let gitInternalPaths: Set<String> = [
-        ".git/objects",
-        ".git/refs/remotes",
-        ".git/logs",
-        ".git/index.lock"
+        ".git/objects",     // Object database changes don't affect working state
+        ".git/logs",        // Log files don't affect current state
+        ".git/index.lock",  // Lock files are temporary
     ]
 
     private let ignoredExtensions: Set<String> = [
