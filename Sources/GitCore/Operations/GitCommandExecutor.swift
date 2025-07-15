@@ -212,6 +212,18 @@ public class GitCommandExecutor {
         }
     }
 
+    /// Gets detailed status entries using the GitStatusManager
+    public func getDetailedStatusEntries() async throws -> [GitStatusEntry] {
+        let statusManager = GitStatusManager(repositoryURL: repositoryURL)
+        return try await statusManager.getDetailedStatus()
+    }
+
+    /// Gets status summary using the GitStatusManager
+    public func getStatusSummary() async throws -> GitStatusSummary {
+        let statusManager = GitStatusManager(repositoryURL: repositoryURL)
+        return try await statusManager.getStatusSummary()
+    }
+
     // MARK: - Staging Operations
 
     public func stageFile(_ filePath: String) async throws {

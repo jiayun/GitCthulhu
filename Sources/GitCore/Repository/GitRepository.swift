@@ -18,6 +18,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     public let name: String
 
     private let gitExecutor: GitCommandExecutor
+    private let statusManager: GitStatusManager
     private let logger = Logger(category: "GitRepository")
 
     // File system monitoring
@@ -25,6 +26,8 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     private var fileSystemSubscription: AnyCancellable?
 
     @Published public var status: [String: GitFileStatus] = [:]
+    @Published public var statusEntries: [GitStatusEntry] = []
+    @Published public var statusSummary: GitStatusSummary = GitStatusSummary(stagedCount: 0, unstagedCount: 0, untrackedCount: 0, conflictedCount: 0, isClean: true)
     @Published public var branches: [GitBranch] = []
     @Published public var currentBranch: GitBranch?
     @Published public var isLoading = false
@@ -38,6 +41,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         self.url = url
         name = url.lastPathComponent
         gitExecutor = GitCommandExecutor(repositoryURL: url)
+        statusManager = GitStatusManager(repositoryURL: url)
         fileSystemMonitor = FileSystemMonitor(repositoryPath: url)
 
         // Validate that this is a git repository
@@ -55,6 +59,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         self.url = url
         name = url.lastPathComponent
         gitExecutor = GitCommandExecutor(repositoryURL: url)
+        statusManager = GitStatusManager(repositoryURL: url)
         fileSystemMonitor = FileSystemMonitor(repositoryPath: url)
 
         // Skip validation for testing
@@ -139,6 +144,15 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     @MainActor
     private func loadStatus() async {
         do {
+            // Load detailed status entries
+            let entries = try await statusManager.getDetailedStatus()
+            statusEntries = entries
+
+            // Load status summary
+            let summary = try await statusManager.getStatusSummary()
+            statusSummary = summary
+
+            // Keep backward compatibility with existing status format
             let statusMap = try await gitExecutor.getRepositoryStatus()
             var convertedStatus: [String: GitFileStatus] = [:]
 
@@ -148,7 +162,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
             }
 
             status = convertedStatus
-            logger.info("Loaded status for \(status.count) files")
+            logger.info("Loaded status for \(status.count) files, \(entries.count) detailed entries")
         } catch {
             logger.warning("Could not load repository status: \(error.localizedDescription)")
         }
@@ -210,34 +224,75 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         await loadStatus()
     }
 
+    /// Gets detailed status entries
+    public func getDetailedStatusEntries() async throws -> [GitStatusEntry] {
+        try await statusManager.getDetailedStatus()
+    }
+
+    /// Gets status summary
+    public func getStatusSummary() async throws -> GitStatusSummary {
+        try await statusManager.getStatusSummary()
+    }
+
+    /// Gets staged files
+    public func getStagedFiles() async throws -> [GitStatusEntry] {
+        try await statusManager.getStagedFiles()
+    }
+
+    /// Gets unstaged files
+    public func getUnstagedFiles() async throws -> [GitStatusEntry] {
+        try await statusManager.getUnstagedFiles()
+    }
+
+    /// Gets untracked files
+    public func getUntrackedFiles() async throws -> [GitStatusEntry] {
+        try await statusManager.getUntrackedFiles()
+    }
+
+    /// Gets conflicted files
+    public func getConflictedFiles() async throws -> [GitStatusEntry] {
+        try await statusManager.getConflictedFiles()
+    }
+
+    /// Checks if repository is clean
+    public func isRepositoryClean() async throws -> Bool {
+        try await statusManager.isRepositoryClean()
+    }
+
     public func stageFile(_ filePath: String) async throws {
         try await gitExecutor.stageFile(filePath)
+        statusManager.invalidateCache()
         await refreshStatus()
     }
 
     public func stageAllFiles() async throws {
         try await gitExecutor.stageAllFiles()
+        statusManager.invalidateCache()
         await refreshStatus()
     }
 
     public func unstageFile(_ filePath: String) async throws {
         try await gitExecutor.unstageFile(filePath)
+        statusManager.invalidateCache()
         await refreshStatus()
     }
 
     public func unstageAllFiles() async throws {
         try await gitExecutor.unstageAllFiles()
+        statusManager.invalidateCache()
         await refreshStatus()
     }
 
     public func commit(message: String, author: String? = nil) async throws -> String {
         let result = try await gitExecutor.commit(message: message, author: author)
+        statusManager.invalidateCache()
         await loadRepositoryData()
         return result
     }
 
     public func amendCommit(message: String?) async throws -> String {
         let result = try await gitExecutor.amendCommit(message: message)
+        statusManager.invalidateCache()
         await loadRepositoryData()
         return result
     }
