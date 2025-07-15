@@ -33,13 +33,15 @@ git checkout main
 ```
 
 #### 3. 驗證 UI 響應性
-- 分支切換後，UI 中的分支名稱應該在 1-2 秒內更新
-- RepositoryInfoPanel 中的分支信息也應該同步更新
+- **左側 repositories 列表**：分支名稱應該在 1-2 秒內自動更新 ✅
+- **Current Repository 區域**：分支信息應該在 1-2 秒內自動更新 ✅
+- **右側詳細資訊面板**：RepositoryInfoPanel 中的分支信息也應該同步更新 ✅
 
 ### 如果測試失敗
 1. 檢查 console log 是否有錯誤信息
 2. 確認文件系統監控是否正常啟動
 3. 驗證 repository change observation 是否正確建立
+4. 檢查 RepositoryDetailViewModel 是否正確觀察 repository 變更
 
 ## 修復內容摘要
 
@@ -57,5 +59,12 @@ git checkout main
 - 改進 `shouldRefreshForEvent` 邏輯，正確檢測 `.git/HEAD` 變更
 - 移除 FileSystemMonitor 中過於嚴格的過濾規則
 - 添加詳細的 debug logging
+
+### 4. RepositoryDetailViewModel 改進
+- 添加了 repository-specific 觀察機制
+- Repository 變更時自動觸發 repositoryInfo 刷新
+- 使用 debounced 更新防止過度的 API 調用
+- 觀察 objectWillChange 和 currentBranch 屬性變更
+- 修復右側詳細資訊面板不自動更新的問題
 
 這些修復應該完全解決外部 git 操作不觸發 UI 更新的問題。
