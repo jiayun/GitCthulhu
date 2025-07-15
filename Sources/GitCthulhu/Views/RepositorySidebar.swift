@@ -102,7 +102,7 @@ struct RepositorySidebar: View {
 }
 
 struct SidebarRepositoryRow: View {
-    let repository: GitRepository
+    @ObservedObject var repository: GitRepository
     @EnvironmentObject private var viewModel: RepositorySidebarViewModel
 
     var body: some View {

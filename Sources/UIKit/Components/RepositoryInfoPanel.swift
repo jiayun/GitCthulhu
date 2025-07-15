@@ -9,7 +9,7 @@ import GitCore
 import SwiftUI
 
 public struct RepositoryInfoPanel: View {
-    let repository: GitRepository
+    @ObservedObject var repository: GitRepository
     let repositoryInfo: RepositoryInfo?
     @State private var isLoading = false
 
