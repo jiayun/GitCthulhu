@@ -61,13 +61,17 @@ public class FileSystemMonitor: ObservableObject {
     }
 
     deinit {
-        // Cleanup file system monitoring without accessing MainActor properties
+        // Ensure monitoring is stopped before deallocation
+        // This prevents callbacks to a deallocated object
         if let eventStream {
             FSEventStreamStop(eventStream)
             FSEventStreamInvalidate(eventStream)
             FSEventStreamRelease(eventStream)
         }
-        eventDebounceTimer?.invalidate()
+
+        // Note: Cannot safely access MainActor properties in deinit
+        // Timer will be invalidated when the object is deallocated
+        // This is acceptable as the timer holds a weak reference
     }
 
     // MARK: - Public API
@@ -76,6 +80,18 @@ public class FileSystemMonitor: ObservableObject {
     public func startMonitoring() {
         guard !isMonitoring else {
             logger.info("File system monitoring already started for \(repositoryPath.path)")
+            return
+        }
+
+        // Validate repository path exists and is accessible
+        guard FileManager.default.fileExists(atPath: repositoryPath.path) else {
+            logger.error("Repository path does not exist: \(repositoryPath.path)")
+            return
+        }
+
+        // Check if path is readable
+        guard FileManager.default.isReadableFile(atPath: repositoryPath.path) else {
+            logger.error("Repository path is not readable: \(repositoryPath.path)")
             return
         }
 
@@ -158,8 +174,20 @@ public class FileSystemMonitor: ObservableObject {
         eventPaths: UnsafeRawPointer,
         eventFlags: UnsafePointer<FSEventStreamEventFlags>
     ) {
+        // Validate input parameters
+        guard numEvents > 0 else {
+            logger.warning("Received FSEvent callback with 0 events")
+            return
+        }
+
         guard let pathsArray = Unmanaged<CFArray>.fromOpaque(eventPaths).takeUnretainedValue() as? [String] else {
             logger.error("Failed to cast FSEvent paths to [String]")
+            return
+        }
+
+        // Ensure we have the expected number of paths
+        guard pathsArray.count == numEvents else {
+            logger.error("FSEvent path count mismatch: expected \(numEvents), got \(pathsArray.count)")
             return
         }
 

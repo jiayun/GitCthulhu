@@ -323,7 +323,19 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
 
         // Check if any events affect Git status
         let shouldRefresh = events.contains { event in
-            let relativePath = event.path.replacingOccurrences(of: url.path + "/", with: "")
+            // Ensure event path is within our repository
+            guard event.path.hasPrefix(url.path) else { return false }
+
+            // Calculate relative path safely
+            let repositoryPathLength = url.path.count
+            guard event.path.count > repositoryPathLength else { return false }
+
+            let relativePath = if event.path.count > repositoryPathLength + 1,
+                                  event.path.dropFirst(repositoryPathLength).first == "/" {
+                String(event.path.dropFirst(repositoryPathLength + 1))
+            } else {
+                String(event.path.dropFirst(repositoryPathLength))
+            }
 
             // Skip if it's within .git directory but not index or HEAD
             if relativePath.hasPrefix(".git/"),
