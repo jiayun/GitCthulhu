@@ -69,9 +69,11 @@ public class FileSystemMonitor: ObservableObject {
             FSEventStreamRelease(eventStream)
         }
 
-        // Note: Cannot safely access MainActor properties in deinit
-        // Timer will be invalidated when the object is deallocated
-        // This is acceptable as the timer holds a weak reference
+        // Synchronously invalidate timer to prevent any potential issues
+        // Safe because timer uses [weak self] closure
+        if let timer = eventDebounceTimer {
+            timer.invalidate()
+        }
     }
 
     // MARK: - Public API

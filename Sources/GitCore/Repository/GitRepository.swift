@@ -323,28 +323,7 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
 
         // Check if any events affect Git status
         let shouldRefresh = events.contains { event in
-            // Ensure event path is within our repository
-            guard event.path.hasPrefix(url.path) else { return false }
-
-            // Calculate relative path safely
-            let repositoryPathLength = url.path.count
-            guard event.path.count > repositoryPathLength else { return false }
-
-            let relativePath = if event.path.count > repositoryPathLength + 1,
-                                  event.path.dropFirst(repositoryPathLength).first == "/" {
-                String(event.path.dropFirst(repositoryPathLength + 1))
-            } else {
-                String(event.path.dropFirst(repositoryPathLength))
-            }
-
-            // Skip if it's within .git directory but not index or HEAD
-            if relativePath.hasPrefix(".git/"),
-               !relativePath.contains("HEAD"),
-               !relativePath.contains("index") {
-                return false
-            }
-
-            return true
+            shouldRefreshForEvent(event)
         }
 
         if shouldRefresh {
@@ -370,5 +349,41 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
         refreshTask?.cancel()
         stopFileSystemMonitoring()
         logger.info("Repository closed")
+    }
+
+    // MARK: - Private Helpers
+
+    /// Determines if a file system event should trigger a repository refresh
+    private func shouldRefreshForEvent(_ event: FileSystemEvent) -> Bool {
+        let eventURL = URL(fileURLWithPath: event.path)
+
+        // Ensure event is within our repository using URL-based comparison
+        guard eventURL.path.hasPrefix(url.path) else { return false }
+
+        // Calculate relative path using URL relationship
+        guard let relativePath = getRelativePath(from: url, to: eventURL) else { return false }
+
+        // Skip if it's within .git directory but not index or HEAD
+        if relativePath.hasPrefix(".git/"),
+           !relativePath.contains("HEAD"),
+           !relativePath.contains("index") {
+            return false
+        }
+
+        return true
+    }
+
+    /// Safely calculates relative path between URLs
+    private func getRelativePath(from baseURL: URL, to targetURL: URL) -> String? {
+        // Normalize paths to handle symbolic links and resolve components
+        let basePath = baseURL.standardized.path
+        let targetPath = targetURL.standardized.path
+
+        // Ensure target is within base
+        guard targetPath.hasPrefix(basePath) else { return nil }
+
+        // Remove base path and leading slash
+        let relativePath = String(targetPath.dropFirst(basePath.count))
+        return relativePath.hasPrefix("/") ? String(relativePath.dropFirst()) : relativePath
     }
 }
