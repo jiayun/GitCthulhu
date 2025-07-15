@@ -36,27 +36,7 @@ struct RepositorySidebar: View {
             if let selectedRepository = viewModel.repositories
                 .first(where: { $0.id == viewModel.selectedRepositoryId }) {
                 Section("Current Repository") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(selectedRepository.name)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        if let branch = selectedRepository.currentBranch {
-                            HStack {
-                                Image(systemName: "arrow.triangle.branch")
-                                    .foregroundColor(.blue)
-                                Text(branch.shortName)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-
-                        Text(selectedRepository.url.path)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                    .padding(.vertical, 4)
+                    CurrentRepositoryRow(repository: selectedRepository)
                 }
             }
         }
@@ -148,6 +128,34 @@ struct SidebarRepositoryRow: View {
                 NSWorkspace.shared.open(repository.url)
             }
         }
+    }
+}
+
+struct CurrentRepositoryRow: View {
+    @ObservedObject var repository: GitRepository
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(repository.name)
+                .font(.headline)
+                .foregroundColor(.primary)
+
+            if let branch = repository.currentBranch {
+                HStack {
+                    Image(systemName: "arrow.triangle.branch")
+                        .foregroundColor(.blue)
+                    Text(branch.shortName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Text(repository.url.path)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+        }
+        .padding(.vertical, 4)
     }
 }
 

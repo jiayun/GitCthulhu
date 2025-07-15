@@ -53,7 +53,7 @@
 - ✅ Repository sidebar auto-updates (was already working)
 - ✅ Repository detail panel auto-updates (newly fixed)
 - ✅ Repository info panel auto-updates (newly fixed)
-- ✅ Current repository display auto-updates (newly fixed)
+- ✅ Current repository display auto-updates (newly fixed - added CurrentRepositoryRow with @ObservedObject)
 
 ### Technical Changes Made:
 
@@ -63,7 +63,12 @@
    - Added comprehensive property observation for `$status` and `$branches`
    - Proper debouncing for different property types
 
-2. **Subscription Architecture**:
+2. **RepositorySidebar.swift**:
+   - Created new `CurrentRepositoryRow` component with `@ObservedObject var repository: GitRepository`
+   - Fixed current repository section to properly observe repository changes
+   - Replaced inline VStack with reactive component
+
+3. **Subscription Architecture**:
    - AppViewModel bindings preserved during repository changes
    - Repository-specific subscriptions managed separately
    - Proper cleanup when switching repositories
