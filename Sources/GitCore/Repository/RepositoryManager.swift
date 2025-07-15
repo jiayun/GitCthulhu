@@ -125,12 +125,13 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func removeRepository(_ repository: GitRepository) {
-        repositories.removeAll { $0.id == repository.id }
+        // Stop file system monitoring before removing
+        repository.stopFileSystemMonitoring()
 
         // Remove from recent repositories if present
-        if let url = repositories.first(where: { $0.id == repository.id })?.url {
-            removeFromRecentRepositories(url)
-        }
+        removeFromRecentRepositories(repository.url)
+
+        repositories.removeAll { $0.id == repository.id }
     }
 
     // MARK: - Recent Repositories Management
@@ -200,6 +201,11 @@ public class RepositoryManager: ObservableObject, RepositoryManagerProtocol {
 
     @MainActor
     public func clearRecentRepositories() {
+        // Stop monitoring for all repositories before clearing
+        for repository in repositories {
+            repository.stopFileSystemMonitoring()
+        }
+
         recentRepositories.removeAll()
         repositories.removeAll()
         saveRecentRepositories()
