@@ -226,8 +226,8 @@ public class StagingViewModel: ObservableObject {
 
                 // Set error message for failed files
                 if !result.failedFiles.isEmpty {
-                    errorMessage =
-                        "Failed to process \(result.failedFiles.count) files: \(result.failedFiles.joined(separator: ", "))"
+                    let failedFilesList = result.failedFiles.joined(separator: ", ")
+                    errorMessage = "Failed to process \(result.failedFiles.count) files: \(failedFilesList)"
                 }
             }
 

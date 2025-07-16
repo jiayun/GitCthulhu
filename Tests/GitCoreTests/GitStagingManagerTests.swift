@@ -38,6 +38,7 @@ final class GitStagingManagerTests: XCTestCase {
         let repoName = "test-repo-\(UUID().uuidString)"
         let repoURL = tempDir.appendingPathComponent(repoName)
 
+        // swiftlint:disable force_try
         try! FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
 
         // Initialize git repository
@@ -62,22 +63,26 @@ final class GitStagingManagerTests: XCTestCase {
         gitConfigName.currentDirectoryURL = repoURL
         try! gitConfigName.run()
         gitConfigName.waitUntilExit()
+        // swiftlint:enable force_try
 
         return repoURL
     }
 
     private func createTestFile(named fileName: String, content: String = "test content") {
         let fileURL = tempRepositoryURL.appendingPathComponent(fileName)
+        // swiftlint:disable:next force_try
         try! content.write(to: fileURL, atomically: true, encoding: .utf8)
     }
 
     private func modifyTestFile(named fileName: String, content: String = "modified content") {
         let fileURL = tempRepositoryURL.appendingPathComponent(fileName)
+        // swiftlint:disable:next force_try
         try! content.write(to: fileURL, atomically: true, encoding: .utf8)
     }
 
     private func deleteTestFile(named fileName: String) {
         let fileURL = tempRepositoryURL.appendingPathComponent(fileName)
+        // swiftlint:disable:next force_try
         try! FileManager.default.removeItem(at: fileURL)
     }
 
@@ -96,6 +101,17 @@ final class GitStagingManagerTests: XCTestCase {
     }
 
     func testUnstageFile() async throws {
+        // Create and commit an initial file to avoid empty repository issues
+        createTestFile(named: "initial.txt", content: "initial content")
+        try await stagingManager.stageFile("initial.txt")
+
+        let commitProcess = Process()
+        commitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commitProcess.arguments = ["commit", "-m", "Initial commit"]
+        commitProcess.currentDirectoryURL = tempRepositoryURL
+        try commitProcess.run()
+        commitProcess.waitUntilExit()
+
         // Create and stage a file
         createTestFile(named: "test.txt")
         try await stagingManager.stageFile("test.txt")
@@ -160,6 +176,17 @@ final class GitStagingManagerTests: XCTestCase {
     }
 
     func testUnstageMultipleFiles() async throws {
+        // Create and commit an initial file to avoid empty repository issues
+        createTestFile(named: "initial.txt", content: "initial content")
+        try await stagingManager.stageFile("initial.txt")
+
+        let commitProcess = Process()
+        commitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commitProcess.arguments = ["commit", "-m", "Initial commit"]
+        commitProcess.currentDirectoryURL = tempRepositoryURL
+        try commitProcess.run()
+        commitProcess.waitUntilExit()
+
         // Create and stage multiple files
         createTestFile(named: "file1.txt")
         createTestFile(named: "file2.txt")
@@ -350,8 +377,8 @@ final class GitStagingManagerTests: XCTestCase {
         let fileCount = 100
         var filePaths: [String] = []
 
-        for i in 0 ..< fileCount {
-            let fileName = "file\(i).txt"
+        for index in 0 ..< fileCount {
+            let fileName = "file\(index).txt"
             createTestFile(named: fileName)
             filePaths.append(fileName)
         }
@@ -362,7 +389,7 @@ final class GitStagingManagerTests: XCTestCase {
         let endTime = Date()
 
         let duration = endTime.timeIntervalSince(startTime)
-        print("Staging \(fileCount) files took \(duration) seconds")
+        // Log performance: Staging took \(duration) seconds for \(fileCount) files
 
         // Should complete within reasonable time (15 seconds)
         XCTAssertLessThan(duration, 15.0)

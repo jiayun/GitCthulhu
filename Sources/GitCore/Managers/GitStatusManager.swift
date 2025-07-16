@@ -189,11 +189,14 @@ public class GitStatusManager {
         var entries: [GitStatusEntry] = []
         for filePath in files {
             // Create status entry for each file with the directory's status
+            let firstChar = statusPrefix.first ?? " "
+            let lastChar = statusPrefix.last ?? " "
+            let indexStatus = statusPrefix == "??" ? .unmodified : GitIndexStatus.fromStatusChar(firstChar)
+            let workingStatus = statusPrefix == "??" ? .untracked : GitWorkingDirectoryStatus.fromStatusChar(lastChar)
             let entry = GitStatusEntry(
                 filePath: filePath,
-                indexStatus: statusPrefix == "??" ? .unmodified : GitIndexStatus.fromStatusChar(statusPrefix.first!),
-                workingDirectoryStatus: statusPrefix == "??" ? .untracked : GitWorkingDirectoryStatus
-                    .fromStatusChar(statusPrefix.last!),
+                indexStatus: indexStatus,
+                workingDirectoryStatus: workingStatus,
                 originalFilePath: nil
             )
             entries.append(entry)

@@ -318,17 +318,17 @@ private struct StagingAreaPreview: View {
         StagingAreaView(
             repository: mockRepository,
             selectedFiles: $selectedFiles,
-            onStageFiles: { files in
-                print("Stage files: \(files)")
+            onStageFiles: { _ in
+                // Preview placeholder - no operation
             },
-            onUnstageFiles: { files in
-                print("Unstage files: \(files)")
+            onUnstageFiles: { _ in
+                // Preview placeholder - no operation
             },
             onStageAll: {
-                print("Stage all")
+                // Preview placeholder - no operation
             },
             onUnstageAll: {
-                print("Unstage all")
+                // Preview placeholder - no operation
             }
         )
         .frame(width: 800, height: 600)
@@ -338,6 +338,7 @@ private struct StagingAreaPreview: View {
         // This is a placeholder for preview
         // In real implementation, this would be a proper GitRepository instance
         let url = URL(fileURLWithPath: "/tmp/mock-repo")
+        // swiftlint:disable:next force_try
         return try! GitRepository(url: url)
     }
 }

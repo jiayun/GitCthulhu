@@ -38,6 +38,7 @@ final class StagingOperationsTests: XCTestCase {
         let repoName = "test-repo-\(UUID().uuidString)"
         let repoURL = tempDir.appendingPathComponent(repoName)
 
+        // swiftlint:disable force_try
         try! FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
 
         // Initialize git repository
@@ -62,12 +63,14 @@ final class StagingOperationsTests: XCTestCase {
         gitConfigName.currentDirectoryURL = repoURL
         try! gitConfigName.run()
         gitConfigName.waitUntilExit()
+        // swiftlint:enable force_try
 
         return repoURL
     }
 
     private func createTestFile(named fileName: String, content: String = "test content") {
         let fileURL = tempRepositoryURL.appendingPathComponent(fileName)
+        // swiftlint:disable:next force_try
         try! content.write(to: fileURL, atomically: true, encoding: .utf8)
     }
 
@@ -333,8 +336,8 @@ final class StagingOperationsTests: XCTestCase {
         let fileCount = 50
         var filePaths: [String] = []
 
-        for i in 0 ..< fileCount {
-            let fileName = "file\(i).txt"
+        for index in 0 ..< fileCount {
+            let fileName = "file\(index).txt"
             createTestFile(named: fileName)
             filePaths.append(fileName)
         }
@@ -345,7 +348,7 @@ final class StagingOperationsTests: XCTestCase {
         let endTime = Date()
 
         let duration = endTime.timeIntervalSince(startTime)
-        print("Batch staging \(fileCount) files took \(duration) seconds")
+        // Log performance: Batch staging took \(duration) seconds for \(fileCount) files
 
         // Should complete within reasonable time
         XCTAssertLessThan(duration, 5.0)

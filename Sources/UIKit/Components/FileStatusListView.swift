@@ -360,103 +360,57 @@ public struct FileStatusListView: View {
 
     private var globalStagingControls: some View {
         HStack(spacing: 8) {
-            // Stage all button
-            Button(action: {
-                Task {
-                    await stagingViewModel.stageAllFiles()
-                }
-            }) {
-                Label("Stage All", systemImage: "plus.circle.fill")
-                    .font(.caption)
+            stagingButton("Stage All", icon: "plus.circle.fill", disabled: !stagingViewModel.hasChangesToStage) {
+                await stagingViewModel.stageAllFiles()
             }
-            .disabled(stagingViewModel.isLoading || !stagingViewModel.hasChangesToStage)
-            .controlSize(.small)
-
-            // Unstage all button
-            Button(action: {
-                Task {
-                    await stagingViewModel.unstageAllFiles()
-                }
-            }) {
-                Label("Unstage All", systemImage: "minus.circle.fill")
-                    .font(.caption)
+            stagingButton("Unstage All", icon: "minus.circle.fill", disabled: !stagingViewModel.hasStagedChanges) {
+                await stagingViewModel.unstageAllFiles()
             }
-            .disabled(stagingViewModel.isLoading || !stagingViewModel.hasStagedChanges)
-            .controlSize(.small)
-
-            // Stage modified files
-            Button(action: {
-                Task {
-                    await stagingViewModel.stageModifiedFiles()
-                }
-            }) {
-                Label("Stage Modified", systemImage: "pencil.circle.fill")
-                    .font(.caption)
+            stagingButton("Stage Modified", icon: "pencil.circle.fill") {
+                await stagingViewModel.stageModifiedFiles()
             }
-            .disabled(stagingViewModel.isLoading)
-            .controlSize(.small)
-
-            // Stage untracked files
-            Button(action: {
-                Task {
-                    await stagingViewModel.stageUntrackedFiles()
-                }
-            }) {
-                Label("Stage Untracked", systemImage: "plus.circle.fill")
-                    .font(.caption)
+            stagingButton("Stage Untracked", icon: "plus.circle.fill") {
+                await stagingViewModel.stageUntrackedFiles()
             }
-            .disabled(stagingViewModel.isLoading)
-            .controlSize(.small)
         }
     }
 
+    private func stagingButton(_ title: String, icon: String, disabled: Bool = false, action: @escaping () async -> Void) -> some View {
+        Button(action: { Task { await action() } }) {
+            Label(title, systemImage: icon).font(.caption)
+        }
+        .disabled(stagingViewModel.isLoading || disabled)
+        .controlSize(.small)
+    }
     private var statusSummary: some View {
         HStack {
             let filtered = state.filteredFileStatuses(from: fileStatuses)
-            let totalCount = filtered.count
-            let stagedCount = filtered.filter(\.isStaged).count
-            let modifiedCount = filtered.filter { $0.hasWorkingDirectoryChanges && !$0.isUntracked }.count
-            let untrackedCount = filtered.filter(\.isUntracked).count
-            let conflictedCount = filtered.filter(\.hasConflicts).count
+            let counts = (
+                total: filtered.count,
+                staged: filtered.filter(\.isStaged).count,
+                modified: filtered.filter { $0.hasWorkingDirectoryChanges && !$0.isUntracked }.count,
+                untracked: filtered.filter(\.isUntracked).count,
+                conflicted: filtered.filter(\.hasConflicts).count
+            )
 
-            summaryBadge(count: totalCount, label: "Total", color: .primary)
-
-            if stagedCount > 0 {
-                summaryBadge(count: stagedCount, label: "Staged", color: .green)
-            }
-
-            if modifiedCount > 0 {
-                summaryBadge(count: modifiedCount, label: "Modified", color: .orange)
-            }
-
-            if untrackedCount > 0 {
-                summaryBadge(count: untrackedCount, label: "Untracked", color: .gray)
-            }
-
-            if conflictedCount > 0 {
-                summaryBadge(count: conflictedCount, label: "Conflicts", color: .red)
-            }
-
+            summaryBadge(count: counts.total, label: "Total", color: .primary)
+            if counts.staged > 0 { summaryBadge(count: counts.staged, label: "Staged", color: .green) }
+            if counts.modified > 0 { summaryBadge(count: counts.modified, label: "Modified", color: .orange) }
+            if counts.untracked > 0 { summaryBadge(count: counts.untracked, label: "Untracked", color: .gray) }
+            if counts.conflicted > 0 { summaryBadge(count: counts.conflicted, label: "Conflicts", color: .red) }
             Spacer()
         }
     }
 
     private func summaryBadge(count: Int, label: String, color: Color) -> some View {
         HStack(spacing: 2) {
-            Text("\(count)")
-                .fontWeight(.medium)
+            Text("\(count)").fontWeight(.medium)
             Text(label)
         }
-        .font(.caption)
-        .foregroundColor(color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
-        .background(color.opacity(0.1))
-        .cornerRadius(4)
+        .font(.caption).foregroundColor(color)
+        .padding(.horizontal, 8).padding(.vertical, 2)
+        .background(color.opacity(0.1)).cornerRadius(4)
     }
-
-    // MARK: - Content View
-
     private var contentView: some View {
         Group {
             if state.filteredFileStatuses(from: fileStatuses).isEmpty {
@@ -466,90 +420,53 @@ public struct FileStatusListView: View {
             }
         }
     }
-
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle")
-                .font(.largeTitle)
-                .foregroundColor(.green)
-
-            Text("No Files Found")
-                .font(.headline)
-
-            Text(emptyStateMessage)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+            Image(systemName: "checkmark.circle").font(.largeTitle).foregroundColor(.green)
+            Text("No Files Found").font(.headline)
+            Text(emptyStateMessage).foregroundColor(.secondary).multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity).padding()
     }
 
     private var emptyStateMessage: String {
-        if !state.searchText.isEmpty {
-            "No files match your search criteria."
-        } else {
-            switch state.selectedFilter {
-            case .all:
-                "Working directory is clean. No changes detected."
-            case .staged:
-                "No files are currently staged for commit."
-            case .unstaged:
-                "No modified files in working directory."
-            case .untracked:
-                "No untracked files found."
-            case .conflicted:
-                "No conflicted files found."
-            }
+        if !state.searchText.isEmpty { return "No files match your search criteria." }
+        switch state.selectedFilter {
+        case .all: return "Working directory is clean. No changes detected."
+        case .staged: return "No files are currently staged for commit."
+        case .unstaged: return "No modified files in working directory."
+        case .untracked: return "No untracked files found."
+        case .conflicted: return "No conflicted files found."
         }
     }
 
     private var fileListView: some View {
         ScrollView {
             LazyVStack(spacing: 8) {
-                ForEach(state.groupedFileStatuses(from: fileStatuses)) { group in
-                    groupView(group)
-                }
-            }
-            .padding()
+                ForEach(state.groupedFileStatuses(from: fileStatuses), content: groupView)
+            }.padding()
         }
     }
 
     private func groupView(_ group: FileStatusGroup) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Group header (if grouping is enabled)
             if let title = group.title {
                 HStack {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
+                    Text(title).font(.headline).foregroundColor(.primary)
                     Spacer()
-
-                    Text("\(group.files.count) files")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 4)
+                    Text("\(group.files.count) files").font(.caption).foregroundColor(.secondary)
+                }.padding(.horizontal, 4)
             }
-
-            // File items
             ForEach(group.files) { fileStatus in
                 FileStatusItemView(
                     fileStatus: fileStatus,
                     isSelected: state.selectedFiles.contains(fileStatus.filePath),
-                    onSelectionToggle: {
-                        state.toggleFileSelection(fileStatus.filePath)
-                    },
-                    onStageToggle: {
-                        Task {
-                            await stagingViewModel.toggleFileStaging(fileStatus.filePath)
-                        }
-                    }
+                    onSelectionToggle: { state.toggleFileSelection(fileStatus.filePath) },
+                    onStageToggle: { Task { await stagingViewModel.toggleFileStaging(fileStatus.filePath) } }
                 )
             }
         }
     }
-
     private var refreshButton: some View {
         Button(action: {
             Task {
@@ -558,93 +475,26 @@ public struct FileStatusListView: View {
             }
         }) {
             Image(systemName: "arrow.clockwise")
-        }
-        .help("Refresh file status")
+        }.help("Refresh file status")
     }
 
-    // MARK: - Banner Views
-
     private func errorBanner(message: String) -> some View {
-        HStack {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.red)
-
-            Text(message)
-                .font(.caption)
-                .foregroundColor(.red)
-
-            Spacer()
-
-            Button("Dismiss") {
-                stagingViewModel.clearError()
-            }
-            .font(.caption)
-            .foregroundColor(.red)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.red.opacity(0.1))
-        .cornerRadius(6)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        banner(message: message, color: .red, icon: "exclamationmark.triangle.fill") { stagingViewModel.clearError() }
     }
 
     private func successBanner(message: String) -> some View {
+        banner(message: message, color: .green, icon: "checkmark.circle.fill") { stagingViewModel.clearLastResult() }
+    }
+
+    private func banner(message: String, color: Color, icon: String, onDismiss: @escaping () -> Void) -> some View {
         HStack {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-
-            Text(message)
-                .font(.caption)
-                .foregroundColor(.green)
-
+            Image(systemName: icon).foregroundColor(color)
+            Text(message).font(.caption).foregroundColor(color)
             Spacer()
-
-            Button("Dismiss") {
-                stagingViewModel.clearLastResult()
-            }
-            .font(.caption)
-            .foregroundColor(.green)
+            Button("Dismiss", action: onDismiss).font(.caption).foregroundColor(color)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(6)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 16).padding(.vertical, 8)
+        .background(color.opacity(0.1)).cornerRadius(6)
+        .padding(.horizontal, 16).padding(.bottom, 8)
     }
-}
-
-// MARK: - Keyboard Shortcuts (Disabled for macOS 12.0 compatibility)
-
-// Keyboard shortcuts require macOS 14.0+, so they are disabled for now
-// to maintain compatibility with macOS 12.0+
-
-#Preview("File Status List") {
-    // Note: This preview requires a GitRepository instance
-    // In real usage, this would be provided by the parent view
-    VStack {
-        Text("File Status List Preview")
-            .font(.title)
-
-        Text("This component requires a GitRepository instance")
-            .font(.caption)
-            .foregroundColor(.secondary)
-
-        Text("It will display:")
-            .font(.subheadline)
-            .padding(.top)
-
-        VStack(alignment: .leading, spacing: 4) {
-            Text("• Search and filter controls")
-            Text("• File grouping options")
-            Text("• Status indicators with colors")
-            Text("• File selection capabilities")
-            Text("• Real-time status updates")
-        }
-        .font(.caption)
-        .foregroundColor(.secondary)
-    }
-    .frame(width: 500, height: 400)
-    .padding()
 }
