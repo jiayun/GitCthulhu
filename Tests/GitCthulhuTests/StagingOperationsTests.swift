@@ -106,6 +106,17 @@ final class StagingOperationsTests: XCTestCase {
     }
 
     func testSmartUnstageFiles() async throws {
+        // Create and commit an initial file to avoid empty repository issues
+        createTestFile(named: "initial.txt", content: "initial content")
+        try await stageFile("initial.txt")
+
+        let commitProcess = Process()
+        commitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commitProcess.arguments = ["commit", "-m", "Initial commit"]
+        commitProcess.currentDirectoryURL = tempRepositoryURL
+        try commitProcess.run()
+        commitProcess.waitUntilExit()
+
         // Create and stage test files
         createTestFile(named: "file1.txt")
         createTestFile(named: "file2.txt")

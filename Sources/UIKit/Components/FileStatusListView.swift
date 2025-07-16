@@ -9,7 +9,6 @@ import GitCore
 import SwiftUI
 
 // MARK: - Supporting Types
-
 public enum FileStatusFilter: String, CaseIterable, Identifiable {
     case all = "All Files"
     case staged = "Staged Only"
@@ -18,7 +17,6 @@ public enum FileStatusFilter: String, CaseIterable, Identifiable {
     case conflicted = "Conflicted Only"
 
     public var id: String { rawValue }
-
     public var systemImage: String {
         switch self {
         case .all: "doc.on.doc"
@@ -29,7 +27,6 @@ public enum FileStatusFilter: String, CaseIterable, Identifiable {
         }
     }
 }
-
 public enum FileStatusGrouping: String, CaseIterable, Identifiable {
     case none = "No Grouping"
     case status = "Group by Status"
@@ -37,7 +34,6 @@ public enum FileStatusGrouping: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 }
-
 public struct FileStatusGroup: Identifiable {
     public let id = UUID()
     public let title: String?
@@ -50,7 +46,6 @@ public struct FileStatusGroup: Identifiable {
 }
 
 // MARK: - FileStatusListView Internal State
-
 @MainActor
 public class FileStatusListState: ObservableObject {
     @Published public var selectedFilter: FileStatusFilter = .all
@@ -59,15 +54,12 @@ public class FileStatusListState: ObservableObject {
     @Published public var selectedFiles: Set<String> = []
 
     public init() {}
-
     public func clearSelection() {
         selectedFiles.removeAll()
     }
 }
-
 public extension FileStatusListState {
     // MARK: - Filtering and Grouping
-
     func filteredFileStatuses(from entries: [GitStatusEntry]) -> [GitStatusEntry] {
         let filtered = entries.filter { entry in
             // Apply filter
@@ -160,7 +152,6 @@ public extension FileStatusListState {
         selectedFiles.count
     }
 }
-
 public struct FileStatusListView: View {
     @ObservedObject private var repository: GitRepository
     @StateObject private var state = FileStatusListState()
@@ -375,13 +366,19 @@ public struct FileStatusListView: View {
         }
     }
 
-    private func stagingButton(_ title: String, icon: String, disabled: Bool = false, action: @escaping () async -> Void) -> some View {
+    private func stagingButton(
+        _ title: String,
+        icon: String,
+        disabled: Bool = false,
+        action: @escaping () async -> Void
+    ) -> some View {
         Button(action: { Task { await action() } }) {
             Label(title, systemImage: icon).font(.caption)
         }
         .disabled(stagingViewModel.isLoading || disabled)
         .controlSize(.small)
     }
+
     private var statusSummary: some View {
         HStack {
             let filtered = state.filteredFileStatuses(from: fileStatuses)
@@ -411,6 +408,7 @@ public struct FileStatusListView: View {
         .padding(.horizontal, 8).padding(.vertical, 2)
         .background(color.opacity(0.1)).cornerRadius(4)
     }
+
     private var contentView: some View {
         Group {
             if state.filteredFileStatuses(from: fileStatuses).isEmpty {
@@ -420,6 +418,7 @@ public struct FileStatusListView: View {
             }
         }
     }
+
     private var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle").font(.largeTitle).foregroundColor(.green)
@@ -467,6 +466,7 @@ public struct FileStatusListView: View {
             }
         }
     }
+
     private var refreshButton: some View {
         Button(action: {
             Task {
