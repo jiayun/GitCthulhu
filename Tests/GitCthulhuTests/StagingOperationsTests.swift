@@ -38,7 +38,7 @@ final class StagingOperationsTests: XCTestCase {
         let repoName = "test-repo-\(UUID().uuidString)"
         let repoURL = tempDir.appendingPathComponent(repoName)
 
-        // swiftlint:disable force_try
+        // swiftlint:disable:next force_try
         try! FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
 
         // Initialize git repository
@@ -46,6 +46,7 @@ final class StagingOperationsTests: XCTestCase {
         gitInit.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         gitInit.arguments = ["init"]
         gitInit.currentDirectoryURL = repoURL
+        // swiftlint:disable:next force_try
         try! gitInit.run()
         gitInit.waitUntilExit()
 
@@ -54,6 +55,7 @@ final class StagingOperationsTests: XCTestCase {
         gitConfig.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         gitConfig.arguments = ["config", "user.email", "test@example.com"]
         gitConfig.currentDirectoryURL = repoURL
+        // swiftlint:disable:next force_try
         try! gitConfig.run()
         gitConfig.waitUntilExit()
 
@@ -61,18 +63,20 @@ final class StagingOperationsTests: XCTestCase {
         gitConfigName.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         gitConfigName.arguments = ["config", "user.name", "Test User"]
         gitConfigName.currentDirectoryURL = repoURL
+        // swiftlint:disable:next force_try
         try! gitConfigName.run()
         gitConfigName.waitUntilExit()
-        // swiftlint:enable force_try
 
         // Create an initial commit
         let initialCommitFile = repoURL.appendingPathComponent("initial.txt")
+        // swiftlint:disable:next force_try
         try! "initial content".write(to: initialCommitFile, atomically: true, encoding: .utf8)
 
         let gitAdd = Process()
         gitAdd.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         gitAdd.arguments = ["add", "initial.txt"]
         gitAdd.currentDirectoryURL = repoURL
+        // swiftlint:disable:next force_try
         try! gitAdd.run()
         gitAdd.waitUntilExit()
 
@@ -80,6 +84,7 @@ final class StagingOperationsTests: XCTestCase {
         gitCommit.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         gitCommit.arguments = ["commit", "-m", "Initial commit"]
         gitCommit.currentDirectoryURL = repoURL
+        // swiftlint:disable:next force_try
         try! gitCommit.run()
         gitCommit.waitUntilExit()
 
