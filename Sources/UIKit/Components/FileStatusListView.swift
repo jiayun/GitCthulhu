@@ -9,6 +9,7 @@ import GitCore
 import SwiftUI
 
 // MARK: - Supporting Types
+
 public enum FileStatusFilter: String, CaseIterable, Identifiable {
     case all = "All Files"
     case staged = "Staged Only"
@@ -27,6 +28,7 @@ public enum FileStatusFilter: String, CaseIterable, Identifiable {
         }
     }
 }
+
 public enum FileStatusGrouping: String, CaseIterable, Identifiable {
     case none = "No Grouping"
     case status = "Group by Status"
@@ -34,6 +36,7 @@ public enum FileStatusGrouping: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 }
+
 public struct FileStatusGroup: Identifiable {
     public let id = UUID()
     public let title: String?
@@ -46,6 +49,7 @@ public struct FileStatusGroup: Identifiable {
 }
 
 // MARK: - FileStatusListView Internal State
+
 @MainActor
 public class FileStatusListState: ObservableObject {
     @Published public var selectedFilter: FileStatusFilter = .all
@@ -54,12 +58,12 @@ public class FileStatusListState: ObservableObject {
     @Published public var selectedFiles: Set<String> = []
 
     public init() {}
-    public func clearSelection() {
-        selectedFiles.removeAll()
-    }
+    public func clearSelection() { selectedFiles.removeAll() }
 }
+
 public extension FileStatusListState {
     // MARK: - Filtering and Grouping
+
     func filteredFileStatuses(from entries: [GitStatusEntry]) -> [GitStatusEntry] {
         let filtered = entries.filter { entry in
             // Apply filter
@@ -144,14 +148,10 @@ public extension FileStatusListState {
         selectedFiles.removeAll()
     }
 
-    var hasSelection: Bool {
-        !selectedFiles.isEmpty
-    }
-
-    var selectionCount: Int {
-        selectedFiles.count
-    }
+    var hasSelection: Bool { !selectedFiles.isEmpty }
+    var selectionCount: Int { selectedFiles.count }
 }
+
 public struct FileStatusListView: View {
     @ObservedObject private var repository: GitRepository
     @StateObject private var state = FileStatusListState()
@@ -289,15 +289,9 @@ public struct FileStatusListView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            Button("Select All") {
-                state.selectAll(from: fileStatuses)
-            }
-            .font(.caption)
+            Button("Select All") { state.selectAll(from: fileStatuses) }.font(.caption)
 
-            Button("Deselect All") {
-                state.deselectAll()
-            }
-            .font(.caption)
+            Button("Deselect All") { state.deselectAll() }.font(.caption)
 
             // Staging operations for selected files
             if state.hasSelection {
@@ -473,9 +467,7 @@ public struct FileStatusListView: View {
                 await repository.refreshStatus()
                 await stagingViewModel.refreshStagingStatus()
             }
-        }) {
-            Image(systemName: "arrow.clockwise")
-        }.help("Refresh file status")
+        }) { Image(systemName: "arrow.clockwise") }.help("Refresh file status")
     }
 
     private func errorBanner(message: String) -> some View {
