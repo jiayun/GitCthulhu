@@ -33,7 +33,7 @@ public class GitStatusManager {
         }
 
         let output = try await gitExecutor.execute(["status", "--porcelain=v1"])
-        let entries = parseStatusOutput(output)
+        let entries = await parseStatusOutput(output)
 
         // Sort entries by file path for consistent ordering
         let sortedEntries = entries.sorted { $0.filePath < $1.filePath }
@@ -57,7 +57,7 @@ public class GitStatusManager {
         let output = try await gitExecutor.execute(["status", "--porcelain=v1", filePath])
         guard !output.isEmpty else { return nil }
 
-        let entries = parseStatusOutput(output)
+        let entries = await parseStatusOutput(output)
         let entry = entries.first { $0.filePath == filePath }
 
         // Update cache for this file
@@ -145,22 +145,83 @@ public class GitStatusManager {
         Date().timeIntervalSince(lastCacheUpdate) < cacheValidityDuration
     }
 
-    private func parseStatusOutput(_ output: String) -> [GitStatusEntry] {
+    private func parseStatusOutput(_ output: String) async -> [GitStatusEntry] {
         let lines = output.components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
 
         var entries: [GitStatusEntry] = []
 
         for line in lines {
-            if let entry = GitStatusEntry.fromPorcelainLine(line) {
-                entries.append(entry)
+            // Check if this line represents a directory (ends with /)
+            if line.count >= 3 && line.hasSuffix("/") {
+                // Expand directory to individual files
+                let expandedEntries = await expandDirectoryEntry(line)
+                entries.append(contentsOf: expandedEntries)
             } else {
-                logger.warning("Failed to parse status line: \(line)")
+                // Handle normal file entry
+                if let entry = GitStatusEntry.fromPorcelainLine(line) {
+                    entries.append(entry)
+                } else {
+                    logger.warning("Failed to parse status line: \(line)")
+                }
             }
         }
 
         logger.debug("Parsed \(entries.count) status entries in order")
         return entries
+    }
+
+    /// Expands a directory entry to individual file entries
+    private func expandDirectoryEntry(_ line: String) async -> [GitStatusEntry] {
+        guard line.count >= 3 else { return [] }
+
+        let statusPrefix = String(line.prefix(2))
+        let directoryPath = String(line.dropFirst(3))
+
+        // Remove trailing slash
+        let cleanDirectoryPath = directoryPath.hasSuffix("/") ? String(directoryPath.dropLast()) : directoryPath
+
+        logger.debug("Expanding directory entry: \(cleanDirectoryPath)")
+
+        // Get files in the directory using git ls-files command
+        let files = await getFilesInDirectory(cleanDirectoryPath, statusPrefix: statusPrefix)
+
+        var entries: [GitStatusEntry] = []
+        for filePath in files {
+            // Create status entry for each file with the directory's status
+            let entry = GitStatusEntry(
+                filePath: filePath,
+                indexStatus: statusPrefix == "??" ? .unmodified : GitIndexStatus.fromStatusChar(statusPrefix.first!),
+                workingDirectoryStatus: statusPrefix == "??" ? .untracked : GitWorkingDirectoryStatus.fromStatusChar(statusPrefix.last!),
+                originalFilePath: nil
+            )
+            entries.append(entry)
+        }
+
+        logger.debug("Expanded directory \(cleanDirectoryPath) to \(entries.count) files")
+        return entries
+    }
+
+    /// Gets all files in a directory using git ls-files
+    private func getFilesInDirectory(_ directoryPath: String, statusPrefix: String) async -> [String] {
+        do {
+            let output: String
+
+            if statusPrefix == "??" {
+                // For untracked files, use git ls-files --others --exclude-standard
+                output = try await gitExecutor.execute(["ls-files", "--others", "--exclude-standard", directoryPath])
+            } else {
+                // For tracked files, use git ls-files
+                output = try await gitExecutor.execute(["ls-files", directoryPath])
+            }
+
+            return output.components(separatedBy: .newlines)
+                .filter { !$0.isEmpty }
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        } catch {
+            logger.error("Failed to get files in directory \(directoryPath): \(error)")
+            return []
+        }
     }
 }
 

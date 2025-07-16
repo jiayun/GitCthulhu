@@ -164,9 +164,11 @@ public extension FileStatusListState {
 public struct FileStatusListView: View {
     @ObservedObject private var repository: GitRepository
     @StateObject private var state = FileStatusListState()
+    @StateObject private var stagingViewModel: StagingViewModel
 
     public init(repository: GitRepository) {
         self.repository = repository
+        self._stagingViewModel = StateObject(wrappedValue: StagingViewModel(repository: repository))
     }
 
     // Direct access to repository's status entries
@@ -183,6 +185,22 @@ public struct FileStatusListView: View {
     }
 
     public var body: some View {
+        mainView
+            .onChange(of: repository.id) { _ in
+                // Clear selection when repository changes
+                state.clearSelection()
+            }
+            .id(repositoryId)
+            .navigationTitle("File Status")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    refreshButton
+                }
+            }
+            .focusable()
+    }
+
+    private var mainView: some View {
         VStack(spacing: 0) {
             // Header with controls
             headerView
@@ -191,16 +209,22 @@ public struct FileStatusListView: View {
 
             // Content area
             contentView
+
+            // Message displays
+            messageDisplays
         }
-        .onChange(of: repository.id) { _ in
-            // Clear selection when repository changes
-            state.clearSelection()
-        }
-        .id(repositoryId)
-        .navigationTitle("File Status")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                refreshButton
+    }
+
+    private var messageDisplays: some View {
+        VStack(spacing: 0) {
+            // Error message display
+            if let errorMessage = stagingViewModel.errorMessage {
+                errorBanner(message: errorMessage)
+            }
+
+            // Success message display
+            if let successMessage = stagingViewModel.lastOperationSuccessMessage {
+                successBanner(message: successMessage)
             }
         }
     }
@@ -260,6 +284,11 @@ public struct FileStatusListView: View {
             if state.hasSelection {
                 selectionControls
             }
+
+            // Global staging actions
+            if !state.hasSelection {
+                globalStagingControls
+            }
         }
     }
 
@@ -278,6 +307,106 @@ public struct FileStatusListView: View {
                 state.deselectAll()
             }
             .font(.caption)
+
+            // Staging operations for selected files
+            if state.hasSelection {
+                Divider()
+                    .frame(height: 16)
+
+                stagingControlsForSelection
+            }
+        }
+    }
+
+    private var stagingControlsForSelection: some View {
+        HStack(spacing: 6) {
+            // Stage selected files
+            Button(action: {
+                Task {
+                    await stagingViewModel.stageSelectedFiles(state.selectedFiles)
+                }
+            }) {
+                Label("Stage", systemImage: "plus.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading)
+            .controlSize(.small)
+
+            // Unstage selected files
+            Button(action: {
+                Task {
+                    await stagingViewModel.unstageSelectedFiles(state.selectedFiles)
+                }
+            }) {
+                Label("Unstage", systemImage: "minus.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading)
+            .controlSize(.small)
+
+            // Toggle staging for selected files
+            Button(action: {
+                Task {
+                    await stagingViewModel.toggleSelectedFilesStaging(state.selectedFiles)
+                }
+            }) {
+                Label("Toggle", systemImage: "arrow.up.arrow.down.circle")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading)
+            .controlSize(.small)
+        }
+    }
+
+    private var globalStagingControls: some View {
+        HStack(spacing: 8) {
+            // Stage all button
+            Button(action: {
+                Task {
+                    await stagingViewModel.stageAllFiles()
+                }
+            }) {
+                Label("Stage All", systemImage: "plus.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading || !stagingViewModel.hasChangesToStage)
+            .controlSize(.small)
+
+            // Unstage all button
+            Button(action: {
+                Task {
+                    await stagingViewModel.unstageAllFiles()
+                }
+            }) {
+                Label("Unstage All", systemImage: "minus.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading || !stagingViewModel.hasStagedChanges)
+            .controlSize(.small)
+
+            // Stage modified files
+            Button(action: {
+                Task {
+                    await stagingViewModel.stageModifiedFiles()
+                }
+            }) {
+                Label("Stage Modified", systemImage: "pencil.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading)
+            .controlSize(.small)
+
+            // Stage untracked files
+            Button(action: {
+                Task {
+                    await stagingViewModel.stageUntrackedFiles()
+                }
+            }) {
+                Label("Stage Untracked", systemImage: "plus.circle.fill")
+                    .font(.caption)
+            }
+            .disabled(stagingViewModel.isLoading)
+            .controlSize(.small)
         }
     }
 
@@ -410,6 +539,11 @@ public struct FileStatusListView: View {
                     isSelected: state.selectedFiles.contains(fileStatus.filePath),
                     onSelectionToggle: {
                         state.toggleFileSelection(fileStatus.filePath)
+                    },
+                    onStageToggle: {
+                        Task {
+                            await stagingViewModel.toggleFileStaging(fileStatus.filePath)
+                        }
                     }
                 )
             }
@@ -420,13 +554,70 @@ public struct FileStatusListView: View {
         Button(action: {
             Task {
                 await repository.refreshStatus()
+                await stagingViewModel.refreshStagingStatus()
             }
         }) {
             Image(systemName: "arrow.clockwise")
         }
         .help("Refresh file status")
     }
+
+    // MARK: - Banner Views
+
+    private func errorBanner(message: String) -> some View {
+        HStack {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.red)
+
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.red)
+
+            Spacer()
+
+            Button("Dismiss") {
+                stagingViewModel.clearError()
+            }
+            .font(.caption)
+            .foregroundColor(.red)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.1))
+        .cornerRadius(6)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+
+    private func successBanner(message: String) -> some View {
+        HStack {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.green)
+
+            Spacer()
+
+            Button("Dismiss") {
+                stagingViewModel.clearLastResult()
+            }
+            .font(.caption)
+            .foregroundColor(.green)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.green.opacity(0.1))
+        .cornerRadius(6)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
 }
+
+// MARK: - Keyboard Shortcuts (Disabled for macOS 12.0 compatibility)
+// Keyboard shortcuts require macOS 14.0+, so they are disabled for now
+// to maintain compatibility with macOS 12.0+
 
 #Preview("File Status List") {
     // Note: This preview requires a GitRepository instance

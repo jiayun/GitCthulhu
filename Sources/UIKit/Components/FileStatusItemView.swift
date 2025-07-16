@@ -12,15 +12,18 @@ public struct FileStatusItemView: View {
     let fileStatus: GitStatusEntry
     let isSelected: Bool
     let onSelectionToggle: () -> Void
+    let onStageToggle: (() -> Void)?
 
     public init(
         fileStatus: GitStatusEntry,
         isSelected: Bool = false,
-        onSelectionToggle: @escaping () -> Void = {}
+        onSelectionToggle: @escaping () -> Void = {},
+        onStageToggle: (() -> Void)? = nil
     ) {
         self.fileStatus = fileStatus
         self.isSelected = isSelected
         self.onSelectionToggle = onSelectionToggle
+        self.onStageToggle = onStageToggle
     }
 
     public var body: some View {
@@ -53,6 +56,11 @@ public struct FileStatusItemView: View {
 
             Spacer()
 
+            // Stage/Unstage button
+            if let onStageToggle = onStageToggle {
+                stageButton(onStageToggle: onStageToggle)
+            }
+
             // Status badges
             statusBadges
         }
@@ -63,6 +71,9 @@ public struct FileStatusItemView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onSelectionToggle()
+        }
+        .conditionalDraggable(fileStatus.filePath) {
+            dragPreview
         }
     }
 
@@ -141,6 +152,26 @@ public struct FileStatusItemView: View {
             .cornerRadius(4)
     }
 
+    private func stageButton(onStageToggle: @escaping () -> Void) -> some View {
+        Button(action: onStageToggle) {
+            HStack(spacing: 4) {
+                Image(systemName: stageButtonIcon)
+                    .font(.system(size: 12, weight: .medium))
+
+                Text(stageButtonText)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(stageButtonColor.opacity(0.15))
+            .foregroundColor(stageButtonColor)
+            .cornerRadius(4)
+        }
+        .buttonStyle(.plain)
+        .help(stageButtonHelpText)
+    }
+
     // MARK: - Computed Properties
 
     private var statusColor: Color {
@@ -210,7 +241,74 @@ public struct FileStatusItemView: View {
             return "doc"
         }
     }
+
+    // MARK: - Stage Button Properties
+
+    private var stageButtonIcon: String {
+        if fileStatus.isStaged {
+            return "minus.circle"
+        } else {
+            return "plus.circle"
+        }
+    }
+
+    private var stageButtonText: String {
+        if fileStatus.isStaged {
+            return "Unstage"
+        } else {
+            return "Stage"
+        }
+    }
+
+    private var stageButtonColor: Color {
+        if fileStatus.isStaged {
+            return .orange
+        } else {
+            return .green
+        }
+    }
+
+    private var stageButtonHelpText: String {
+        if fileStatus.isStaged {
+            return "Unstage this file from the commit"
+        } else {
+            return "Stage this file for commit"
+        }
+    }
+
+    // MARK: - Drag Preview
+
+    private var dragPreview: some View {
+        HStack(spacing: 8) {
+            // Status indicator
+            Circle()
+                .fill(statusColor)
+                .frame(width: 8, height: 8)
+
+            // File icon
+            Image(systemName: fileIcon)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            // File name
+            Text(fileName)
+                .font(.callout)
+                .fontWeight(.medium)
+                .lineLimit(1)
+
+            // Stage indicator
+            Image(systemName: fileStatus.isStaged ? "checkmark.circle.fill" : "plus.circle")
+                .font(.caption)
+                .foregroundColor(fileStatus.isStaged ? .green : .orange)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(8)
+        .shadow(radius: 2)
+    }
 }
+
 
 #Preview("Single File Status") {
     FileStatusItemPreview()
@@ -236,8 +334,9 @@ private struct FileStatusItemPreview: View {
                 workingDirectoryStatus: .unmodified,
                 originalFilePath: nil
             ),
-            isSelected: false
-        ) {}
+            isSelected: false,
+            onStageToggle: { }
+        )
     }
 
     private var modifiedFileExample: some View {
@@ -248,8 +347,9 @@ private struct FileStatusItemPreview: View {
                 workingDirectoryStatus: .modified,
                 originalFilePath: nil
             ),
-            isSelected: true
-        ) {}
+            isSelected: true,
+            onStageToggle: { }
+        )
     }
 
     private var untrackedFileExample: some View {
@@ -260,8 +360,9 @@ private struct FileStatusItemPreview: View {
                 workingDirectoryStatus: .untracked,
                 originalFilePath: nil
             ),
-            isSelected: false
-        ) {}
+            isSelected: false,
+            onStageToggle: { }
+        )
     }
 
     private var renamedFileExample: some View {
@@ -272,7 +373,8 @@ private struct FileStatusItemPreview: View {
                 workingDirectoryStatus: .unmodified,
                 originalFilePath: "OldFile.swift"
             ),
-            isSelected: false
-        ) {}
+            isSelected: false,
+            onStageToggle: { }
+        )
     }
 }

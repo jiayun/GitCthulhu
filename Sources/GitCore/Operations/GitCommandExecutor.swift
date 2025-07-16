@@ -245,6 +245,19 @@ public class GitCommandExecutor {
 
     public func stageFile(_ filePath: String) async throws {
         let sanitizedPath = try GitInputValidator.sanitizeFilePath(filePath)
+
+        // Check if file exists before attempting to stage
+        let fileURL = repositoryURL.appendingPathComponent(sanitizedPath)
+        let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
+
+        if !fileExists {
+            // Check if it's a deleted file that should be staged
+            let statusOutput = try await execute(["status", "--porcelain=v1", sanitizedPath])
+            if statusOutput.isEmpty {
+                throw GitError.libgit2Error("File does not exist and is not tracked by Git: \(sanitizedPath)")
+            }
+        }
+
         try await execute(["add", sanitizedPath])
     }
 
