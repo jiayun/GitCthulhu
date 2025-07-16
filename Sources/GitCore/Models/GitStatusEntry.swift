@@ -152,7 +152,6 @@ public struct GitStatusEntry: Identifiable {
     }
 }
 
-
 // MARK: - Equatable Implementation
 
 extension GitStatusEntry: Equatable {
@@ -163,7 +162,6 @@ extension GitStatusEntry: Equatable {
             lhs.originalFilePath == rhs.originalFilePath
     }
 }
-
 
 // MARK: - Hashable Implementation
 

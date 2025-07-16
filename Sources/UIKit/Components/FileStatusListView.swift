@@ -49,7 +49,6 @@ public struct FileStatusGroup: Identifiable {
     }
 }
 
-
 // MARK: - FileStatusListView Internal State
 
 @MainActor
@@ -175,6 +174,14 @@ public struct FileStatusListView: View {
         repository.statusEntries
     }
 
+    private var repositoryId: String {
+        let statusEntries = repository.statusEntries
+        let statusString = statusEntries.map {
+            "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)"
+        }.joined(separator: ",")
+        return "\(repository.id)-\(statusEntries.count)-\(statusString)"
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             // Header with controls
@@ -189,9 +196,7 @@ public struct FileStatusListView: View {
             // Clear selection when repository changes
             state.clearSelection()
         }
-        .id(
-            "\(repository.id)-\(repository.statusEntries.count)-\(repository.statusEntries.map { "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)" }.joined(separator: ","))"
-        )
+        .id(repositoryId)
         .navigationTitle("File Status")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -204,55 +209,58 @@ public struct FileStatusListView: View {
 
     private var headerView: some View {
         VStack(spacing: 12) {
-            // Search and filter controls
-            HStack {
-                // Search field
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    TextField("Search files...", text: $state.searchText)
-                        .textFieldStyle(.plain)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(6)
-
-                // Filter picker
-                Picker("Filter", selection: $state.selectedFilter) {
-                    ForEach(FileStatusFilter.allCases) { filter in
-                        Label(filter.rawValue, systemImage: filter.systemImage)
-                            .tag(filter)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(width: 140)
-            }
-
-            // Grouping and selection controls
-            HStack {
-                // Grouping picker
-                Picker("Group by", selection: $state.selectedGrouping) {
-                    ForEach(FileStatusGrouping.allCases) { grouping in
-                        Text(grouping.rawValue)
-                            .tag(grouping)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Spacer()
-
-                // Selection controls
-                if state.hasSelection {
-                    selectionControls
-                }
-            }
-
-            // Status summary
+            searchAndFilterControls
+            groupingAndSelectionControls
             statusSummary
         }
         .padding()
         .background(Color(NSColor.windowBackgroundColor))
+    }
+
+    private var searchAndFilterControls: some View {
+        HStack {
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search files...", text: $state.searchText)
+                    .textFieldStyle(.plain)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(6)
+
+            // Filter picker
+            Picker("Filter", selection: $state.selectedFilter) {
+                ForEach(FileStatusFilter.allCases) { filter in
+                    Label(filter.rawValue, systemImage: filter.systemImage)
+                        .tag(filter)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(width: 140)
+        }
+    }
+
+    private var groupingAndSelectionControls: some View {
+        HStack {
+            // Grouping picker
+            Picker("Group by", selection: $state.selectedGrouping) {
+                ForEach(FileStatusGrouping.allCases) { grouping in
+                    Text(grouping.rawValue)
+                        .tag(grouping)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Spacer()
+
+            // Selection controls
+            if state.hasSelection {
+                selectionControls
+            }
+        }
     }
 
     private var selectionControls: some View {

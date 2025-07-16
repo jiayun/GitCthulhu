@@ -213,8 +213,22 @@ public struct FileStatusItemView: View {
 }
 
 #Preview("Single File Status") {
-    VStack(spacing: 8) {
-        // Different status examples
+    FileStatusItemPreview()
+}
+
+private struct FileStatusItemPreview: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            stagedFileExample
+            modifiedFileExample
+            untrackedFileExample
+            renamedFileExample
+        }
+        .padding()
+        .frame(width: 400)
+    }
+
+    private var stagedFileExample: some View {
         FileStatusItemView(
             fileStatus: GitStatusEntry(
                 filePath: "Sources/GitCore/Models/GitRepository.swift",
@@ -224,7 +238,9 @@ public struct FileStatusItemView: View {
             ),
             isSelected: false
         ) {}
+    }
 
+    private var modifiedFileExample: some View {
         FileStatusItemView(
             fileStatus: GitStatusEntry(
                 filePath: "README.md",
@@ -234,7 +250,9 @@ public struct FileStatusItemView: View {
             ),
             isSelected: true
         ) {}
+    }
 
+    private var untrackedFileExample: some View {
         FileStatusItemView(
             fileStatus: GitStatusEntry(
                 filePath: "NewFile.swift",
@@ -244,7 +262,9 @@ public struct FileStatusItemView: View {
             ),
             isSelected: false
         ) {}
+    }
 
+    private var renamedFileExample: some View {
         FileStatusItemView(
             fileStatus: GitStatusEntry(
                 filePath: "RenamedFile.swift",
@@ -255,6 +275,4 @@ public struct FileStatusItemView: View {
             isSelected: false
         ) {}
     }
-    .padding()
-    .frame(width: 400)
 }
