@@ -93,7 +93,7 @@ public struct GitStatusEntry: Identifiable {
         workingDirectoryStatus: GitWorkingDirectoryStatus,
         originalFilePath: String? = nil
     ) {
-        self.id = UUID()
+        id = UUID()
         self.filePath = filePath
         self.indexStatus = indexStatus
         self.workingDirectoryStatus = workingDirectoryStatus
@@ -152,17 +152,21 @@ public struct GitStatusEntry: Identifiable {
     }
 }
 
+
 // MARK: - Equatable Implementation
+
 extension GitStatusEntry: Equatable {
     public static func == (lhs: GitStatusEntry, rhs: GitStatusEntry) -> Bool {
-        return lhs.filePath == rhs.filePath &&
-               lhs.indexStatus == rhs.indexStatus &&
-               lhs.workingDirectoryStatus == rhs.workingDirectoryStatus &&
-               lhs.originalFilePath == rhs.originalFilePath
+        lhs.filePath == rhs.filePath &&
+            lhs.indexStatus == rhs.indexStatus &&
+            lhs.workingDirectoryStatus == rhs.workingDirectoryStatus &&
+            lhs.originalFilePath == rhs.originalFilePath
     }
 }
 
+
 // MARK: - Hashable Implementation
+
 extension GitStatusEntry: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(filePath)

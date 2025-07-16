@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-16.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 public struct FileStatusItemView: View {
     let fileStatus: GitStatusEntry
@@ -92,7 +92,7 @@ public struct FileStatusItemView: View {
 
             // Simplified file path display - avoid Text concatenation
             HStack(spacing: 2) {
-                if let directoryPath = directoryPath, !directoryPath.isEmpty {
+                if let directoryPath, !directoryPath.isEmpty {
                     Text(directoryPath)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -116,13 +116,13 @@ public struct FileStatusItemView: View {
             // Show primary status badge with proper precedence
             if fileStatus.hasConflicts {
                 statusBadge(text: "Conflict", color: .red)
-            } else if fileStatus.isStaged && fileStatus.hasWorkingDirectoryChanges {
+            } else if fileStatus.isStaged, fileStatus.hasWorkingDirectoryChanges {
                 // File is both staged AND has working directory changes
                 statusBadge(text: "Staged", color: .green)
                 statusBadge(text: "Modified", color: .orange)
             } else if fileStatus.isStaged {
                 statusBadge(text: "Staged", color: .green)
-            } else if fileStatus.hasWorkingDirectoryChanges && !fileStatus.isUntracked {
+            } else if fileStatus.hasWorkingDirectoryChanges, !fileStatus.isUntracked {
                 statusBadge(text: "Modified", color: .orange)
             } else if fileStatus.isUntracked {
                 statusBadge(text: "Untracked", color: .gray)
@@ -146,29 +146,29 @@ public struct FileStatusItemView: View {
     private var statusColor: Color {
         switch fileStatus.displayStatus {
         case .untracked:
-            return .gray
+            .gray
         case .modified:
-            return .orange
+            .orange
         case .added:
-            return .green
+            .green
         case .deleted:
-            return .red
+            .red
         case .renamed:
-            return .blue
+            .blue
         case .copied:
-            return .purple
+            .purple
         case .unmerged:
-            return .red
+            .red
         case .ignored:
-            return .secondary
+            .secondary
         }
     }
 
     private var backgroundColor: Color {
         if isSelected {
-            return Color.accentColor.opacity(0.1)
+            Color.accentColor.opacity(0.1)
         } else {
-            return Color.clear
+            Color.clear
         }
     }
 

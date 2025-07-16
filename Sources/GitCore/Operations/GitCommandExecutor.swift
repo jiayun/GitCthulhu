@@ -87,7 +87,11 @@ public class GitCommandExecutor {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    private func handleSuccessfulCommand(output: String, arguments: [String], continuation: CheckedContinuation<String, Error>) {
+    private func handleSuccessfulCommand(
+        output: String,
+        arguments: [String],
+        continuation: CheckedContinuation<String, Error>
+    ) {
         let processedOutput = processCommandOutput(output, arguments: arguments)
         logger.debug("Git command succeeded: \(processedOutput)")
         continuation.resume(returning: processedOutput)

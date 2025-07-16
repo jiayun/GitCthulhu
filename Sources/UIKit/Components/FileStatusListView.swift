@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-16.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 // MARK: - Supporting Types
 
@@ -21,11 +21,11 @@ public enum FileStatusFilter: String, CaseIterable, Identifiable {
 
     public var systemImage: String {
         switch self {
-        case .all: return "doc.on.doc"
-        case .staged: return "checkmark.circle"
-        case .unstaged: return "pencil.circle"
-        case .untracked: return "plus.circle"
-        case .conflicted: return "exclamationmark.triangle"
+        case .all: "doc.on.doc"
+        case .staged: "checkmark.circle"
+        case .unstaged: "pencil.circle"
+        case .untracked: "plus.circle"
+        case .conflicted: "exclamationmark.triangle"
         }
     }
 }
@@ -49,7 +49,9 @@ public struct FileStatusGroup: Identifiable {
     }
 }
 
+
 // MARK: - FileStatusListView Internal State
+
 @MainActor
 public class FileStatusListState: ObservableObject {
     @Published public var selectedFilter: FileStatusFilter = .all
@@ -64,11 +66,11 @@ public class FileStatusListState: ObservableObject {
     }
 }
 
-extension FileStatusListState {
+public extension FileStatusListState {
     // MARK: - Filtering and Grouping
 
-    public func filteredFileStatuses(from entries: [GitStatusEntry]) -> [GitStatusEntry] {
-        let filtered = entries.filter { entry in
+    func filteredFileStatuses(from entries: [GitStatusEntry]) -> [GitStatusEntry] {
+        entries.filter { entry in
             // Apply filter
             let matchesFilter = switch selectedFilter {
             case .all:
@@ -90,26 +92,24 @@ extension FileStatusListState {
 
             return matchesFilter && matchesSearch
         }
-
-        return filtered
     }
 
-    public func groupedFileStatuses(from entries: [GitStatusEntry]) -> [FileStatusGroup] {
+    func groupedFileStatuses(from entries: [GitStatusEntry]) -> [FileStatusGroup] {
         let filtered = filteredFileStatuses(from: entries)
 
         switch selectedGrouping {
         case .none:
-            return [FileStatusGroup(title: nil, files: filtered)]
+            [FileStatusGroup(title: nil, files: filtered)]
 
         case .status:
-            return groupByStatus(filtered)
+            groupByStatus(filtered)
 
         case .directory:
-            return groupByDirectory(filtered)
+            groupByDirectory(filtered)
         }
     }
 
-    private func groupByStatus(_ files: [GitStatusEntry]) -> [FileStatusGroup] {
+    func groupByStatus(_ files: [GitStatusEntry]) -> [FileStatusGroup] {
         let grouped = Dictionary(grouping: files) { $0.displayStatus }
 
         let statusOrder: [GitFileStatus] = [.unmerged, .added, .modified, .deleted, .renamed, .copied, .untracked]
@@ -121,7 +121,7 @@ extension FileStatusListState {
         }
     }
 
-    private func groupByDirectory(_ files: [GitStatusEntry]) -> [FileStatusGroup] {
+    func groupByDirectory(_ files: [GitStatusEntry]) -> [FileStatusGroup] {
         let grouped = Dictionary(grouping: files) { entry in
             let url = URL(fileURLWithPath: entry.filePath)
             return url.deletingLastPathComponent().path
@@ -135,7 +135,7 @@ extension FileStatusListState {
 
     // MARK: - Selection Management
 
-    public func toggleFileSelection(_ filePath: String) {
+    func toggleFileSelection(_ filePath: String) {
         if selectedFiles.contains(filePath) {
             selectedFiles.remove(filePath)
         } else {
@@ -143,19 +143,19 @@ extension FileStatusListState {
         }
     }
 
-    public func selectAll(from entries: [GitStatusEntry]) {
+    func selectAll(from entries: [GitStatusEntry]) {
         selectedFiles = Set(filteredFileStatuses(from: entries).map(\.filePath))
     }
 
-    public func deselectAll() {
+    func deselectAll() {
         selectedFiles.removeAll()
     }
 
-    public var hasSelection: Bool {
+    var hasSelection: Bool {
         !selectedFiles.isEmpty
     }
 
-    public var selectionCount: Int {
+    var selectionCount: Int {
         selectedFiles.count
     }
 }
@@ -187,7 +187,7 @@ public struct FileStatusListView: View {
             // Clear selection when repository changes
             state.clearSelection()
         }
-        .id("\(repository.id)-\(repository.statusEntries.count)-\(repository.statusEntries.map { "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)" }.joined(separator: ","))")
+        .id("\(repository.id)-\(repository.statusEntries.count)-\(repository.statusEntries.map { "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)" }.joined())")
         .navigationTitle("File Status")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -326,7 +326,6 @@ public struct FileStatusListView: View {
         }
     }
 
-
     private var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle")
@@ -350,15 +349,15 @@ public struct FileStatusListView: View {
         } else {
             switch state.selectedFilter {
             case .all:
-                return "Working directory is clean. No changes detected."
+                "Working directory is clean. No changes detected."
             case .staged:
-                return "No files are currently staged for commit."
+                "No files are currently staged for commit."
             case .unstaged:
-                return "No modified files in working directory."
+                "No modified files in working directory."
             case .untracked:
-                return "No untracked files found."
+                "No untracked files found."
             case .conflicted:
-                return "No conflicted files found."
+                "No conflicted files found."
             }
         }
     }
