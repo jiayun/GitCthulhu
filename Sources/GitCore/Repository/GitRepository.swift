@@ -227,6 +227,8 @@ public class GitRepository: ObservableObject, GitRepositoryProtocol, Identifiabl
     }
 
     public func refreshStatus() async {
+        // Force cache invalidation before loading new status
+        statusManager.invalidateCache()
         await loadStatus()
     }
 

@@ -17,13 +17,22 @@ public class RepositoryInfoService {
         async let latestCommit = try? await executor.getLatestCommit()
         async let remoteInfo = try? await executor.getRemoteInfo()
         async let commitCount = try? await executor.getCommitCount()
-        async let workingDirectoryStatus = try? await executor.getDetailedStatus()
+
+        // Use GitRepository's status summary instead of creating new executor
+        async let statusSummary = try? await repository.getStatusSummary()
+        let workingDirectoryStatus = await statusSummary.map { summary in
+            GitCommandExecutor.DetailedFileStatus(
+                staged: summary.stagedCount,
+                unstaged: summary.unstagedCount,
+                untracked: summary.untrackedCount
+            )
+        }
 
         let branchResult = await branch
         let latestCommitResult = await latestCommit
         let remoteInfoResult = await remoteInfo ?? []
         let commitCountResult = await commitCount ?? 0
-        let workingDirectoryStatusResult = await workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(
+        let workingDirectoryStatusResult = workingDirectoryStatus ?? GitCommandExecutor.DetailedFileStatus(
             staged: 0,
             unstaged: 0,
             untracked: 0
