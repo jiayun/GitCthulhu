@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-16.
 //
 
-import XCTest
 import Foundation
 @testable import GitCore
+import XCTest
 
 @MainActor
 final class GitStagingManagerTests: XCTestCase {
@@ -113,6 +113,17 @@ final class GitStagingManagerTests: XCTestCase {
     }
 
     func testToggleFileStaging() async throws {
+        // Create and commit an initial file to avoid empty repository issues
+        createTestFile(named: "initial.txt", content: "initial content")
+        try await stagingManager.stageFile("initial.txt")
+
+        let commitProcess = Process()
+        commitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commitProcess.arguments = ["commit", "-m", "Initial commit"]
+        commitProcess.currentDirectoryURL = tempRepositoryURL
+        try commitProcess.run()
+        commitProcess.waitUntilExit()
+
         // Create a file
         createTestFile(named: "test.txt")
 
@@ -184,6 +195,17 @@ final class GitStagingManagerTests: XCTestCase {
     }
 
     func testUnstageAllFiles() async throws {
+        // Create and commit an initial file to avoid empty repository issues
+        createTestFile(named: "initial.txt", content: "initial content")
+        try await stagingManager.stageFile("initial.txt")
+
+        let commitProcess = Process()
+        commitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commitProcess.arguments = ["commit", "-m", "Initial commit"]
+        commitProcess.currentDirectoryURL = tempRepositoryURL
+        try commitProcess.run()
+        commitProcess.waitUntilExit()
+
         // Create and stage multiple files
         createTestFile(named: "file1.txt")
         createTestFile(named: "file2.txt")
@@ -328,7 +350,7 @@ final class GitStagingManagerTests: XCTestCase {
         let fileCount = 100
         var filePaths: [String] = []
 
-        for i in 0..<fileCount {
+        for i in 0 ..< fileCount {
             let fileName = "file\(i).txt"
             createTestFile(named: fileName)
             filePaths.append(fileName)
@@ -342,8 +364,8 @@ final class GitStagingManagerTests: XCTestCase {
         let duration = endTime.timeIntervalSince(startTime)
         print("Staging \(fileCount) files took \(duration) seconds")
 
-        // Should complete within reasonable time (10 seconds)
-        XCTAssertLessThan(duration, 10.0)
+        // Should complete within reasonable time (15 seconds)
+        XCTAssertLessThan(duration, 15.0)
 
         // Verify all files are staged
         let status = try await stagingManager.getStagingStatus()

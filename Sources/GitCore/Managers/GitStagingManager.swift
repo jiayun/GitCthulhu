@@ -17,8 +17,8 @@ public class GitStagingManager {
 
     public init(repositoryURL: URL) {
         self.repositoryURL = repositoryURL
-        self.gitExecutor = GitCommandExecutor(repositoryURL: repositoryURL)
-        self.statusManager = GitStatusManager(repositoryURL: repositoryURL)
+        gitExecutor = GitCommandExecutor(repositoryURL: repositoryURL)
+        statusManager = GitStatusManager(repositoryURL: repositoryURL)
     }
 
     // MARK: - Single File Operations
@@ -133,7 +133,8 @@ public class GitStagingManager {
         }
 
         if !failedFiles.isEmpty {
-            throw GitError.stagingFailed("Failed to stage \(failedFiles.count) files: \(failedFiles.joined(separator: ", "))")
+            throw GitError
+                .stagingFailed("Failed to stage \(failedFiles.count) files: \(failedFiles.joined(separator: ", "))")
         }
 
         logger.info("Successfully staged \(filePaths.count) files")
@@ -155,7 +156,8 @@ public class GitStagingManager {
         }
 
         if !failedFiles.isEmpty {
-            throw GitError.stagingFailed("Failed to unstage \(failedFiles.count) files: \(failedFiles.joined(separator: ", "))")
+            throw GitError
+                .stagingFailed("Failed to unstage \(failedFiles.count) files: \(failedFiles.joined(separator: ", "))")
         }
 
         logger.info("Successfully unstaged \(filePaths.count) files")
@@ -202,7 +204,7 @@ public class GitStagingManager {
         let statusEntries = try await statusManager.getDetailedStatus()
         let modifiedFiles = statusEntries
             .filter { $0.hasWorkingDirectoryChanges && !$0.isUntracked }
-            .map { $0.filePath }
+            .map(\.filePath)
 
         if !modifiedFiles.isEmpty {
             try await stageFiles(modifiedFiles)
@@ -213,8 +215,8 @@ public class GitStagingManager {
     public func stageAllUntrackedFiles() async throws {
         let statusEntries = try await statusManager.getDetailedStatus()
         let untrackedFiles = statusEntries
-            .filter { $0.isUntracked }
-            .map { $0.filePath }
+            .filter(\.isUntracked)
+            .map(\.filePath)
 
         if !untrackedFiles.isEmpty {
             try await stageFiles(untrackedFiles)
@@ -225,8 +227,8 @@ public class GitStagingManager {
     public func unstageAllStagedFiles() async throws {
         let statusEntries = try await statusManager.getDetailedStatus()
         let stagedFiles = statusEntries
-            .filter { $0.isStaged }
-            .map { $0.filePath }
+            .filter(\.isStaged)
+            .map(\.filePath)
 
         if !stagedFiles.isEmpty {
             try await unstageFiles(stagedFiles)
@@ -239,9 +241,9 @@ public class GitStagingManager {
     public func getStagingStatus() async throws -> StagingStatus {
         let statusEntries = try await statusManager.getDetailedStatus()
 
-        let stagedFiles = statusEntries.filter { $0.isStaged }
+        let stagedFiles = statusEntries.filter(\.isStaged)
         let modifiedFiles = statusEntries.filter { $0.hasWorkingDirectoryChanges && !$0.isUntracked }
-        let untrackedFiles = statusEntries.filter { $0.isUntracked }
+        let untrackedFiles = statusEntries.filter(\.isUntracked)
 
         return StagingStatus(
             stagedFiles: stagedFiles,

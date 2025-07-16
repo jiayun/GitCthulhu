@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-16.
 //
 
-import XCTest
 import Foundation
 @testable import GitCore
+import XCTest
 
 @MainActor
 final class StagingOperationsTests: XCTestCase {
@@ -260,12 +260,11 @@ final class StagingOperationsTests: XCTestCase {
         let detailedStatus = try await stagingOperations.getDetailedStagingStatus()
 
         // Verify status
-        XCTAssertNotNil(detailedStatus)
-        XCTAssertEqual(detailedStatus?.stagedFiles, 1)
-        XCTAssertEqual(detailedStatus?.untrackedFiles, 1)
-        XCTAssertEqual(detailedStatus?.totalFiles, 2)
-        XCTAssertTrue(detailedStatus?.canStageAll ?? false)
-        XCTAssertTrue(detailedStatus?.canUnstageAll ?? false)
+        XCTAssertEqual(detailedStatus.stagedFiles, 1)
+        XCTAssertEqual(detailedStatus.untrackedFiles, 1)
+        XCTAssertEqual(detailedStatus.totalFiles, 2)
+        XCTAssertTrue(detailedStatus.canStageAll)
+        XCTAssertTrue(detailedStatus.canUnstageAll)
     }
 
     // MARK: - Result Object Tests
@@ -334,7 +333,7 @@ final class StagingOperationsTests: XCTestCase {
         let fileCount = 50
         var filePaths: [String] = []
 
-        for i in 0..<fileCount {
+        for i in 0 ..< fileCount {
             let fileName = "file\(i).txt"
             createTestFile(named: fileName)
             filePaths.append(fileName)

@@ -57,7 +57,7 @@ public struct FileStatusItemView: View {
             Spacer()
 
             // Stage/Unstage button
-            if let onStageToggle = onStageToggle {
+            if let onStageToggle {
                 stageButton(onStageToggle: onStageToggle)
             }
 
@@ -246,33 +246,33 @@ public struct FileStatusItemView: View {
 
     private var stageButtonIcon: String {
         if fileStatus.isStaged {
-            return "minus.circle"
+            "minus.circle"
         } else {
-            return "plus.circle"
+            "plus.circle"
         }
     }
 
     private var stageButtonText: String {
         if fileStatus.isStaged {
-            return "Unstage"
+            "Unstage"
         } else {
-            return "Stage"
+            "Stage"
         }
     }
 
     private var stageButtonColor: Color {
         if fileStatus.isStaged {
-            return .orange
+            .orange
         } else {
-            return .green
+            .green
         }
     }
 
     private var stageButtonHelpText: String {
         if fileStatus.isStaged {
-            return "Unstage this file from the commit"
+            "Unstage this file from the commit"
         } else {
-            return "Stage this file for commit"
+            "Stage this file for commit"
         }
     }
 
@@ -309,7 +309,6 @@ public struct FileStatusItemView: View {
     }
 }
 
-
 #Preview("Single File Status") {
     FileStatusItemPreview()
 }
@@ -335,7 +334,7 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: false,
-            onStageToggle: { }
+            onStageToggle: {}
         )
     }
 
@@ -348,7 +347,7 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: true,
-            onStageToggle: { }
+            onStageToggle: {}
         )
     }
 
@@ -361,7 +360,7 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: false,
-            onStageToggle: { }
+            onStageToggle: {}
         )
     }
 
@@ -374,7 +373,7 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: "OldFile.swift"
             ),
             isSelected: false,
-            onStageToggle: { }
+            onStageToggle: {}
         )
     }
 }

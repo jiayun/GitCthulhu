@@ -12,15 +12,15 @@ import SwiftUI
 @available(macOS 13.0, *)
 extension View {
     @ViewBuilder
-    func conditionalDraggable<T: Transferable, V: View>(_ payload: T, @ViewBuilder preview: () -> V) -> some View {
-        self.draggable(payload, preview: preview)
+    func conditionalDraggable(_ payload: some Transferable, @ViewBuilder preview: () -> some View) -> some View {
+        draggable(payload, preview: preview)
     }
 }
 
 @available(macOS, deprecated: 13.0)
 extension View {
     @ViewBuilder
-    func conditionalDraggable<T, V: View>(_ payload: T, @ViewBuilder preview: () -> V) -> some View {
+    func conditionalDraggable(_: some Any, @ViewBuilder _: () -> some View) -> some View {
         self
     }
 }

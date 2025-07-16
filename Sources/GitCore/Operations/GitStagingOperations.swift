@@ -14,7 +14,7 @@ public class GitStagingOperations {
     private let logger = Logger(category: "GitStagingOperations")
 
     public init(repositoryURL: URL) {
-        self.stagingManager = GitStagingManager(repositoryURL: repositoryURL)
+        stagingManager = GitStagingManager(repositoryURL: repositoryURL)
     }
 
     // MARK: - Smart Staging Operations
@@ -150,7 +150,7 @@ public class GitStagingOperations {
 
             let result = StagingOperationResult(
                 operation: .stageAll,
-                successfulFiles: finalStatus.stagedFiles.map { $0.filePath },
+                successfulFiles: finalStatus.stagedFiles.map(\.filePath),
                 failedFiles: [],
                 skippedFiles: []
             )
@@ -171,7 +171,7 @@ public class GitStagingOperations {
         do {
             // Get initial status to know what will be unstaged
             let initialStatus = try await stagingManager.getStagingStatus()
-            let initiallyStaged = initialStatus.stagedFiles.map { $0.filePath }
+            let initiallyStaged = initialStatus.stagedFiles.map(\.filePath)
 
             try await stagingManager.unstageAllFiles()
 
@@ -199,7 +199,7 @@ public class GitStagingOperations {
 
         do {
             let status = try await stagingManager.getStagingStatus()
-            let modifiedFiles = status.modifiedFiles.map { $0.filePath }
+            let modifiedFiles = status.modifiedFiles.map(\.filePath)
 
             if modifiedFiles.isEmpty {
                 return StagingOperationResult(
@@ -234,7 +234,7 @@ public class GitStagingOperations {
 
         do {
             let status = try await stagingManager.getStagingStatus()
-            let untrackedFiles = status.untrackedFiles.map { $0.filePath }
+            let untrackedFiles = status.untrackedFiles.map(\.filePath)
 
             if untrackedFiles.isEmpty {
                 return StagingOperationResult(

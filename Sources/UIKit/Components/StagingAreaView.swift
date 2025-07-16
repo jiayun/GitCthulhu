@@ -30,7 +30,7 @@ public struct StagingAreaView: View {
         onUnstageAll: @escaping () -> Void
     ) {
         self.repository = repository
-        self._selectedFiles = selectedFiles
+        _selectedFiles = selectedFiles
         self.onStageFiles = onStageFiles
         self.onUnstageFiles = onUnstageFiles
         self.onStageAll = onStageAll
@@ -39,7 +39,7 @@ public struct StagingAreaView: View {
 
     // Get staged files from repository
     private var stagedFiles: [GitStatusEntry] {
-        repository.statusEntries.filter { $0.isStaged }
+        repository.statusEntries.filter(\.isStaged)
     }
 
     // Get unstaged files from repository
@@ -286,10 +286,9 @@ public struct StagingAreaView: View {
         // Handle file drops to staging area
         // This is a simplified implementation
         for provider in providers {
-            provider.loadItem(forTypeIdentifier: "public.file-url") { item, error in
+            provider.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
                 if let data = item as? Data,
                    let url = URL(dataRepresentation: data, relativeTo: nil) {
-
                     let filePath = url.path
 
                     // Check if file is in repository and not already staged

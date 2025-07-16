@@ -153,7 +153,7 @@ public class GitStatusManager {
 
         for line in lines {
             // Check if this line represents a directory (ends with /)
-            if line.count >= 3 && line.hasSuffix("/") {
+            if line.count >= 3, line.hasSuffix("/") {
                 // Expand directory to individual files
                 let expandedEntries = await expandDirectoryEntry(line)
                 entries.append(contentsOf: expandedEntries)
@@ -192,7 +192,8 @@ public class GitStatusManager {
             let entry = GitStatusEntry(
                 filePath: filePath,
                 indexStatus: statusPrefix == "??" ? .unmodified : GitIndexStatus.fromStatusChar(statusPrefix.first!),
-                workingDirectoryStatus: statusPrefix == "??" ? .untracked : GitWorkingDirectoryStatus.fromStatusChar(statusPrefix.last!),
+                workingDirectoryStatus: statusPrefix == "??" ? .untracked : GitWorkingDirectoryStatus
+                    .fromStatusChar(statusPrefix.last!),
                 originalFilePath: nil
             )
             entries.append(entry)
@@ -205,14 +206,12 @@ public class GitStatusManager {
     /// Gets all files in a directory using git ls-files
     private func getFilesInDirectory(_ directoryPath: String, statusPrefix: String) async -> [String] {
         do {
-            let output: String
-
-            if statusPrefix == "??" {
+            let output: String = if statusPrefix == "??" {
                 // For untracked files, use git ls-files --others --exclude-standard
-                output = try await gitExecutor.execute(["ls-files", "--others", "--exclude-standard", directoryPath])
+                try await gitExecutor.execute(["ls-files", "--others", "--exclude-standard", directoryPath])
             } else {
                 // For tracked files, use git ls-files
-                output = try await gitExecutor.execute(["ls-files", directoryPath])
+                try await gitExecutor.execute(["ls-files", directoryPath])
             }
 
             return output.components(separatedBy: .newlines)

@@ -168,7 +168,7 @@ public struct FileStatusListView: View {
 
     public init(repository: GitRepository) {
         self.repository = repository
-        self._stagingViewModel = StateObject(wrappedValue: StagingViewModel(repository: repository))
+        _stagingViewModel = StateObject(wrappedValue: StagingViewModel(repository: repository))
     }
 
     // Direct access to repository's status entries
@@ -616,6 +616,7 @@ public struct FileStatusListView: View {
 }
 
 // MARK: - Keyboard Shortcuts (Disabled for macOS 12.0 compatibility)
+
 // Keyboard shortcuts require macOS 14.0+, so they are disabled for now
 // to maintain compatibility with macOS 12.0+
 
