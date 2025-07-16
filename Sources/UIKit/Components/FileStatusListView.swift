@@ -99,13 +99,13 @@ public extension FileStatusListState {
 
         switch selectedGrouping {
         case .none:
-            [FileStatusGroup(title: nil, files: filtered)]
+            return [FileStatusGroup(title: nil, files: filtered)]
 
         case .status:
-            groupByStatus(filtered)
+            return groupByStatus(filtered)
 
         case .directory:
-            groupByDirectory(filtered)
+            return groupByDirectory(filtered)
         }
     }
 
@@ -349,15 +349,15 @@ public struct FileStatusListView: View {
         } else {
             switch state.selectedFilter {
             case .all:
-                "Working directory is clean. No changes detected."
+                return "Working directory is clean. No changes detected."
             case .staged:
-                "No files are currently staged for commit."
+                return "No files are currently staged for commit."
             case .unstaged:
-                "No modified files in working directory."
+                return "No modified files in working directory."
             case .untracked:
-                "No untracked files found."
+                return "No untracked files found."
             case .conflicted:
-                "No conflicted files found."
+                return "No conflicted files found."
             }
         }
     }
