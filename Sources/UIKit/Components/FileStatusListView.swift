@@ -70,7 +70,7 @@ public extension FileStatusListState {
     // MARK: - Filtering and Grouping
 
     func filteredFileStatuses(from entries: [GitStatusEntry]) -> [GitStatusEntry] {
-        entries.filter { entry in
+        let filtered = entries.filter { entry in
             // Apply filter
             let matchesFilter = switch selectedFilter {
             case .all:
@@ -92,6 +92,8 @@ public extension FileStatusListState {
 
             return matchesFilter && matchesSearch
         }
+
+        return filtered
     }
 
     func groupedFileStatuses(from entries: [GitStatusEntry]) -> [FileStatusGroup] {
@@ -187,7 +189,9 @@ public struct FileStatusListView: View {
             // Clear selection when repository changes
             state.clearSelection()
         }
-        .id("\(repository.id)-\(repository.statusEntries.count)-\(repository.statusEntries.map { "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)" }.joined())")
+        .id(
+            "\(repository.id)-\(repository.statusEntries.count)-\(repository.statusEntries.map { "\($0.filePath):\($0.indexStatus.rawValue)\($0.workingDirectoryStatus.rawValue)" }.joined(separator: ","))"
+        )
         .navigationTitle("File Status")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -345,19 +349,19 @@ public struct FileStatusListView: View {
 
     private var emptyStateMessage: String {
         if !state.searchText.isEmpty {
-            return "No files match your search criteria."
+            "No files match your search criteria."
         } else {
             switch state.selectedFilter {
             case .all:
-                return "Working directory is clean. No changes detected."
+                "Working directory is clean. No changes detected."
             case .staged:
-                return "No files are currently staged for commit."
+                "No files are currently staged for commit."
             case .unstaged:
-                return "No modified files in working directory."
+                "No modified files in working directory."
             case .untracked:
-                return "No untracked files found."
+                "No untracked files found."
             case .conflicted:
-                return "No conflicted files found."
+                "No conflicted files found."
             }
         }
     }
