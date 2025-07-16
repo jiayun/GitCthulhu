@@ -65,6 +65,24 @@ final class StagingOperationsTests: XCTestCase {
         gitConfigName.waitUntilExit()
         // swiftlint:enable force_try
 
+        // Create an initial commit
+        let initialCommitFile = repoURL.appendingPathComponent("initial.txt")
+        try! "initial content".write(to: initialCommitFile, atomically: true, encoding: .utf8)
+
+        let gitAdd = Process()
+        gitAdd.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        gitAdd.arguments = ["add", "initial.txt"]
+        gitAdd.currentDirectoryURL = repoURL
+        try! gitAdd.run()
+        gitAdd.waitUntilExit()
+
+        let gitCommit = Process()
+        gitCommit.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        gitCommit.arguments = ["commit", "-m", "Initial commit"]
+        gitCommit.currentDirectoryURL = repoURL
+        try! gitCommit.run()
+        gitCommit.waitUntilExit()
+
         return repoURL
     }
 
