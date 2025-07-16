@@ -8,7 +8,10 @@
 import Foundation
 
 /// Represents a detailed entry in the Git status output
-public struct GitStatusEntry: Equatable, Hashable {
+public struct GitStatusEntry: Identifiable {
+    /// Unique identifier for SwiftUI
+    public let id: UUID
+
     /// The file path relative to the repository root
     public let filePath: String
 
@@ -90,6 +93,7 @@ public struct GitStatusEntry: Equatable, Hashable {
         workingDirectoryStatus: GitWorkingDirectoryStatus,
         originalFilePath: String? = nil
     ) {
+        id = UUID()
         self.filePath = filePath
         self.indexStatus = indexStatus
         self.workingDirectoryStatus = workingDirectoryStatus
@@ -100,12 +104,9 @@ public struct GitStatusEntry: Equatable, Hashable {
     public static func fromPorcelainLine(_ line: String) -> GitStatusEntry? {
         guard line.count >= 3 else { return nil }
 
-        let indexChar = line[line.startIndex]
-        let workingChar = line[line.index(line.startIndex, offsetBy: 1)]
-        let filePath = String(line.dropFirst(3))
-
-        // Handle special cases for untracked files
+        // Handle special cases for untracked files first
         if line.hasPrefix("??") {
+            let filePath = String(line.dropFirst(3))
             return GitStatusEntry(
                 filePath: filePath,
                 indexStatus: .unmodified,
@@ -113,6 +114,17 @@ public struct GitStatusEntry: Equatable, Hashable {
                 originalFilePath: nil
             )
         }
+
+        // For standard porcelain format, expect at least 3 characters
+        // Format: "XY filename" where X and Y are status chars
+        let indexChar = line[line.startIndex]
+        let workingChar = line[line.index(line.startIndex, offsetBy: 1)]
+
+        // Find the first space after the status characters and extract filename from there
+        let remainingLine = line.dropFirst(2)
+
+        // Skip any spaces after the status characters
+        let filePath = String(remainingLine.drop(while: { $0 == " " }))
 
         let indexStatus = GitIndexStatus.fromStatusChar(indexChar)
         let workingStatus = GitWorkingDirectoryStatus.fromStatusChar(workingChar)
@@ -137,6 +149,28 @@ public struct GitStatusEntry: Equatable, Hashable {
             workingDirectoryStatus: workingStatus,
             originalFilePath: originalFilePath
         )
+    }
+}
+
+// MARK: - Equatable Implementation
+
+extension GitStatusEntry: Equatable {
+    public static func == (lhs: GitStatusEntry, rhs: GitStatusEntry) -> Bool {
+        lhs.filePath == rhs.filePath &&
+            lhs.indexStatus == rhs.indexStatus &&
+            lhs.workingDirectoryStatus == rhs.workingDirectoryStatus &&
+            lhs.originalFilePath == rhs.originalFilePath
+    }
+}
+
+// MARK: - Hashable Implementation
+
+extension GitStatusEntry: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(filePath)
+        hasher.combine(indexStatus)
+        hasher.combine(workingDirectoryStatus)
+        hasher.combine(originalFilePath)
     }
 }
 

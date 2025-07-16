@@ -34,6 +34,7 @@ public class GitCommandExecutor {
                         process,
                         pipe: pipe,
                         errorPipe: errorPipe,
+                        arguments: arguments,
                         continuation: continuation
                     )
                 }
@@ -63,13 +64,14 @@ public class GitCommandExecutor {
         _ process: Process,
         pipe: Pipe,
         errorPipe: Pipe,
+        arguments: [String],
         continuation: CheckedContinuation<String, Error>
     ) {
         let output = readOutput(from: pipe)
         let errorOutput = readOutput(from: errorPipe)
 
         if process.terminationStatus == 0 {
-            handleSuccessfulCommand(output: output, continuation: continuation)
+            handleSuccessfulCommand(output: output, arguments: arguments, continuation: continuation)
         } else {
             handleFailedCommand(
                 output: output,
@@ -85,10 +87,25 @@ public class GitCommandExecutor {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    private func handleSuccessfulCommand(output: String, continuation: CheckedContinuation<String, Error>) {
-        let trimmedOutput = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        logger.debug("Git command succeeded: \(trimmedOutput)")
-        continuation.resume(returning: trimmedOutput)
+    private func handleSuccessfulCommand(
+        output: String,
+        arguments: [String],
+        continuation: CheckedContinuation<String, Error>
+    ) {
+        let processedOutput = processCommandOutput(output, arguments: arguments)
+        logger.debug("Git command succeeded: \(processedOutput)")
+        continuation.resume(returning: processedOutput)
+    }
+
+    private func processCommandOutput(_ output: String, arguments: [String]) -> String {
+        // For porcelain format commands, preserve leading whitespace as it's part of the format
+        if arguments.contains("--porcelain") || arguments.contains("--porcelain=v1") {
+            // Only remove trailing newline, preserve leading whitespace
+            return output.trimmingCharacters(in: .newlines)
+        }
+
+        // For other commands, use normal trimming
+        return output.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func handleFailedCommand(

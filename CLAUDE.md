@@ -38,6 +38,30 @@ NSApplication.shared.activate(ignoringOtherApps: true)
 - 所有 Git 操作都透過 GitCommandExecutor 類別
 - 支援非同步操作 (async/await)
 
+### Git Porcelain 格式處理 (重要！)
+**問題**: `git status --porcelain=v1` 輸出格式敏感，開頭空白字元有特殊意義
+- 第一個字元：index (staged) 狀態
+- 第二個字元：working directory 狀態
+- `" M filename"` = 只有 working directory 修改 (Modified)
+- `"M  filename"` = 只有 index 修改 (Staged)
+
+**解決方案**: GitCommandExecutor 針對 porcelain 格式命令特殊處理
+```swift
+private func processCommandOutput(_ output: String, arguments: [String]) -> String {
+    // 針對 porcelain 格式命令，保留開頭空白
+    if arguments.contains("--porcelain") || arguments.contains("--porcelain=v1") {
+        return output.trimmingCharacters(in: .newlines)  // 只去除尾隨換行
+    }
+    return output.trimmingCharacters(in: .whitespacesAndNewlines)  // 其他命令正常處理
+}
+```
+
+**教訓**:
+- ❌ 絕對不要對 Git porcelain 輸出進行 `trimmingCharacters(in: .whitespacesAndNewlines)`
+- ❌ 不要嘗試「修正」或「標準化」Git 狀態格式
+- ✅ 尊重 Git 命令的原始輸出格式
+- ✅ 根據命令類型選擇性地處理輸出
+
 ## 開發指令
 
 ### 建置與執行

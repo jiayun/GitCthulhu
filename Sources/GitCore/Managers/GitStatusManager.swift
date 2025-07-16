@@ -16,6 +16,7 @@ public class GitStatusManager {
 
     /// Cache for status entries to improve performance
     private var statusCache: [String: GitStatusEntry] = [:]
+    private var cachedEntries: [GitStatusEntry] = [] // Maintain order
     private var lastCacheUpdate: Date = .distantPast
     private let cacheValidityDuration: TimeInterval = 1.0 // 1 second cache
 
@@ -27,19 +28,23 @@ public class GitStatusManager {
     /// Gets the complete repository status with detailed information
     public func getDetailedStatus(useCache: Bool = true) async throws -> [GitStatusEntry] {
         if useCache, isCacheValid() {
-            logger.debug("Using cached status entries")
-            return Array(statusCache.values)
+            logger.debug("Using cached status entries (count: \(cachedEntries.count))")
+            return cachedEntries
         }
 
         let output = try await gitExecutor.execute(["status", "--porcelain=v1"])
         let entries = parseStatusOutput(output)
 
-        // Update cache
-        statusCache = Dictionary(uniqueKeysWithValues: entries.map { ($0.filePath, $0) })
+        // Sort entries by file path for consistent ordering
+        let sortedEntries = entries.sorted { $0.filePath < $1.filePath }
+
+        // Update cache - maintain both dictionary for fast lookup and array for order
+        statusCache = Dictionary(uniqueKeysWithValues: sortedEntries.map { ($0.filePath, $0) })
+        cachedEntries = sortedEntries
         lastCacheUpdate = Date()
 
-        logger.info("Loaded detailed status for \(entries.count) files")
-        return entries
+        logger.info("Loaded detailed status for \(sortedEntries.count) files")
+        return sortedEntries
     }
 
     /// Gets status for a specific file
@@ -58,6 +63,15 @@ public class GitStatusManager {
         // Update cache for this file
         if let entry {
             statusCache[filePath] = entry
+            // Also update the ordered cache if this file is not already present
+            if !cachedEntries.contains(where: { $0.filePath == filePath }) {
+                cachedEntries.append(entry)
+            } else {
+                // Update existing entry in the ordered cache
+                if let index = cachedEntries.firstIndex(where: { $0.filePath == filePath }) {
+                    cachedEntries[index] = entry
+                }
+            }
         }
 
         return entry
@@ -114,6 +128,7 @@ public class GitStatusManager {
     /// Invalidates the status cache
     public func invalidateCache() {
         statusCache.removeAll()
+        cachedEntries.removeAll()
         lastCacheUpdate = .distantPast
         logger.debug("Status cache invalidated")
     }
@@ -144,6 +159,7 @@ public class GitStatusManager {
             }
         }
 
+        logger.debug("Parsed \(entries.count) status entries in order")
         return entries
     }
 }
