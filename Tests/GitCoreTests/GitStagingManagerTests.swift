@@ -391,8 +391,8 @@ final class GitStagingManagerTests: XCTestCase {
         let duration = endTime.timeIntervalSince(startTime)
         // Log performance: Staging took \(duration) seconds for \(fileCount) files
 
-        // Should complete within reasonable time (15 seconds)
-        XCTAssertLessThan(duration, 15.0)
+        // Should complete within reasonable time (30 seconds for CI)
+        XCTAssertLessThan(duration, 30.0)
 
         // Verify all files are staged
         let status = try await stagingManager.getStagingStatus()

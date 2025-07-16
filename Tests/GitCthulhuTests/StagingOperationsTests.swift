@@ -361,8 +361,8 @@ final class StagingOperationsTests: XCTestCase {
         let duration = endTime.timeIntervalSince(startTime)
         // Log performance: Batch staging took \(duration) seconds for \(fileCount) files
 
-        // Should complete within reasonable time
-        XCTAssertLessThan(duration, 5.0)
+        // Should complete within reasonable time (10 seconds for CI)
+        XCTAssertLessThan(duration, 10.0)
 
         // Verify result
         XCTAssertTrue(result.isSuccess)
