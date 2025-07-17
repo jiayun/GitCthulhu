@@ -34,6 +34,12 @@ public class StagingViewModel: ObservableObject {
         }
     }
 
+    public convenience init(repositoryPath: String) {
+        let url = URL(fileURLWithPath: repositoryPath)
+        let repository = try! GitRepository(url: url)
+        self.init(repository: repository)
+    }
+
     // MARK: - Public Methods
 
     /// Loads the current staging status
@@ -56,6 +62,11 @@ public class StagingViewModel: ObservableObject {
     /// Refreshes the staging status
     public func refreshStagingStatus() async {
         await loadStagingStatus()
+    }
+
+    /// Alias for refreshStagingStatus to match interface expected by IntegratedRepositoryView
+    public func refreshStatus() async {
+        await refreshStagingStatus()
     }
 
     // MARK: - Single File Operations
