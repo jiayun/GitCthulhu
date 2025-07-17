@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import XCTest
 @testable import GitCore
+import XCTest
 
 final class UnifiedDiffParserTests: XCTestCase {
     private var parser: UnifiedDiffParser!
@@ -405,7 +405,7 @@ final class UnifiedDiffParserTests: XCTestCase {
         """
 
         // Generate 1000 lines of diff
-        for i in 1...1000 {
+        for i in 1 ... 1000 {
             if i % 10 == 0 {
                 largeDiffOutput += "\n-let old\(i) = true"
                 largeDiffOutput += "\n+let new\(i) = false"

@@ -42,7 +42,7 @@ public class DiffViewerViewModel: ObservableObject {
     @Published public var showStaged: Bool = false
 
     public init(repositoryPath: String) {
-        self.diffManager = GitDiffManager(repositoryPath: repositoryPath)
+        diffManager = GitDiffManager(repositoryPath: repositoryPath)
     }
 
     // MARK: - Public Methods
@@ -54,7 +54,7 @@ public class DiffViewerViewModel: ObservableObject {
 
         do {
             let loadedDiffs = try await diffManager.getAllDiffs(staged: showStaged)
-            self.diffs = loadedDiffs
+            diffs = loadedDiffs
 
             // Auto-select first file if none selected
             if selectedFilePath == nil, let firstDiff = loadedDiffs.first {
@@ -99,7 +99,7 @@ public class DiffViewerViewModel: ObservableObject {
 
     /// Get the currently selected diff
     public var selectedDiff: GitDiff? {
-        guard let selectedFilePath = selectedFilePath else { return nil }
+        guard let selectedFilePath else { return nil }
         return diffs.first { $0.filePath == selectedFilePath }
     }
 
@@ -134,8 +134,8 @@ public class DiffViewerViewModel: ObservableObject {
         let query = searchQuery.lowercased()
         return diffs.filter { diff in
             diff.filePath.lowercased().contains(query) ||
-            diff.fileName.lowercased().contains(query) ||
-            (diff.oldPath?.lowercased().contains(query) ?? false)
+                diff.fileName.lowercased().contains(query) ||
+                (diff.oldPath?.lowercased().contains(query) ?? false)
         }
     }
 
@@ -189,26 +189,26 @@ public class DiffViewerViewModel: ObservableObject {
 
 /// Diff view modes
 public enum DiffViewMode: String, CaseIterable, Identifiable {
-    case unified = "unified"
-    case sideBySide = "sideBySide"
+    case unified
+    case sideBySide
 
     public var id: String { rawValue }
 
     public var displayName: String {
         switch self {
         case .unified:
-            return "Unified"
+            "Unified"
         case .sideBySide:
-            return "Side by Side"
+            "Side by Side"
         }
     }
 
     public var icon: String {
         switch self {
         case .unified:
-            return "list.bullet"
+            "list.bullet"
         case .sideBySide:
-            return "rectangle.split.2x1"
+            "rectangle.split.2x1"
         }
     }
 }

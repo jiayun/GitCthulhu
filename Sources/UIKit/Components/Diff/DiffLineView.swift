@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 /// Enhanced diff line view with syntax highlighting
 public struct DiffLineView: View {
@@ -80,7 +80,7 @@ public struct DiffLineView: View {
 
     private var lineContent: some View {
         Group {
-            if showSyntaxHighlighting && line.type.isContentLine && language != "text" {
+            if showSyntaxHighlighting, line.type.isContentLine, language != "text" {
                 // Syntax highlighted content
                 Text(highlightedContent)
                     .textSelection(.enabled)
@@ -99,11 +99,11 @@ public struct DiffLineView: View {
 
     private var displayContent: String {
         if showWhitespace {
-            return line.content
+            line.content
                 .replacingOccurrences(of: " ", with: "·")
                 .replacingOccurrences(of: "\t", with: "→")
         } else {
-            return line.content
+            line.content
         }
     }
 
@@ -115,39 +115,39 @@ public struct DiffLineView: View {
     private var lineBackgroundColor: Color {
         switch line.type {
         case .addition:
-            return Color.green.opacity(0.15)
+            Color.green.opacity(0.15)
         case .deletion:
-            return Color.red.opacity(0.15)
+            Color.red.opacity(0.15)
         case .context:
-            return Color.clear
+            Color.clear
         case .noNewline, .header, .fileHeader, .meta:
-            return Color(NSColor.controlBackgroundColor)
+            Color(NSColor.controlBackgroundColor)
         }
     }
 
     private var lineIndicatorColor: Color {
         switch line.type {
         case .addition:
-            return .green
+            .green
         case .deletion:
-            return .red
+            .red
         case .context:
-            return .clear
+            .clear
         case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
+            .secondary
         }
     }
 
     private var lineTextColor: Color {
         switch line.type {
         case .addition:
-            return .primary
+            .primary
         case .deletion:
-            return .primary
+            .primary
         case .context:
-            return .primary
+            .primary
         case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
+            .secondary
         }
     }
 }
@@ -200,7 +200,7 @@ public struct EnhancedUnifiedDiffView: View {
                 }
 
                 // Empty state if no chunks
-                if diff.chunks.isEmpty && !diff.isBinary {
+                if diff.chunks.isEmpty, !diff.isBinary {
                     emptyDiffState
                 }
             }
@@ -298,21 +298,21 @@ public struct EnhancedUnifiedDiffView: View {
     private var changeTypeColor: Color {
         switch diff.changeType {
         case .added:
-            return .green
+            .green
         case .deleted:
-            return .red
+            .red
         case .modified:
-            return .orange
+            .orange
         case .renamed:
-            return .blue
+            .blue
         case .copied:
-            return .purple
+            .purple
         case .unmerged:
-            return .red
+            .red
         case .typeChanged:
-            return .yellow
+            .yellow
         case .unknown:
-            return .gray
+            .gray
         }
     }
 }
@@ -398,7 +398,7 @@ struct EnhancedDiffChunkView: View {
 
     private var chunkContent: some View {
         LazyVStack(spacing: 0) {
-            ForEach(Array(chunk.lines.enumerated()), id: \.offset) { index, line in
+            ForEach(Array(chunk.lines.enumerated()), id: \.offset) { _, line in
                 DiffLineView(
                     line: line,
                     language: language,

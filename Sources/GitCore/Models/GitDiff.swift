@@ -104,21 +104,21 @@ public enum GitChangeType: String, CaseIterable, Equatable {
     public var displayName: String {
         switch self {
         case .modified:
-            return "Modified"
+            "Modified"
         case .added:
-            return "Added"
+            "Added"
         case .deleted:
-            return "Deleted"
+            "Deleted"
         case .renamed:
-            return "Renamed"
+            "Renamed"
         case .copied:
-            return "Copied"
+            "Copied"
         case .unmerged:
-            return "Unmerged"
+            "Unmerged"
         case .typeChanged:
-            return "Type Changed"
+            "Type Changed"
         case .unknown:
-            return "Unknown"
+            "Unknown"
         }
     }
 
@@ -126,21 +126,21 @@ public enum GitChangeType: String, CaseIterable, Equatable {
     public var color: String {
         switch self {
         case .modified:
-            return "orange"
+            "orange"
         case .added:
-            return "green"
+            "green"
         case .deleted:
-            return "red"
+            "red"
         case .renamed:
-            return "blue"
+            "blue"
         case .copied:
-            return "purple"
+            "purple"
         case .unmerged:
-            return "red"
+            "red"
         case .typeChanged:
-            return "yellow"
+            "yellow"
         case .unknown:
-            return "gray"
+            "gray"
         }
     }
 
@@ -148,103 +148,103 @@ public enum GitChangeType: String, CaseIterable, Equatable {
     public var symbol: String {
         switch self {
         case .modified:
-            return "pencil"
+            "pencil"
         case .added:
-            return "plus"
+            "plus"
         case .deleted:
-            return "minus"
+            "minus"
         case .renamed:
-            return "arrow.right"
+            "arrow.right"
         case .copied:
-            return "doc.on.doc"
+            "doc.on.doc"
         case .unmerged:
-            return "exclamationmark.triangle"
+            "exclamationmark.triangle"
         case .typeChanged:
-            return "arrow.triangle.2.circlepath"
+            "arrow.triangle.2.circlepath"
         case .unknown:
-            return "questionmark"
+            "questionmark"
         }
     }
 }
 
 // MARK: - Computed Properties
 
-extension GitDiff {
+public extension GitDiff {
     /// All lines from all chunks
-    public var allLines: [GitDiffLine] {
-        return chunks.flatMap { $0.lines }
+    var allLines: [GitDiffLine] {
+        chunks.flatMap(\.lines)
     }
 
     /// Lines that represent additions
-    public var addedLines: [GitDiffLine] {
-        return allLines.filter { $0.type == .addition }
+    var addedLines: [GitDiffLine] {
+        allLines.filter { $0.type == .addition }
     }
 
     /// Lines that represent deletions
-    public var deletedLines: [GitDiffLine] {
-        return allLines.filter { $0.type == .deletion }
+    var deletedLines: [GitDiffLine] {
+        allLines.filter { $0.type == .deletion }
     }
 
     /// Lines that represent context (unchanged)
-    public var contextLines: [GitDiffLine] {
-        return allLines.filter { $0.type == .context }
+    var contextLines: [GitDiffLine] {
+        allLines.filter { $0.type == .context }
     }
 
     /// Number of lines added
-    public var additionsCount: Int {
-        return addedLines.count
+    var additionsCount: Int {
+        addedLines.count
     }
 
     /// Number of lines deleted
-    public var deletionsCount: Int {
-        return deletedLines.count
+    var deletionsCount: Int {
+        deletedLines.count
     }
 
     /// Number of context lines
-    public var contextCount: Int {
-        return contextLines.count
+    var contextCount: Int {
+        contextLines.count
     }
 
     /// Total number of lines in the diff
-    public var totalLines: Int {
-        return allLines.count
+    var totalLines: Int {
+        allLines.count
     }
 
     /// Net change in lines (additions - deletions)
-    public var netChange: Int {
-        return additionsCount - deletionsCount
+    var netChange: Int {
+        additionsCount - deletionsCount
     }
 
     /// Total number of changed lines (additions + deletions)
-    public var totalChanges: Int {
-        return additionsCount + deletionsCount
+    var totalChanges: Int {
+        additionsCount + deletionsCount
     }
 
     /// Returns true if this diff has any changes
-    public var hasChanges: Bool {
-        return totalChanges > 0 || isBinary
+    var hasChanges: Bool {
+        totalChanges > 0 || isBinary
     }
 
     /// File name without path
-    public var fileName: String {
-        return URL(fileURLWithPath: filePath).lastPathComponent
+    var fileName: String {
+        URL(fileURLWithPath: filePath).lastPathComponent
     }
 
     /// Directory path
-    public var directoryPath: String? {
+    var directoryPath: String? {
         let url = URL(fileURLWithPath: filePath)
         let directory = url.deletingLastPathComponent().path
         return directory.isEmpty || directory == "." ? nil : directory
     }
 
     /// File extension
-    public var fileExtension: String {
-        return URL(fileURLWithPath: filePath).pathExtension
+    var fileExtension: String {
+        URL(fileURLWithPath: filePath).pathExtension
     }
 
     /// Effective file path for display (handles renames)
-    public var displayPath: String {
-        if isRenamed, let oldPath = oldPath {
+    var displayPath: String {
+        if isRenamed, let oldPath {
             return "\(oldPath) → \(filePath)"
         }
         return filePath
@@ -253,10 +253,10 @@ extension GitDiff {
 
 // MARK: - Statistics
 
-extension GitDiff {
+public extension GitDiff {
     /// Statistics for this diff
-    public var stats: GitDiffStats {
-        return GitDiffStats(
+    var stats: GitDiffStats {
+        GitDiffStats(
             additions: additionsCount,
             deletions: deletionsCount,
             context: contextCount,
@@ -290,22 +290,22 @@ public struct GitDiffStats: Equatable {
 
     /// Net change in lines (additions - deletions)
     public var netChange: Int {
-        return additions - deletions
+        additions - deletions
     }
 
     /// Total number of changed lines (additions + deletions)
     public var totalChanges: Int {
-        return additions + deletions
+        additions + deletions
     }
 
     /// Total number of lines (including context)
     public var totalLines: Int {
-        return additions + deletions + context
+        additions + deletions + context
     }
 
     /// Returns true if there are any changes
     public var hasChanges: Bool {
-        return totalChanges > 0 || isBinary
+        totalChanges > 0 || isBinary
     }
 
     /// Percentage of lines that are additions (0.0 to 1.0)
@@ -323,14 +323,14 @@ public struct GitDiffStats: Equatable {
 
 // MARK: - Factory Methods
 
-extension GitDiff {
+public extension GitDiff {
     /// Creates a diff for a binary file
-    public static func binaryFile(
+    static func binaryFile(
         filePath: String,
         changeType: GitChangeType,
         oldPath: String? = nil
     ) -> GitDiff {
-        return GitDiff(
+        GitDiff(
             filePath: filePath,
             oldPath: oldPath,
             changeType: changeType,
@@ -342,11 +342,11 @@ extension GitDiff {
     }
 
     /// Creates a diff for a new file
-    public static func newFile(
+    static func newFile(
         filePath: String,
         chunks: [GitDiffChunk] = []
     ) -> GitDiff {
-        return GitDiff(
+        GitDiff(
             filePath: filePath,
             changeType: .added,
             chunks: chunks,
@@ -355,11 +355,11 @@ extension GitDiff {
     }
 
     /// Creates a diff for a deleted file
-    public static func deletedFile(
+    static func deletedFile(
         filePath: String,
         chunks: [GitDiffChunk] = []
     ) -> GitDiff {
-        return GitDiff(
+        GitDiff(
             filePath: filePath,
             changeType: .deleted,
             chunks: chunks,
@@ -368,12 +368,12 @@ extension GitDiff {
     }
 
     /// Creates a diff for a renamed file
-    public static func renamedFile(
+    static func renamedFile(
         oldPath: String,
         newPath: String,
         chunks: [GitDiffChunk] = []
     ) -> GitDiff {
-        return GitDiff(
+        GitDiff(
             filePath: newPath,
             oldPath: oldPath,
             changeType: .renamed,

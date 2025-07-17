@@ -10,7 +10,6 @@ import SwiftUI
 
 /// Syntax highlighter for code in diffs
 public class SyntaxHighlighter {
-
     public init() {}
 
     /// Highlight syntax for a given piece of code
@@ -186,7 +185,11 @@ public class SyntaxHighlighter {
             result = highlightPattern(result, pattern: "\\b\(keyword)\\b", color: .purple)
         }
 
-        result = highlightPattern(result, pattern: "\"[^\"]*\"|'[^']*'|\"\"\"[\\s\\S]*?\"\"\"|'''[\\s\\S]*?'''", color: .red)
+        result = highlightPattern(
+            result,
+            pattern: "\"[^\"]*\"|'[^']*'|\"\"\"[\\s\\S]*?\"\"\"|'''[\\s\\S]*?'''",
+            color: .red
+        )
         result = highlightPattern(result, pattern: "#.*$", color: .green, isMultiline: true)
         result = highlightPattern(result, pattern: "\\b\\d+(\\.\\d+)?\\b", color: .blue)
 
@@ -329,7 +332,11 @@ public class SyntaxHighlighter {
 
             for match in matches.reversed() {
                 if let swiftRange = Range(match.range, in: content) {
-                    let attributedRange = AttributedString.Index(swiftRange.lowerBound, within: result)!..<AttributedString.Index(swiftRange.upperBound, within: result)!
+                    let attributedRange = AttributedString
+                        .Index(swiftRange.lowerBound, within: result)! ..< AttributedString.Index(
+                            swiftRange.upperBound,
+                            within: result
+                        )!
                     result[attributedRange].foregroundColor = color
                 }
             }

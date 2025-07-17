@@ -68,19 +68,19 @@ public enum GitDiffLineType: String, CaseIterable, Equatable {
     public var symbol: String {
         switch self {
         case .context:
-            return " "
+            " "
         case .addition:
-            return "+"
+            "+"
         case .deletion:
-            return "-"
+            "-"
         case .noNewline:
-            return "\\"
+            "\\"
         case .header:
-            return "@"
+            "@"
         case .fileHeader:
-            return "f"
+            "f"
         case .meta:
-            return "m"
+            "m"
         }
     }
 
@@ -88,62 +88,62 @@ public enum GitDiffLineType: String, CaseIterable, Equatable {
     public var isContentLine: Bool {
         switch self {
         case .context, .addition, .deletion:
-            return true
+            true
         case .noNewline, .header, .fileHeader, .meta:
-            return false
+            false
         }
     }
 
     /// Returns true if this line represents a change (addition or deletion)
     public var isChange: Bool {
-        return self == .addition || self == .deletion
+        self == .addition || self == .deletion
     }
 }
 
 // MARK: - Extensions
 
-extension GitDiffLine {
+public extension GitDiffLine {
     /// Returns true if this line is an addition
-    public var isAddition: Bool {
-        return type == .addition
+    var isAddition: Bool {
+        type == .addition
     }
 
     /// Returns true if this line is a deletion
-    public var isDeletion: Bool {
-        return type == .deletion
+    var isDeletion: Bool {
+        type == .deletion
     }
 
     /// Returns true if this line is context (unchanged)
-    public var isContext: Bool {
-        return type == .context
+    var isContext: Bool {
+        type == .context
     }
 
     /// Returns the effective line number for display purposes
-    public var displayLineNumber: Int? {
-        return newLineNumber ?? oldLineNumber
+    var displayLineNumber: Int? {
+        newLineNumber ?? oldLineNumber
     }
 
     /// Returns a trimmed version of the content (useful for display)
-    public var trimmedContent: String {
-        return content.trimmingCharacters(in: .whitespaces)
+    var trimmedContent: String {
+        content.trimmingCharacters(in: .whitespaces)
     }
 
     /// Returns true if this line contains only whitespace
-    public var isWhitespaceOnly: Bool {
-        return content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    var isWhitespaceOnly: Bool {
+        content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 
 // MARK: - Factory Methods
 
-extension GitDiffLine {
+public extension GitDiffLine {
     /// Creates a context line
-    public static func context(
+    static func context(
         oldLineNumber: Int,
         newLineNumber: Int,
         content: String
     ) -> GitDiffLine {
-        return GitDiffLine(
+        GitDiffLine(
             type: .context,
             oldLineNumber: oldLineNumber,
             newLineNumber: newLineNumber,
@@ -153,11 +153,11 @@ extension GitDiffLine {
     }
 
     /// Creates an addition line
-    public static func addition(
+    static func addition(
         newLineNumber: Int,
         content: String
     ) -> GitDiffLine {
-        return GitDiffLine(
+        GitDiffLine(
             type: .addition,
             oldLineNumber: nil,
             newLineNumber: newLineNumber,
@@ -167,11 +167,11 @@ extension GitDiffLine {
     }
 
     /// Creates a deletion line
-    public static func deletion(
+    static func deletion(
         oldLineNumber: Int,
         content: String
     ) -> GitDiffLine {
-        return GitDiffLine(
+        GitDiffLine(
             type: .deletion,
             oldLineNumber: oldLineNumber,
             newLineNumber: nil,
@@ -181,8 +181,8 @@ extension GitDiffLine {
     }
 
     /// Creates a header line
-    public static func header(content: String) -> GitDiffLine {
-        return GitDiffLine(
+    static func header(content: String) -> GitDiffLine {
+        GitDiffLine(
             type: .header,
             content: content,
             rawLine: content

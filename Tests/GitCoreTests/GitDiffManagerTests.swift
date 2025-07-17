@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import XCTest
 @testable import GitCore
+import XCTest
 
 @MainActor
 final class GitDiffManagerTests: XCTestCase {
@@ -444,7 +444,7 @@ class MockGitCommandExecutor: GitCommandExecutor {
             throw errorToThrow
         }
 
-        if !mockOutputs.isEmpty && callCount <= mockOutputs.count {
+        if !mockOutputs.isEmpty, callCount <= mockOutputs.count {
             return mockOutputs[callCount - 1]
         }
 

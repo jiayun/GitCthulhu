@@ -9,7 +9,6 @@ import Foundation
 
 /// Parser for Git unified diff format
 public class UnifiedDiffParser {
-
     public init() {}
 
     /// Parse unified diff output into GitDiff objects
@@ -184,7 +183,7 @@ public class UnifiedDiffParser {
                     )
                 }
 
-            } else if !line.isEmpty && currentChunk != nil {
+            } else if !line.isEmpty, currentChunk != nil {
                 // Content line
                 let diffLine = parseDiffLine(line, oldLineNumber: &oldLineNumber, newLineNumber: &newLineNumber)
                 chunkLines.append(diffLine)
@@ -247,7 +246,7 @@ public class UnifiedDiffParser {
             isDeleted = true
         } else if line.hasPrefix("--- ") {
             let path = extractPathFromFileHeader(line)
-            if oldPath == nil && path != diff.filePath {
+            if oldPath == nil, path != diff.filePath {
                 oldPath = path
             }
         }
@@ -355,20 +354,20 @@ public class UnifiedDiffParser {
 
 // MARK: - Error Types
 
-extension UnifiedDiffParser {
-    public enum ParseError: Error, LocalizedError {
+public extension UnifiedDiffParser {
+    enum ParseError: Error, LocalizedError {
         case invalidDiffFormat(String)
         case malformedChunkHeader(String)
         case unexpectedContent(String)
 
         public var errorDescription: String? {
             switch self {
-            case .invalidDiffFormat(let details):
-                return "Invalid diff format: \(details)"
-            case .malformedChunkHeader(let header):
-                return "Malformed chunk header: \(header)"
-            case .unexpectedContent(let content):
-                return "Unexpected content: \(content)"
+            case let .invalidDiffFormat(details):
+                "Invalid diff format: \(details)"
+            case let .malformedChunkHeader(header):
+                "Malformed chunk header: \(header)"
+            case let .unexpectedContent(content):
+                "Unexpected content: \(content)"
             }
         }
     }

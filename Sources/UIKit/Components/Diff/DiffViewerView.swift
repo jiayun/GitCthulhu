@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 /// Main diff viewer component
 public struct DiffViewerView: View {
@@ -14,7 +14,7 @@ public struct DiffViewerView: View {
     @State private var selectedFileId: String?
 
     public init(repositoryPath: String) {
-        self.viewModel = DiffViewerViewModel(repositoryPath: repositoryPath)
+        viewModel = DiffViewerViewModel(repositoryPath: repositoryPath)
     }
 
     public var body: some View {
@@ -161,7 +161,7 @@ struct DiffFileItem: View {
                         .font(.caption2)
                         .foregroundColor(changeTypeColor)
 
-                    if !diff.isBinary && diff.hasChanges {
+                    if !diff.isBinary, diff.hasChanges {
                         DiffStatsView(stats: diff.stats)
                     } else if diff.isBinary {
                         Text("Binary")
@@ -194,21 +194,21 @@ struct DiffFileItem: View {
     private var changeTypeColor: Color {
         switch diff.changeType {
         case .added:
-            return .green
+            .green
         case .deleted:
-            return .red
+            .red
         case .modified:
-            return .orange
+            .orange
         case .renamed:
-            return .blue
+            .blue
         case .copied:
-            return .purple
+            .purple
         case .unmerged:
-            return .red
+            .red
         case .typeChanged:
-            return .yellow
+            .yellow
         case .unknown:
-            return .gray
+            .gray
         }
     }
 }
@@ -247,7 +247,7 @@ struct DiffContentView: View {
 
     var body: some View {
         Group {
-            if let diff = diff {
+            if let diff {
                 if diff.isBinary {
                     BinaryFileView(diff: diff)
                 } else {

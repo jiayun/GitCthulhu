@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 /// Side-by-side diff view component
 public struct SideBySideDiffView: View {
@@ -51,7 +51,7 @@ public struct SideBySideDiffView: View {
                     }
 
                     // Empty state if no chunks
-                    if diff.chunks.isEmpty && !diff.isBinary {
+                    if diff.chunks.isEmpty, !diff.isBinary {
                         emptyDiffState
                     }
                 }
@@ -187,21 +187,21 @@ public struct SideBySideDiffView: View {
     private var changeTypeColor: Color {
         switch diff.changeType {
         case .added:
-            return .green
+            .green
         case .deleted:
-            return .red
+            .red
         case .modified:
-            return .orange
+            .orange
         case .renamed:
-            return .blue
+            .blue
         case .copied:
-            return .purple
+            .purple
         case .unmerged:
-            return .red
+            .red
         case .typeChanged:
-            return .yellow
+            .yellow
         case .unknown:
-            return .gray
+            .gray
         }
     }
 }
@@ -287,7 +287,7 @@ struct SideBySideDiffChunkView: View {
         let sideBySideLines = buildSideBySideLines(from: chunk.lines)
 
         return LazyVStack(spacing: 0) {
-            ForEach(Array(sideBySideLines.enumerated()), id: \.offset) { index, linePair in
+            ForEach(Array(sideBySideLines.enumerated()), id: \.offset) { _, linePair in
                 SideBySideLineView(
                     leftLine: linePair.left,
                     rightLine: linePair.right,
@@ -340,7 +340,7 @@ struct SideBySideDiffChunkView: View {
     ) {
         let maxCount = max(leftLines.count, rightLines.count)
 
-        for i in 0..<maxCount {
+        for i in 0 ..< maxCount {
             let left = i < leftLines.count ? leftLines[i] : nil
             let right = i < rightLines.count ? rightLines[i] : nil
 
@@ -443,7 +443,7 @@ struct SideBySideLineContentView: View {
     }
 
     private var displayLineNumber: String {
-        guard let line = line else { return "" }
+        guard let line else { return "" }
 
         switch side {
         case .left:
@@ -454,19 +454,19 @@ struct SideBySideLineContentView: View {
     }
 
     private var displayContent: String {
-        guard let line = line else { return "" }
+        guard let line else { return "" }
 
         let content = showWhitespace ?
             line.content
-                .replacingOccurrences(of: " ", with: "·")
-                .replacingOccurrences(of: "\t", with: "→") :
+            .replacingOccurrences(of: " ", with: "·")
+            .replacingOccurrences(of: "\t", with: "→") :
             line.content
 
         return content
     }
 
     private var lineBackgroundColor: Color {
-        guard let line = line else { return Color.clear }
+        guard let line else { return Color.clear }
 
         switch line.type {
         case .addition:
@@ -481,7 +481,7 @@ struct SideBySideLineContentView: View {
     }
 
     private var lineIndicatorColor: Color {
-        guard let line = line else { return Color.clear }
+        guard let line else { return Color.clear }
 
         switch line.type {
         case .addition:
@@ -496,7 +496,7 @@ struct SideBySideLineContentView: View {
     }
 
     private var lineTextColor: Color {
-        guard let line = line else { return Color.secondary }
+        guard let line else { return Color.secondary }
 
         switch line.type {
         case .addition, .deletion, .context:

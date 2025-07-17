@@ -19,11 +19,11 @@ public class GitStatusViewModel: ObservableObject {
     private let statusManager: GitStatusManager
 
     public init(repositoryPath: String) {
-        self.statusManager = GitStatusManager(repositoryURL: URL(fileURLWithPath: repositoryPath))
+        statusManager = GitStatusManager(repositoryURL: URL(fileURLWithPath: repositoryPath))
     }
 
     public init(repositoryURL: URL) {
-        self.statusManager = GitStatusManager(repositoryURL: repositoryURL)
+        statusManager = GitStatusManager(repositoryURL: repositoryURL)
     }
 
     /// Checks status and updates the published properties for UI
@@ -48,17 +48,17 @@ public class GitStatusViewModel: ObservableObject {
 
     /// Gets status summary
     public func getStatusSummary() async throws -> GitStatusSummary {
-        return try await statusManager.getStatusSummary()
+        try await statusManager.getStatusSummary()
     }
 
     /// Gets status for a specific file
     public func getFileStatus(_ filePath: String) async throws -> GitStatusEntry? {
-        return try await statusManager.getFileStatus(filePath)
+        try await statusManager.getFileStatus(filePath)
     }
 
     /// Checks if repository is clean
     public func isRepositoryClean() async throws -> Bool {
-        return try await statusManager.isRepositoryClean()
+        try await statusManager.isRepositoryClean()
     }
 
     /// Invalidates the cache

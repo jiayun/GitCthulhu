@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 /// Unified diff view component
 public struct UnifiedDiffView: View {
@@ -46,7 +46,7 @@ public struct UnifiedDiffView: View {
                 }
 
                 // Empty state if no chunks
-                if diff.chunks.isEmpty && !diff.isBinary {
+                if diff.chunks.isEmpty, !diff.isBinary {
                     emptyDiffState
                 }
             }
@@ -116,21 +116,21 @@ public struct UnifiedDiffView: View {
     private var changeTypeColor: Color {
         switch diff.changeType {
         case .added:
-            return .green
+            .green
         case .deleted:
-            return .red
+            .red
         case .modified:
-            return .orange
+            .orange
         case .renamed:
-            return .blue
+            .blue
         case .copied:
-            return .purple
+            .purple
         case .unmerged:
-            return .red
+            .red
         case .typeChanged:
-            return .yellow
+            .yellow
         case .unknown:
-            return .gray
+            .gray
         }
     }
 }
@@ -214,7 +214,7 @@ struct UnifiedDiffChunkView: View {
 
     private var chunkContent: some View {
         LazyVStack(spacing: 0) {
-            ForEach(Array(chunk.lines.enumerated()), id: \.offset) { index, line in
+            ForEach(Array(chunk.lines.enumerated()), id: \.offset) { _, line in
                 UnifiedDiffLineView(
                     line: line,
                     showWhitespace: showWhitespace,
@@ -289,50 +289,50 @@ struct UnifiedDiffLineView: View {
 
     private var displayContent: String {
         if showWhitespace {
-            return line.content
+            line.content
                 .replacingOccurrences(of: " ", with: "·")
                 .replacingOccurrences(of: "\t", with: "→")
         } else {
-            return line.content
+            line.content
         }
     }
 
     private var lineBackgroundColor: Color {
         switch line.type {
         case .addition:
-            return Color.green.opacity(0.15)
+            Color.green.opacity(0.15)
         case .deletion:
-            return Color.red.opacity(0.15)
+            Color.red.opacity(0.15)
         case .context:
-            return Color.clear
+            Color.clear
         case .noNewline, .header, .fileHeader, .meta:
-            return Color(NSColor.controlBackgroundColor)
+            Color(NSColor.controlBackgroundColor)
         }
     }
 
     private var lineIndicatorColor: Color {
         switch line.type {
         case .addition:
-            return .green
+            .green
         case .deletion:
-            return .red
+            .red
         case .context:
-            return .clear
+            .clear
         case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
+            .secondary
         }
     }
 
     private var lineTextColor: Color {
         switch line.type {
         case .addition:
-            return .primary
+            .primary
         case .deletion:
-            return .primary
+            .primary
         case .context:
-            return .primary
+            .primary
         case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
+            .secondary
         }
     }
 }

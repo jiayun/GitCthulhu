@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import XCTest
-@testable import UIKit
 import SwiftUI
+@testable import UIKit
+import XCTest
 
 final class SyntaxHighlighterTests: XCTestCase {
     private var highlighter: SyntaxHighlighter!
@@ -357,7 +357,7 @@ final class SyntaxHighlighterTests: XCTestCase {
     func testHighlightingPerformance() {
         // Given
         var largeCode = ""
-        for i in 1...1000 {
+        for i in 1 ... 1000 {
             largeCode += "func function\(i)() { let value\(i) = \"\(i)\" }\n"
         }
 
@@ -369,7 +369,7 @@ final class SyntaxHighlighterTests: XCTestCase {
 
     func testLanguageDetectionPerformance() {
         // Given
-        let filePaths = (1...1000).map { "file\($0).swift" }
+        let filePaths = (1 ... 1000).map { "file\($0).swift" }
 
         // When/Then
         measure {

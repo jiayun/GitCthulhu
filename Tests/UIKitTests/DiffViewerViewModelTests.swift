@@ -5,9 +5,9 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import XCTest
-@testable import UIKit
 @testable import GitCore
+@testable import UIKit
+import XCTest
 
 @MainActor
 final class DiffViewerViewModelTests: XCTestCase {
@@ -323,11 +323,11 @@ final class DiffViewerViewModelTests: XCTestCase {
         additions: Int = 1,
         deletions: Int = 1
     ) -> GitDiff {
-        let additionLines = (0..<additions).map { index in
+        let additionLines = (0 ..< additions).map { index in
             GitDiffLine.addition(newLineNumber: index + 1, content: "Added line \(index + 1)")
         }
 
-        let deletionLines = (0..<deletions).map { index in
+        let deletionLines = (0 ..< deletions).map { index in
             GitDiffLine.deletion(oldLineNumber: index + 1, content: "Deleted line \(index + 1)")
         }
 
@@ -348,7 +348,7 @@ final class DiffViewerViewModelTests: XCTestCase {
     }
 
     private func createBinaryTestDiff(filePath: String) -> GitDiff {
-        return GitDiff.binaryFile(
+        GitDiff.binaryFile(
             filePath: filePath,
             changeType: .modified
         )
@@ -358,7 +358,6 @@ final class DiffViewerViewModelTests: XCTestCase {
 // MARK: - DiffViewMode Tests
 
 final class DiffViewModeTests: XCTestCase {
-
     func testAllCases() {
         let modes = DiffViewMode.allCases
         XCTAssertEqual(modes.count, 2)

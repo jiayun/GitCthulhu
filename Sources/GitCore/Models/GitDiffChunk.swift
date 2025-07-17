@@ -53,84 +53,84 @@ public struct GitDiffChunk: Identifiable, Equatable {
 
 // MARK: - Computed Properties
 
-extension GitDiffChunk {
+public extension GitDiffChunk {
     /// Lines that represent additions
-    public var addedLines: [GitDiffLine] {
-        return lines.filter { $0.type == .addition }
+    var addedLines: [GitDiffLine] {
+        lines.filter { $0.type == .addition }
     }
 
     /// Lines that represent deletions
-    public var deletedLines: [GitDiffLine] {
-        return lines.filter { $0.type == .deletion }
+    var deletedLines: [GitDiffLine] {
+        lines.filter { $0.type == .deletion }
     }
 
     /// Lines that represent context (unchanged)
-    public var contextLines: [GitDiffLine] {
-        return lines.filter { $0.type == .context }
+    var contextLines: [GitDiffLine] {
+        lines.filter { $0.type == .context }
     }
 
     /// Number of lines added in this chunk
-    public var additionsCount: Int {
-        return addedLines.count
+    var additionsCount: Int {
+        addedLines.count
     }
 
     /// Number of lines deleted in this chunk
-    public var deletionsCount: Int {
-        return deletedLines.count
+    var deletionsCount: Int {
+        deletedLines.count
     }
 
     /// Number of context lines in this chunk
-    public var contextCount: Int {
-        return contextLines.count
+    var contextCount: Int {
+        contextLines.count
     }
 
     /// Returns true if this chunk contains any changes
-    public var hasChanges: Bool {
-        return additionsCount > 0 || deletionsCount > 0
+    var hasChanges: Bool {
+        additionsCount > 0 || deletionsCount > 0
     }
 
     /// Returns true if this chunk only contains additions
-    public var isAdditionOnly: Bool {
-        return additionsCount > 0 && deletionsCount == 0
+    var isAdditionOnly: Bool {
+        additionsCount > 0 && deletionsCount == 0
     }
 
     /// Returns true if this chunk only contains deletions
-    public var isDeletionOnly: Bool {
-        return deletionsCount > 0 && additionsCount == 0
+    var isDeletionOnly: Bool {
+        deletionsCount > 0 && additionsCount == 0
     }
 
     /// Returns true if this chunk contains both additions and deletions
-    public var isMixed: Bool {
-        return additionsCount > 0 && deletionsCount > 0
+    var isMixed: Bool {
+        additionsCount > 0 && deletionsCount > 0
     }
 
     /// The ending line number in the old file
-    public var oldEnd: Int {
-        return oldStart + oldCount - 1
+    var oldEnd: Int {
+        oldStart + oldCount - 1
     }
 
     /// The ending line number in the new file
-    public var newEnd: Int {
-        return newStart + newCount - 1
+    var newEnd: Int {
+        newStart + newCount - 1
     }
 
     /// Range of lines in the old file
-    public var oldRange: ClosedRange<Int> {
-        return oldStart...oldEnd
+    var oldRange: ClosedRange<Int> {
+        oldStart ... oldEnd
     }
 
     /// Range of lines in the new file
-    public var newRange: ClosedRange<Int> {
-        return newStart...newEnd
+    var newRange: ClosedRange<Int> {
+        newStart ... newEnd
     }
 }
 
 // MARK: - Statistics
 
-extension GitDiffChunk {
+public extension GitDiffChunk {
     /// Statistics for this chunk
-    public var stats: GitDiffChunkStats {
-        return GitDiffChunkStats(
+    var stats: GitDiffChunkStats {
+        GitDiffChunkStats(
             additions: additionsCount,
             deletions: deletionsCount,
             context: contextCount,
@@ -155,30 +155,30 @@ public struct GitDiffChunkStats: Equatable {
 
     /// Net change in lines (additions - deletions)
     public var netChange: Int {
-        return additions - deletions
+        additions - deletions
     }
 
     /// Total number of changed lines (additions + deletions)
     public var totalChanges: Int {
-        return additions + deletions
+        additions + deletions
     }
 
     /// Returns true if there are any changes
     public var hasChanges: Bool {
-        return totalChanges > 0
+        totalChanges > 0
     }
 }
 
 // MARK: - Factory Methods
 
-extension GitDiffChunk {
+public extension GitDiffChunk {
     /// Parses a hunk header line and creates a chunk with the parsed information
     /// Expected format: @@ -oldStart,oldCount +newStart,newCount @@ [context]
-    public static func parseHeader(_ headerLine: String) -> GitDiffChunk? {
+    static func parseHeader(_ headerLine: String) -> GitDiffChunk? {
         let trimmed = headerLine.trimmingCharacters(in: .whitespaces)
 
         // Basic validation
-        guard trimmed.hasPrefix("@@") && trimmed.contains("@@") else {
+        guard trimmed.hasPrefix("@@"), trimmed.contains("@@") else {
             return nil
         }
 
@@ -230,8 +230,8 @@ extension GitDiffChunk {
     }
 
     /// Creates a new chunk with additional lines
-    public func withLines(_ newLines: [GitDiffLine]) -> GitDiffChunk {
-        return GitDiffChunk(
+    func withLines(_ newLines: [GitDiffLine]) -> GitDiffChunk {
+        GitDiffChunk(
             oldStart: oldStart,
             oldCount: oldCount,
             newStart: newStart,

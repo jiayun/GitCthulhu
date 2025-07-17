@@ -24,7 +24,9 @@ public class GitDiffManager: ObservableObject {
 
     public init(repositoryPath: String, commandExecutor: GitCommandExecutor? = nil) {
         self.repositoryPath = repositoryPath
-        self.commandExecutor = commandExecutor ?? GitCommandExecutor(repositoryURL: URL(fileURLWithPath: repositoryPath))
+        self
+            .commandExecutor = commandExecutor ??
+            GitCommandExecutor(repositoryURL: URL(fileURLWithPath: repositoryPath))
     }
 
     // MARK: - Public Methods
@@ -80,7 +82,7 @@ public class GitDiffManager: ObservableObject {
         clearError()
 
         var arguments = ["diff", commit1, commit2]
-        if let filePath = filePath {
+        if let filePath {
             arguments.append("--")
             arguments.append(filePath)
         }
@@ -137,7 +139,7 @@ public class GitDiffManager: ObservableObject {
             "--no-prefix"
         ])
 
-        if let filePath = filePath {
+        if let filePath {
             arguments.append("--")
             arguments.append(filePath)
         }
@@ -215,23 +217,23 @@ public class GitDiffManager: ObservableObject {
 
 // MARK: - Error Handling
 
-extension GitDiffManager {
+public extension GitDiffManager {
     /// Clear the current error state
-    public func clearCurrentError() {
+    func clearCurrentError() {
         error = nil
     }
 
     /// Returns true if there's currently an error
-    public var hasError: Bool {
-        return error != nil
+    var hasError: Bool {
+        error != nil
     }
 }
 
 // MARK: - Convenience Methods
 
-extension GitDiffManager {
+public extension GitDiffManager {
     /// Get diff for file with automatic staging detection
-    public func getDiffForFile(_ filePath: String) async throws -> GitDiff? {
+    func getDiffForFile(_ filePath: String) async throws -> GitDiff? {
         // Try unstaged first, then staged
         if let unstagedDiff = try await getDiff(for: filePath, staged: false) {
             return unstagedDiff
@@ -241,15 +243,15 @@ extension GitDiffManager {
     }
 
     /// Get both staged and unstaged diffs for a file
-    public func getAllDiffsForFile(_ filePath: String) async throws -> (staged: GitDiff?, unstaged: GitDiff?) {
+    func getAllDiffsForFile(_ filePath: String) async throws -> (staged: GitDiff?, unstaged: GitDiff?) {
         async let stagedDiff = try? await getDiff(for: filePath, staged: true)
         async let unstagedDiff = try? await getDiff(for: filePath, staged: false)
 
-        return (await stagedDiff, await unstagedDiff)
+        return await (stagedDiff, unstagedDiff)
     }
 
     /// Check if a file has any diffs
-    public func hasDiff(for filePath: String) async -> Bool {
+    func hasDiff(for filePath: String) async -> Bool {
         do {
             let diff = try await getDiffForFile(filePath)
             return diff?.hasChanges ?? false

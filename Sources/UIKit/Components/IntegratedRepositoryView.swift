@@ -5,8 +5,8 @@
 // Created by GitCthulhu Team on 2025-07-17.
 //
 
-import SwiftUI
 import GitCore
+import SwiftUI
 
 /// Integrated view combining file status list and diff viewer
 public struct IntegratedRepositoryView: View {
@@ -22,9 +22,9 @@ public struct IntegratedRepositoryView: View {
 
     public init(repositoryPath: String) {
         self.repositoryPath = repositoryPath
-        self._statusManager = StateObject(wrappedValue: GitStatusViewModel(repositoryPath: repositoryPath))
-        self._stagingViewModel = StateObject(wrappedValue: StagingViewModel(repositoryPath: repositoryPath))
-        self._diffViewModel = StateObject(wrappedValue: DiffViewerViewModel(repositoryPath: repositoryPath))
+        _statusManager = StateObject(wrappedValue: GitStatusViewModel(repositoryPath: repositoryPath))
+        _stagingViewModel = StateObject(wrappedValue: StagingViewModel(repositoryPath: repositoryPath))
+        _diffViewModel = StateObject(wrappedValue: DiffViewerViewModel(repositoryPath: repositoryPath))
     }
 
     public var body: some View {
@@ -53,7 +53,7 @@ public struct IntegratedRepositoryView: View {
             }
         }
         .onChange(of: selectedFileForDiff) { filePath in
-            if let filePath = filePath {
+            if let filePath {
                 diffViewModel.selectFile(filePath)
                 selectedTab = .diff
             }
@@ -181,15 +181,15 @@ public struct IntegratedRepositoryView: View {
 // MARK: - Repository Tab Enum
 
 enum RepositoryTab: String, CaseIterable {
-    case changes = "changes"
-    case diff = "diff"
+    case changes
+    case diff
 
     var displayName: String {
         switch self {
         case .changes:
-            return "Changes"
+            "Changes"
         case .diff:
-            return "Diff"
+            "Diff"
         }
     }
 }
@@ -204,15 +204,14 @@ extension FileStatusListView {
         onFileSelected: @escaping (String) -> Void = { _ in },
         onViewDiff: @escaping (String) -> Void = { _ in }
     ) {
-        self.init(
-            statusEntries: statusEntries,
-            selectedFiles: selectedFiles,
-            stagingViewModel: stagingViewModel
-        )
+        self.statusEntries = statusEntries
+        self._selectedFiles = selectedFiles
+        self.stagingViewModel = stagingViewModel
 
-        // Note: This is a conceptual extension.
-        // In practice, you would need to modify FileStatusListView
-        // to accept these additional closures.
+        // Note: These closures are currently not used in FileStatusListView
+        // but are available for future implementation
+        _ = onFileSelected
+        _ = onViewDiff
     }
 }
 
