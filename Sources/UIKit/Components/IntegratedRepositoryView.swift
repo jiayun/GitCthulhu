@@ -15,7 +15,7 @@ public struct IntegratedRepositoryView: View {
     @StateObject private var statusManager: GitStatusViewModel
     @StateObject private var stagingViewModel: StagingViewModel
     @StateObject private var diffViewModel: DiffViewerViewModel
-
+    @State private var repository: GitRepository?
     @State private var selectedFileForDiff: String?
     @State private var showDiffViewer: Bool = false
     @State private var selectedTab: RepositoryTab = .changes
@@ -69,8 +69,8 @@ public struct IntegratedRepositoryView: View {
                 // Header
                 fileStatusHeader
 
-                // File list - create a temporary repository for FileStatusListView
-                if let repository = createTempRepository() {
+                // File list
+                if let repository = repository {
                     FileStatusListView(
                         repository: repository,
                         onViewDiff: { filePath in
@@ -78,8 +78,8 @@ public struct IntegratedRepositoryView: View {
                         }
                     )
                 } else {
-                    Text("Failed to initialize repository")
-                        .foregroundColor(.red)
+                    Text("Loading repository...")
+                        .foregroundColor(.secondary)
                 }
             }
             .frame(minWidth: 300, idealWidth: 400)
@@ -158,6 +158,22 @@ public struct IntegratedRepositoryView: View {
     // MARK: - Data Loading
 
     private func loadRepositoryData() async {
+        // Initialize repository if not already done
+        if repository == nil {
+            do {
+                let url = URL(fileURLWithPath: repositoryPath)
+                let repo = try GitRepository(url: url)
+
+                // Update repository on main thread
+                await MainActor.run {
+                    self.repository = repo
+                }
+            } catch {
+                print("Failed to initialize repository: \(error)")
+                return
+            }
+        }
+
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 await statusManager.checkStatus()
@@ -170,6 +186,11 @@ public struct IntegratedRepositoryView: View {
             group.addTask {
                 await diffViewModel.loadDiffs()
             }
+
+            // Refresh repository status
+            group.addTask {
+                await repository?.refreshStatus()
+            }
         }
     }
 
@@ -178,15 +199,6 @@ public struct IntegratedRepositoryView: View {
     }
 
     // MARK: - Helper Methods
-
-    private func createTempRepository() -> GitRepository? {
-        do {
-            let url = URL(fileURLWithPath: repositoryPath)
-            return try GitRepository(url: url)
-        } catch {
-            return nil
-        }
-    }
 }
 
 // MARK: - Repository Tab Enum
