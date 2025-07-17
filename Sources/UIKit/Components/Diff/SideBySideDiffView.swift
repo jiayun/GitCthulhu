@@ -57,6 +57,7 @@ public struct SideBySideDiffView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .font(.custom("SF Mono", size: 12))
         .background(Color(NSColor.textBackgroundColor))
@@ -374,7 +375,7 @@ struct SideBySideLineView: View {
                 showWhitespace: showWhitespace,
                 showLineNumbers: showLineNumbers
             )
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // Divider
             Rectangle()
@@ -388,9 +389,10 @@ struct SideBySideLineView: View {
                 showWhitespace: showWhitespace,
                 showLineNumbers: showLineNumbers
             )
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(minHeight: 20)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -410,9 +412,8 @@ struct SideBySideLineContentView: View {
 
             // Line content
             lineContent
-
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(lineBackgroundColor)
         .overlay(
             // Left border for line type

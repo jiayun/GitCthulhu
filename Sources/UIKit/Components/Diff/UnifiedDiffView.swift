@@ -52,6 +52,7 @@ public struct UnifiedDiffView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .font(.custom("SF Mono", size: 12))
         .background(Color(NSColor.textBackgroundColor))
     }

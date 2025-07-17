@@ -85,19 +85,46 @@ public struct IntegratedRepositoryView: View {
             .frame(minWidth: 300, idealWidth: 400)
 
             // Right: Staging area
-            VStack {
-                Text("Staging Area")
-                    .font(.headline)
-                    .padding()
+            if let repository = repository {
+                StagingAreaView(
+                    repository: repository,
+                    selectedFiles: .constant(Set<String>()),
+                    onStageFiles: { filePaths in
+                        Task {
+                            await stagingViewModel.stageSelectedFiles(Set(filePaths))
+                        }
+                    },
+                    onUnstageFiles: { filePaths in
+                        Task {
+                            await stagingViewModel.unstageSelectedFiles(Set(filePaths))
+                        }
+                    },
+                    onStageAll: {
+                        Task {
+                            await stagingViewModel.stageAllFiles()
+                        }
+                    },
+                    onUnstageAll: {
+                        Task {
+                            await stagingViewModel.unstageAllFiles()
+                        }
+                    }
+                )
+                .frame(minWidth: 300, idealWidth: 400)
+            } else {
+                VStack {
+                    Text("Staging Area")
+                        .font(.headline)
+                        .padding()
 
-                // Placeholder for staging area - would need proper implementation
-                Text("Staging area functionality coming soon")
-                    .foregroundColor(.secondary)
-                    .padding()
+                    Text("Loading...")
+                        .foregroundColor(.secondary)
+                        .padding()
 
-                Spacer()
+                    Spacer()
+                }
+                .frame(minWidth: 300, idealWidth: 400)
             }
-            .frame(minWidth: 300, idealWidth: 400)
         }
     }
 
