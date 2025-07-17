@@ -204,9 +204,9 @@ extension FileStatusListView {
         onFileSelected: @escaping (String) -> Void = { _ in },
         onViewDiff: @escaping (String) -> Void = { _ in }
     ) {
-        self.statusEntries = statusEntries
-        self._selectedFiles = selectedFiles
-        self.stagingViewModel = stagingViewModel
+        statusEntries = statusEntries
+        _selectedFiles = selectedFiles
+        stagingViewModel = stagingViewModel
 
         // Note: These closures are currently not used in FileStatusListView
         // but are available for future implementation
