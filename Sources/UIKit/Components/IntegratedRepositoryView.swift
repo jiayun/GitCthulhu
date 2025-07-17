@@ -69,18 +69,18 @@ public struct IntegratedRepositoryView: View {
                 // Header
                 fileStatusHeader
 
-                // File list
-                FileStatusListView(
-                    statusEntries: statusManager.statusEntries,
-                    selectedFiles: .constant(Set<String>()),
-                    stagingViewModel: stagingViewModel,
-                    onFileSelected: { filePath in
-                        selectedFileForDiff = filePath
-                    },
-                    onViewDiff: { filePath in
-                        selectedFileForDiff = filePath
-                    }
-                )
+                // File list - create a temporary repository for FileStatusListView
+                if let repository = createTempRepository() {
+                    FileStatusListView(
+                        repository: repository,
+                        onViewDiff: { filePath in
+                            selectedFileForDiff = filePath
+                        }
+                    )
+                } else {
+                    Text("Failed to initialize repository")
+                        .foregroundColor(.red)
+                }
             }
             .frame(minWidth: 300, idealWidth: 400)
 
@@ -176,6 +176,17 @@ public struct IntegratedRepositoryView: View {
     private func refreshRepositoryData() async {
         await loadRepositoryData()
     }
+
+    // MARK: - Helper Methods
+
+    private func createTempRepository() -> GitRepository? {
+        do {
+            let url = URL(fileURLWithPath: repositoryPath)
+            return try GitRepository(url: url)
+        } catch {
+            return nil
+        }
+    }
 }
 
 // MARK: - Repository Tab Enum
@@ -191,27 +202,6 @@ enum RepositoryTab: String, CaseIterable {
         case .diff:
             "Diff"
         }
-    }
-}
-
-// MARK: - Enhanced File Status List View
-
-extension FileStatusListView {
-    init(
-        statusEntries: [GitStatusEntry],
-        selectedFiles: Binding<Set<String>>,
-        stagingViewModel: StagingViewModel,
-        onFileSelected: @escaping (String) -> Void = { _ in },
-        onViewDiff: @escaping (String) -> Void = { _ in }
-    ) {
-        statusEntries = statusEntries
-        _selectedFiles = selectedFiles
-        stagingViewModel = stagingViewModel
-
-        // Note: These closures are currently not used in FileStatusListView
-        // but are available for future implementation
-        _ = onFileSelected
-        _ = onViewDiff
     }
 }
 

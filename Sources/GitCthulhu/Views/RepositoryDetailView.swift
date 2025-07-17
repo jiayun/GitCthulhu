@@ -30,8 +30,8 @@ struct RepositoryDetailView: View {
 
                 Divider()
 
-                // File Status List
-                FileStatusListView(repository: selectedRepository)
+                // Integrated Repository View with Diff Support
+                IntegratedRepositoryView(repositoryPath: selectedRepository.url.path)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .padding()

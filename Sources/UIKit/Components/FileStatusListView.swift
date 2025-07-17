@@ -157,8 +157,11 @@ public struct FileStatusListView: View {
     @StateObject private var state = FileStatusListState()
     @StateObject private var stagingViewModel: StagingViewModel
 
-    public init(repository: GitRepository) {
+    private let onViewDiff: ((String) -> Void)?
+
+    public init(repository: GitRepository, onViewDiff: ((String) -> Void)? = nil) {
         self.repository = repository
+        self.onViewDiff = onViewDiff
         _stagingViewModel = StateObject(wrappedValue: StagingViewModel(repository: repository))
     }
 
@@ -455,7 +458,10 @@ public struct FileStatusListView: View {
                     fileStatus: fileStatus,
                     isSelected: state.selectedFiles.contains(fileStatus.filePath),
                     onSelectionToggle: { state.toggleFileSelection(fileStatus.filePath) },
-                    onStageToggle: { Task { await stagingViewModel.toggleFileStaging(fileStatus.filePath) } }
+                    onStageToggle: { Task { await stagingViewModel.toggleFileStaging(fileStatus.filePath) } },
+                    onViewDiff: onViewDiff.map { callback in
+                        { callback(fileStatus.filePath) }
+                    }
                 )
             }
         }
