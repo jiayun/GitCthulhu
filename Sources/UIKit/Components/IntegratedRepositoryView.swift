@@ -70,7 +70,7 @@ public struct IntegratedRepositoryView: View {
                 fileStatusHeader
 
                 // File list
-                if let repository = repository {
+                if let repository {
                     FileStatusListView(
                         repository: repository,
                         onViewDiff: { filePath in
@@ -91,7 +91,7 @@ public struct IntegratedRepositoryView: View {
             .frame(minWidth: 300, idealWidth: 400)
 
             // Right: Staging area
-            if let repository = repository {
+            if let repository {
                 StagingAreaView(
                     repository: repository,
                     selectedFiles: .constant(Set<String>()),
@@ -208,7 +208,7 @@ public struct IntegratedRepositoryView: View {
 
                 // Update repository on main thread
                 await MainActor.run {
-                    self.repository = repo
+                    repository = repo
                 }
             } catch {
                 print("Failed to initialize repository: \(error)")

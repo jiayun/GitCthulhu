@@ -9,212 +9,155 @@ import Foundation
 
 /// Parser for Git unified diff format
 public class UnifiedDiffParser {
-    public init() {}
-
-    /// Parse unified diff output into GitDiff objects
-    public func parse(_ diffOutput: String) throws -> [GitDiff] {
-        let lines = diffOutput.components(separatedBy: .newlines)
-        guard !lines.isEmpty else { return [] }
-
+    private struct ParserState {
         var diffs: [GitDiff] = []
         var currentDiff: GitDiff?
         var currentChunk: GitDiffChunk?
         var chunkLines: [GitDiffLine] = []
-        var headerLines: [String] = []
         var oldLineNumber = 0
         var newLineNumber = 0
+    }
 
-        var index = 0
-        while index < lines.count {
-            let line = lines[index]
+    public init() {}
 
-            if line.hasPrefix("diff --git") {
-                // Save previous diff if exists
-                if var diff = currentDiff {
-                    if var chunk = currentChunk {
-                        chunk = chunk.withLines(chunkLines)
-                        diff = GitDiff(
-                            filePath: diff.filePath,
-                            oldPath: diff.oldPath,
-                            changeType: diff.changeType,
-                            chunks: diff.chunks + [chunk],
-                            isBinary: diff.isBinary,
-                            isNew: diff.isNew,
-                            isDeleted: diff.isDeleted,
-                            isRenamed: diff.isRenamed,
-                            oldMode: diff.oldMode,
-                            newMode: diff.newMode,
-                            headerLines: diff.headerLines,
-                            rawDiff: diff.rawDiff
-                        )
-                    }
-                    diffs.append(diff)
-                }
+    /// Parse unified diff output into GitDiff objects
+    public func parse(_ diffOutput: String) throws -> [GitDiff] {
+        let lines = diffOutput.trimmingCharacters(in: .newlines).components(separatedBy: .newlines)
+        guard !lines.isEmpty else { return [] }
 
-                // Start new diff
-                let paths = parseGitDiffHeader(line)
-                currentDiff = GitDiff(
-                    filePath: paths.newPath,
-                    oldPath: paths.oldPath != paths.newPath ? paths.oldPath : nil,
-                    changeType: .modified,
-                    headerLines: [line]
-                )
-                currentChunk = nil
-                chunkLines = []
-                headerLines = [line]
+        var state = ParserState()
 
-            } else if line.hasPrefix("index ") {
-                // Git index information
-                headerLines.append(line)
-
-            } else if line.hasPrefix("--- ") || line.hasPrefix("+++ ") {
-                // File headers
-                headerLines.append(line)
-                if var diff = currentDiff {
-                    let updatedDiff = updateDiffWithFileHeader(diff, line: line)
-                    currentDiff = updatedDiff
-                }
-
-            } else if line.hasPrefix("@@ ") {
-                // Save previous chunk if exists
-                if var chunk = currentChunk {
-                    chunk = chunk.withLines(chunkLines)
-                    if var diff = currentDiff {
-                        currentDiff = GitDiff(
-                            filePath: diff.filePath,
-                            oldPath: diff.oldPath,
-                            changeType: diff.changeType,
-                            chunks: diff.chunks + [chunk],
-                            isBinary: diff.isBinary,
-                            isNew: diff.isNew,
-                            isDeleted: diff.isDeleted,
-                            isRenamed: diff.isRenamed,
-                            oldMode: diff.oldMode,
-                            newMode: diff.newMode,
-                            headerLines: diff.headerLines,
-                            rawDiff: diff.rawDiff
-                        )
-                    }
-                }
-
-                // Start new chunk
-                if let chunk = GitDiffChunk.parseHeader(line) {
-                    currentChunk = chunk
-                    chunkLines = []
-                    oldLineNumber = chunk.oldStart
-                    newLineNumber = chunk.newStart
-                }
-
-            } else if line.hasPrefix("Binary files") {
-                // Binary file
-                if var diff = currentDiff {
-                    currentDiff = GitDiff(
-                        filePath: diff.filePath,
-                        oldPath: diff.oldPath,
-                        changeType: diff.changeType,
-                        chunks: [],
-                        isBinary: true,
-                        isNew: diff.isNew,
-                        isDeleted: diff.isDeleted,
-                        isRenamed: diff.isRenamed,
-                        oldMode: diff.oldMode,
-                        newMode: diff.newMode,
-                        headerLines: diff.headerLines + [line],
-                        rawDiff: diff.rawDiff
-                    )
-                }
-
-            } else if line.hasPrefix("new file mode") {
-                // New file
-                if var diff = currentDiff {
-                    let mode = String(line.dropFirst("new file mode ".count))
-                    currentDiff = GitDiff(
-                        filePath: diff.filePath,
-                        oldPath: diff.oldPath,
-                        changeType: .added,
-                        chunks: diff.chunks,
-                        isBinary: diff.isBinary,
-                        isNew: true,
-                        isDeleted: diff.isDeleted,
-                        isRenamed: diff.isRenamed,
-                        oldMode: diff.oldMode,
-                        newMode: mode,
-                        headerLines: diff.headerLines + [line],
-                        rawDiff: diff.rawDiff
-                    )
-                }
-
-            } else if line.hasPrefix("deleted file mode") {
-                // Deleted file
-                if var diff = currentDiff {
-                    let mode = String(line.dropFirst("deleted file mode ".count))
-                    currentDiff = GitDiff(
-                        filePath: diff.filePath,
-                        oldPath: diff.oldPath,
-                        changeType: .deleted,
-                        chunks: diff.chunks,
-                        isBinary: diff.isBinary,
-                        isNew: diff.isNew,
-                        isDeleted: true,
-                        isRenamed: diff.isRenamed,
-                        oldMode: mode,
-                        newMode: diff.newMode,
-                        headerLines: diff.headerLines + [line],
-                        rawDiff: diff.rawDiff
-                    )
-                }
-
-            } else if line.hasPrefix("rename from ") || line.hasPrefix("rename to ") {
-                // Renamed file
-                if var diff = currentDiff {
-                    currentDiff = GitDiff(
-                        filePath: diff.filePath,
-                        oldPath: diff.oldPath,
-                        changeType: .renamed,
-                        chunks: diff.chunks,
-                        isBinary: diff.isBinary,
-                        isNew: diff.isNew,
-                        isDeleted: diff.isDeleted,
-                        isRenamed: true,
-                        oldMode: diff.oldMode,
-                        newMode: diff.newMode,
-                        headerLines: diff.headerLines + [line],
-                        rawDiff: diff.rawDiff
-                    )
-                }
-
-            } else if !line.isEmpty, currentChunk != nil {
-                // Content line
-                let diffLine = parseDiffLine(line, oldLineNumber: &oldLineNumber, newLineNumber: &newLineNumber)
-                chunkLines.append(diffLine)
-            }
-
-            index += 1
+        for line in lines {
+            if line.isEmpty { continue }
+            processLine(line, state: &state)
         }
 
-        // Save last diff
-        if var diff = currentDiff {
-            if var chunk = currentChunk {
-                chunk = chunk.withLines(chunkLines)
-                diff = GitDiff(
-                    filePath: diff.filePath,
-                    oldPath: diff.oldPath,
-                    changeType: diff.changeType,
-                    chunks: diff.chunks + [chunk],
-                    isBinary: diff.isBinary,
-                    isNew: diff.isNew,
-                    isDeleted: diff.isDeleted,
-                    isRenamed: diff.isRenamed,
-                    oldMode: diff.oldMode,
-                    newMode: diff.newMode,
-                    headerLines: diff.headerLines,
-                    rawDiff: diff.rawDiff
-                )
+        finalizeCurrentDiff(state: &state)
+
+        return state.diffs
+    }
+
+    private func processLine(_ line: String, state: inout ParserState) {
+        if line.hasPrefix("diff --git") {
+            finalizeCurrentDiff(state: &state)
+            startNewDiff(line: line, state: &state)
+        } else if line.hasPrefix("index ") {
+            updateDiffHeader(line: line, state: &state)
+        } else if line.hasPrefix("--- ") || line.hasPrefix("+++ ") {
+            updateDiffWithFileHeader(line: line, state: &state)
+        } else if line.hasPrefix("@@ ") {
+            finalizeCurrentChunk(state: &state)
+            startNewChunk(line: line, state: &state)
+        } else if line.hasPrefix("Binary files") {
+            markDiffAsBinary(line: line, state: &state)
+        } else if line.hasPrefix("new file mode") {
+            markDiffAsNew(line: line, state: &state)
+        } else if line.hasPrefix("deleted file mode") {
+            markDiffAsDeleted(line: line, state: &state)
+        } else if line.hasPrefix("rename from ") || line.hasPrefix("rename to ") {
+            markDiffAsRenamed(line: line, state: &state)
+        } else if !line.isEmpty, state.currentChunk != nil {
+            parseAndAddDiffLine(line, state: &state)
+        }
+    }
+
+    // MARK: - State Management
+
+    private func startNewDiff(line: String, state: inout ParserState) {
+        let paths = parseGitDiffHeader(line)
+        state.currentDiff = GitDiff(
+            filePath: paths.newPath,
+            oldPath: paths.oldPath != paths.newPath ? paths.oldPath : nil,
+            changeType: .modified,
+            headerLines: [line]
+        )
+        state.currentChunk = nil
+        state.chunkLines = []
+    }
+
+    private func finalizeCurrentChunk(state: inout ParserState) {
+        guard var chunk = state.currentChunk else { return }
+
+        chunk = chunk.withLines(state.chunkLines)
+        state.currentDiff?.chunks.append(chunk)
+        state.chunkLines = []
+        state.currentChunk = nil
+    }
+
+    private func finalizeCurrentDiff(state: inout ParserState) {
+        finalizeCurrentChunk(state: &state)
+        if let diff = state.currentDiff {
+            state.diffs.append(diff)
+        }
+        state.currentDiff = nil
+    }
+
+    private func startNewChunk(line: String, state: inout ParserState) {
+        if let chunk = GitDiffChunk.parseHeader(line) {
+            state.currentChunk = chunk
+            state.oldLineNumber = chunk.oldStart
+            state.newLineNumber = chunk.newStart
+        }
+    }
+
+    // MARK: - Line Processing Methods
+
+    private func updateDiffHeader(line: String, state: inout ParserState) {
+        state.currentDiff?.headerLines.append(line)
+    }
+
+    private func updateDiffWithFileHeader(line: String, state: inout ParserState) {
+        guard var diff = state.currentDiff else { return }
+
+        if line.hasPrefix("--- /dev/null") {
+            diff.changeType = .added
+            diff.isNew = true
+        } else if line.hasPrefix("+++ /dev/null") {
+            diff.changeType = .deleted
+            diff.isDeleted = true
+        } else if line.hasPrefix("--- ") {
+            let path = extractPathFromFileHeader(line)
+            if diff.oldPath == nil, path != diff.filePath {
+                diff.oldPath = path
             }
-            diffs.append(diff)
         }
 
-        return diffs
+        diff.headerLines.append(line)
+        state.currentDiff = diff
+    }
+
+    private func markDiffAsBinary(line: String, state: inout ParserState) {
+        state.currentDiff?.isBinary = true
+        state.currentDiff?.headerLines.append(line)
+    }
+
+    private func markDiffAsNew(line: String, state: inout ParserState) {
+        state.currentDiff?.changeType = .added
+        state.currentDiff?.isNew = true
+        if let mode = line.split(separator: " ").last {
+            state.currentDiff?.newMode = String(mode)
+        }
+        state.currentDiff?.headerLines.append(line)
+    }
+
+    private func markDiffAsDeleted(line: String, state: inout ParserState) {
+        state.currentDiff?.changeType = .deleted
+        state.currentDiff?.isDeleted = true
+        if let mode = line.split(separator: " ").last {
+            state.currentDiff?.oldMode = String(mode)
+        }
+        state.currentDiff?.headerLines.append(line)
+    }
+
+    private func markDiffAsRenamed(line: String, state: inout ParserState) {
+        state.currentDiff?.changeType = .renamed
+        state.currentDiff?.isRenamed = true
+        state.currentDiff?.headerLines.append(line)
+    }
+
+    private func parseAndAddDiffLine(_ line: String, state: inout ParserState) {
+        let diffLine = parseDiffLine(line, oldLineNumber: &state.oldLineNumber, newLineNumber: &state.newLineNumber)
+        state.chunkLines.append(diffLine)
     }
 
     // MARK: - Private Parsing Methods
@@ -232,41 +175,6 @@ public class UnifiedDiffParser {
         return (oldPath, newPath)
     }
 
-    private func updateDiffWithFileHeader(_ diff: GitDiff, line: String) -> GitDiff {
-        var changeType = diff.changeType
-        var isNew = diff.isNew
-        var isDeleted = diff.isDeleted
-        var oldPath = diff.oldPath
-
-        if line.hasPrefix("--- /dev/null") {
-            changeType = .added
-            isNew = true
-        } else if line.hasPrefix("+++ /dev/null") {
-            changeType = .deleted
-            isDeleted = true
-        } else if line.hasPrefix("--- ") {
-            let path = extractPathFromFileHeader(line)
-            if oldPath == nil, path != diff.filePath {
-                oldPath = path
-            }
-        }
-
-        return GitDiff(
-            filePath: diff.filePath,
-            oldPath: oldPath,
-            changeType: changeType,
-            chunks: diff.chunks,
-            isBinary: diff.isBinary,
-            isNew: isNew,
-            isDeleted: isDeleted,
-            isRenamed: diff.isRenamed,
-            oldMode: diff.oldMode,
-            newMode: diff.newMode,
-            headerLines: diff.headerLines + [line],
-            rawDiff: diff.rawDiff
-        )
-    }
-
     private func extractPathFromFileHeader(_ line: String) -> String {
         // Remove "--- " or "+++ " prefix and optional timestamp
         let prefixRemoved = String(line.dropFirst(4))
@@ -280,11 +188,7 @@ public class UnifiedDiffParser {
         newLineNumber: inout Int
     ) -> GitDiffLine {
         guard !line.isEmpty else {
-            return GitDiffLine(
-                type: .context,
-                content: "",
-                rawLine: line
-            )
+            return GitDiffLine(type: .context, content: "", rawLine: line)
         }
 
         let prefix = String(line.prefix(1))
@@ -330,11 +234,7 @@ public class UnifiedDiffParser {
 
         case "\\":
             // No newline marker
-            return GitDiffLine(
-                type: .noNewline,
-                content: content,
-                rawLine: line
-            )
+            return GitDiffLine(type: .noNewline, content: content, rawLine: line)
 
         default:
             // Treat as context by default

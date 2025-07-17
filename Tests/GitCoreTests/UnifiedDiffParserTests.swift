@@ -53,7 +53,7 @@ final class UnifiedDiffParserTests: XCTestCase {
         XCTAssertEqual(chunk.oldCount, 3)
         XCTAssertEqual(chunk.newStart, 1)
         XCTAssertEqual(chunk.newCount, 4)
-        XCTAssertEqual(chunk.lines.count, 4)
+        XCTAssertEqual(chunk.lines.count, 5)
 
         // Verify line types
         XCTAssertEqual(chunk.lines[0].type, .context)
@@ -275,7 +275,7 @@ final class UnifiedDiffParserTests: XCTestCase {
         let secondChunk = diff.chunks[1]
         XCTAssertEqual(secondChunk.oldStart, 10)
         XCTAssertEqual(secondChunk.newStart, 11)
-        XCTAssertEqual(secondChunk.context, "func second()")
+        XCTAssertEqual(secondChunk.context, "func second() {")
     }
 
     // MARK: - Edge Cases

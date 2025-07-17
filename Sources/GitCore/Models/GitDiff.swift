@@ -12,38 +12,38 @@ public struct GitDiff: Identifiable, Equatable {
     public let id = UUID()
 
     /// Path to the file in the new version
-    public let filePath: String
+    public var filePath: String
 
     /// Path to the file in the old version (different if renamed)
-    public let oldPath: String?
+    public var oldPath: String?
 
     /// Type of change for this file
-    public let changeType: GitChangeType
+    public var changeType: GitChangeType
 
     /// All chunks of changes in this file
-    public let chunks: [GitDiffChunk]
+    public var chunks: [GitDiffChunk]
 
     /// True if this is a binary file
-    public let isBinary: Bool
+    public var isBinary: Bool
 
     /// True if this file is new (added)
-    public let isNew: Bool
+    public var isNew: Bool
 
     /// True if this file was deleted
-    public let isDeleted: Bool
+    public var isDeleted: Bool
 
     /// True if this file was renamed
-    public let isRenamed: Bool
+    public var isRenamed: Bool
 
     /// File mode changes (if any)
-    public let oldMode: String?
-    public let newMode: String?
+    public var oldMode: String?
+    public var newMode: String?
 
     /// Original git diff header lines
-    public let headerLines: [String]
+    public var headerLines: [String]
 
     /// Raw diff content
-    public let rawDiff: String
+    public var rawDiff: String
 
     public init(
         filePath: String,

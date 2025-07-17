@@ -18,66 +18,39 @@ public class SyntaxHighlighter {
         return highlightedCode
     }
 
+    private static let languageMap: [String: String] = [
+        "swift": "swift",
+        "js": "javascript", "jsx": "javascript",
+        "ts": "typescript", "tsx": "typescript",
+        "py": "python",
+        "java": "java",
+        "kt": "kotlin", "kts": "kotlin",
+        "cpp": "cpp", "cc": "cpp", "cxx": "cpp", "c++": "cpp",
+        "c": "c",
+        "h": "header", "hpp": "header", "hxx": "header",
+        "rs": "rust",
+        "go": "go",
+        "rb": "ruby",
+        "php": "php",
+        "cs": "csharp",
+        "html": "html", "htm": "html",
+        "css": "css",
+        "scss": "scss", "sass": "scss",
+        "xml": "xml",
+        "json": "json",
+        "yaml": "yaml", "yml": "yaml",
+        "toml": "toml",
+        "md": "markdown", "markdown": "markdown",
+        "sh": "shell", "bash": "shell",
+        "sql": "sql",
+        "dockerfile": "dockerfile",
+        "makefile": "makefile"
+    ]
+
     /// Detect programming language from file extension
     public func detectLanguage(from filePath: String) -> String {
         let fileExtension = URL(fileURLWithPath: filePath).pathExtension.lowercased()
-
-        switch fileExtension {
-        case "swift":
-            return "swift"
-        case "js", "jsx":
-            return "javascript"
-        case "ts", "tsx":
-            return "typescript"
-        case "py":
-            return "python"
-        case "java":
-            return "java"
-        case "kt", "kts":
-            return "kotlin"
-        case "cpp", "cc", "cxx", "c++":
-            return "cpp"
-        case "c":
-            return "c"
-        case "h", "hpp", "hxx":
-            return "header"
-        case "rs":
-            return "rust"
-        case "go":
-            return "go"
-        case "rb":
-            return "ruby"
-        case "php":
-            return "php"
-        case "cs":
-            return "csharp"
-        case "html", "htm":
-            return "html"
-        case "css":
-            return "css"
-        case "scss", "sass":
-            return "scss"
-        case "xml":
-            return "xml"
-        case "json":
-            return "json"
-        case "yaml", "yml":
-            return "yaml"
-        case "toml":
-            return "toml"
-        case "md", "markdown":
-            return "markdown"
-        case "sh", "bash":
-            return "shell"
-        case "sql":
-            return "sql"
-        case "dockerfile":
-            return "dockerfile"
-        case "makefile":
-            return "makefile"
-        default:
-            return "text"
-        }
+        return Self.languageMap[fileExtension] ?? "text"
     }
 
     // MARK: - Private Methods
