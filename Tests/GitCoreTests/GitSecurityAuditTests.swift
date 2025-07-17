@@ -28,6 +28,7 @@ struct GitSecurityAuditTests {
     func securityAuditInsecureConfiguration() async throws {
         let config = GitSecurityConfig.shared
         config.resetToDefaults()
+        config.resetToDefaults()
 
         // Make configuration insecure
         config.allowHTTPProtocol = true
