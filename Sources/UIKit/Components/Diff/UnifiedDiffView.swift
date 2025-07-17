@@ -237,6 +237,7 @@ struct UnifiedDiffLineView: View {
             // Line numbers
             if showLineNumbers {
                 lineNumbers
+                    .layoutPriority(1)
             }
 
             // Line content
@@ -244,6 +245,7 @@ struct UnifiedDiffLineView: View {
 
             Spacer(minLength: 0)
         }
+        .frame(minHeight: 18)
         .background(lineBackgroundColor)
         .overlay(
             // Left border for line type
@@ -255,26 +257,26 @@ struct UnifiedDiffLineView: View {
     }
 
     private var lineNumbers: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 4) {
             // Old line number
             Text(line.oldLineNumber?.description ?? "")
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 35, alignment: .trailing)
                 .foregroundColor(.secondary)
-                .font(.custom("SF Mono", size: 11))
+                .font(.custom("SF Mono", size: 10))
 
             // New line number
             Text(line.newLineNumber?.description ?? "")
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 35, alignment: .trailing)
                 .foregroundColor(.secondary)
-                .font(.custom("SF Mono", size: 11))
+                .font(.custom("SF Mono", size: 10))
 
             // Separator
             Text(line.type.symbol)
-                .frame(width: 16, alignment: .center)
+                .frame(width: 12, alignment: .center)
                 .foregroundColor(lineIndicatorColor)
-                .font(.custom("SF Mono", size: 11))
+                .font(.custom("SF Mono", size: 10))
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 6)
         .background(Color(NSColor.controlBackgroundColor))
     }
 
@@ -283,9 +285,10 @@ struct UnifiedDiffLineView: View {
             .font(.custom("SF Mono", size: 11))
             .foregroundColor(lineTextColor)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 1)
             .textSelection(.enabled)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var displayContent: String {

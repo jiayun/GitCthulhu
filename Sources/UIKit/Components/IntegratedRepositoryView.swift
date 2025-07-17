@@ -75,8 +75,14 @@ public struct IntegratedRepositoryView: View {
                         repository: repository,
                         onViewDiff: { filePath in
                             selectedFileForDiff = filePath
+                        },
+                        onStagingChanged: {
+                            Task {
+                                await repository.refreshStatus()
+                            }
                         }
                     )
+                    .id(repository.id) // Force refresh when repository changes
                 } else {
                     Text("Loading repository...")
                         .foregroundColor(.secondary)
@@ -92,25 +98,34 @@ public struct IntegratedRepositoryView: View {
                     onStageFiles: { filePaths in
                         Task {
                             await stagingViewModel.stageSelectedFiles(Set(filePaths))
+                            // Refresh repository status after staging
+                            await repository.refreshStatus()
                         }
                     },
                     onUnstageFiles: { filePaths in
                         Task {
                             await stagingViewModel.unstageSelectedFiles(Set(filePaths))
+                            // Refresh repository status after unstaging
+                            await repository.refreshStatus()
                         }
                     },
                     onStageAll: {
                         Task {
                             await stagingViewModel.stageAllFiles()
+                            // Refresh repository status after staging all
+                            await repository.refreshStatus()
                         }
                     },
                     onUnstageAll: {
                         Task {
                             await stagingViewModel.unstageAllFiles()
+                            // Refresh repository status after unstaging all
+                            await repository.refreshStatus()
                         }
                     }
                 )
                 .frame(minWidth: 300, idealWidth: 400)
+                .id(repository.id) // Force refresh when repository changes
             } else {
                 VStack {
                     Text("Staging Area")

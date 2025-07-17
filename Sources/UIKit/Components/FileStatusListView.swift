@@ -158,10 +158,16 @@ public struct FileStatusListView: View {
     @StateObject private var stagingViewModel: StagingViewModel
 
     private let onViewDiff: ((String) -> Void)?
+    private let onStagingChanged: (() -> Void)?
 
-    public init(repository: GitRepository, onViewDiff: ((String) -> Void)? = nil) {
+    public init(
+        repository: GitRepository,
+        onViewDiff: ((String) -> Void)? = nil,
+        onStagingChanged: (() -> Void)? = nil
+    ) {
         self.repository = repository
         self.onViewDiff = onViewDiff
+        self.onStagingChanged = onStagingChanged
         _stagingViewModel = StateObject(wrappedValue: StagingViewModel(repository: repository))
     }
 
@@ -312,6 +318,7 @@ public struct FileStatusListView: View {
             Button(action: {
                 Task {
                     await stagingViewModel.stageSelectedFiles(state.selectedFiles)
+                    onStagingChanged?()
                 }
             }) {
                 Label("Stage", systemImage: "plus.circle.fill")
@@ -324,6 +331,7 @@ public struct FileStatusListView: View {
             Button(action: {
                 Task {
                     await stagingViewModel.unstageSelectedFiles(state.selectedFiles)
+                    onStagingChanged?()
                 }
             }) {
                 Label("Unstage", systemImage: "minus.circle.fill")
@@ -336,6 +344,7 @@ public struct FileStatusListView: View {
             Button(action: {
                 Task {
                     await stagingViewModel.toggleSelectedFilesStaging(state.selectedFiles)
+                    onStagingChanged?()
                 }
             }) {
                 Label("Toggle", systemImage: "arrow.up.arrow.down.circle")
@@ -350,15 +359,19 @@ public struct FileStatusListView: View {
         HStack(spacing: 8) {
             stagingButton("Stage All", icon: "plus.circle.fill", disabled: !stagingViewModel.hasChangesToStage) {
                 await stagingViewModel.stageAllFiles()
+                onStagingChanged?()
             }
             stagingButton("Unstage All", icon: "minus.circle.fill", disabled: !stagingViewModel.hasStagedChanges) {
                 await stagingViewModel.unstageAllFiles()
+                onStagingChanged?()
             }
             stagingButton("Stage Modified", icon: "pencil.circle.fill") {
                 await stagingViewModel.stageModifiedFiles()
+                onStagingChanged?()
             }
             stagingButton("Stage Untracked", icon: "plus.circle.fill") {
                 await stagingViewModel.stageUntrackedFiles()
+                onStagingChanged?()
             }
         }
     }
@@ -458,7 +471,12 @@ public struct FileStatusListView: View {
                     fileStatus: fileStatus,
                     isSelected: state.selectedFiles.contains(fileStatus.filePath),
                     onSelectionToggle: { state.toggleFileSelection(fileStatus.filePath) },
-                    onStageToggle: { Task { await stagingViewModel.toggleFileStaging(fileStatus.filePath) } },
+                    onStageToggle: {
+                        Task {
+                            await stagingViewModel.toggleFileStaging(fileStatus.filePath)
+                            onStagingChanged?()
+                        }
+                    },
                     onViewDiff: onViewDiff.map { callback in
                         { callback(fileStatus.filePath) }
                     }
