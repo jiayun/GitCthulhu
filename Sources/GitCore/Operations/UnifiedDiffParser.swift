@@ -82,8 +82,8 @@ public class UnifiedDiffParser {
         let paths = parseGitDiffHeader(line)
         state.currentDiff = GitDiff(
             filePath: paths.newPath,
-            oldPath: paths.oldPath != paths.newPath ? paths.oldPath : nil,
             changeType: .modified,
+            oldPath: paths.oldPath != paths.newPath ? paths.oldPath : nil,
             headerLines: [line]
         )
         state.currentChunk = nil
@@ -236,10 +236,10 @@ public class UnifiedDiffParser {
     ) -> GitDiffLine {
         let diffLine = GitDiffLine(
             type: .context,
-            oldLineNumber: oldLineNumber,
-            newLineNumber: newLineNumber,
             content: content,
-            rawLine: rawLine
+            rawLine: rawLine,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: newLineNumber
         )
         oldLineNumber += 1
         newLineNumber += 1
@@ -249,10 +249,10 @@ public class UnifiedDiffParser {
     private func createAdditionLine(_ content: String, newLineNumber: inout Int, rawLine: String) -> GitDiffLine {
         let diffLine = GitDiffLine(
             type: .addition,
-            oldLineNumber: nil,
-            newLineNumber: newLineNumber,
             content: content,
-            rawLine: rawLine
+            rawLine: rawLine,
+            oldLineNumber: nil,
+            newLineNumber: newLineNumber
         )
         newLineNumber += 1
         return diffLine
@@ -261,10 +261,10 @@ public class UnifiedDiffParser {
     private func createDeletionLine(_ content: String, oldLineNumber: inout Int, rawLine: String) -> GitDiffLine {
         let diffLine = GitDiffLine(
             type: .deletion,
-            oldLineNumber: oldLineNumber,
-            newLineNumber: nil,
             content: content,
-            rawLine: rawLine
+            rawLine: rawLine,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: nil
         )
         oldLineNumber += 1
         return diffLine

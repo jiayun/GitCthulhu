@@ -20,15 +20,7 @@ jobs:
       with:
         xcode-version: latest-stable
 
-    - name: Swift Package Cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          .build
-          ~/Library/Developer/Xcode/DerivedData
-        key: ${{ runner.os }}-swift-${{ hashFiles('Package.swift', 'Package.resolved') }}
-        restore-keys: |
-          ${{ runner.os }}-swift-
+
 
     - name: Clean Swift Package Manager cache
       run: rm -rf ~/Library/Caches/org.swift.swiftpm
