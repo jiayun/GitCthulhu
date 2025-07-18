@@ -20,6 +20,8 @@ public struct IntegratedRepositoryView: View {
     @State private var showDiffViewer: Bool = false
     @State private var selectedTab: RepositoryTab = .changes
 
+    private let logger = Logger(category: "IntegratedRepositoryView")
+
     public init(repositoryPath: String) {
         self.repositoryPath = repositoryPath
         _statusManager = StateObject(wrappedValue: GitStatusViewModel(repositoryPath: repositoryPath))
@@ -30,7 +32,13 @@ public struct IntegratedRepositoryView: View {
     public var body: some View {
         TabView(selection: $selectedTab) {
             // Changes tab with file status and staging
-            changesTab
+            IntegratedRepositoryChangesTab(
+                statusManager: statusManager,
+                stagingViewModel: stagingViewModel,
+                diffViewModel: diffViewModel,
+                repository: $repository,
+                selectedFileForDiff: $selectedFileForDiff
+            )
                 .tabItem {
                     Label("Changes", systemImage: "square.and.pencil")
                 }
@@ -65,81 +73,17 @@ public struct IntegratedRepositoryView: View {
     private var changesTab: some View {
         HSplitView {
             // Left: File status list
-            VStack(spacing: 0) {
-                // Header
-                fileStatusHeader
-
-                // File list
-                if let repository {
-                    FileStatusListView(
-                        repository: repository,
-                        onViewDiff: { filePath in
-                            selectedFileForDiff = filePath
-                        },
-                        onStagingChanged: {
-                            Task {
-                                await repository.refreshStatus()
-                            }
-                        }
-                    )
-                    .id(repository.id) // Force refresh when repository changes
-                } else {
-                    Text("Loading repository...")
-                        .foregroundColor(.secondary)
-                }
-            }
-            .frame(minWidth: 300, idealWidth: 400)
+            IntegratedRepositoryFileStatusTab(
+                statusManager: statusManager,
+                repository: $repository,
+                selectedFileForDiff: $selectedFileForDiff
+            )
 
             // Right: Staging area
-            if let repository {
-                StagingAreaView(
-                    repository: repository,
-                    selectedFiles: .constant(Set<String>()),
-                    onStageFiles: { filePaths in
-                        Task {
-                            await stagingViewModel.stageSelectedFiles(Set(filePaths))
-                            // Refresh repository status after staging
-                            await repository.refreshStatus()
-                        }
-                    },
-                    onUnstageFiles: { filePaths in
-                        Task {
-                            await stagingViewModel.unstageSelectedFiles(Set(filePaths))
-                            // Refresh repository status after unstaging
-                            await repository.refreshStatus()
-                        }
-                    },
-                    onStageAll: {
-                        Task {
-                            await stagingViewModel.stageAllFiles()
-                            // Refresh repository status after staging all
-                            await repository.refreshStatus()
-                        }
-                    },
-                    onUnstageAll: {
-                        Task {
-                            await stagingViewModel.unstageAllFiles()
-                            // Refresh repository status after unstaging all
-                            await repository.refreshStatus()
-                        }
-                    }
-                )
-                .frame(minWidth: 300, idealWidth: 400)
-                .id(repository.id) // Force refresh when repository changes
-            } else {
-                VStack {
-                    Text("Staging Area")
-                        .font(.headline)
-                        .padding()
-
-                    Text("Loading...")
-                        .foregroundColor(.secondary)
-                        .padding()
-
-                    Spacer()
-                }
-                .frame(minWidth: 300, idealWidth: 400)
-            }
+            IntegratedRepositoryStagingAreaTab(
+                repository: $repository,
+                stagingViewModel: stagingViewModel
+            )
         }
     }
 
@@ -148,32 +92,6 @@ public struct IntegratedRepositoryView: View {
     }
 
     // MARK: - Headers and Toolbars
-
-    private var fileStatusHeader: some View {
-        HStack {
-            Text("Changed Files")
-                .font(.headline)
-                .fontWeight(.medium)
-
-            Spacer()
-
-            // Status summary
-            if !statusManager.statusEntries.isEmpty {
-                Text("\(statusManager.statusEntries.count) files changed")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(NSColor.controlBackgroundColor))
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(Color(NSColor.separatorColor)),
-            alignment: .bottom
-        )
-    }
 
     private var repositoryToolbar: some View {
         HStack {
@@ -211,7 +129,7 @@ public struct IntegratedRepositoryView: View {
                     repository = repo
                 }
             } catch {
-                print("Failed to initialize repository: \(error)")
+                logger.error("Failed to initialize repository: \(error)")
                 return
             }
         }

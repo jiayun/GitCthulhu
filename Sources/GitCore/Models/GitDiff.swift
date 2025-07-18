@@ -47,8 +47,8 @@ public struct GitDiff: Identifiable, Equatable {
 
     public init(
         filePath: String,
-        oldPath: String? = nil,
         changeType: GitChangeType,
+        oldPath: String? = nil,
         chunks: [GitDiffChunk] = [],
         isBinary: Bool = false,
         isNew: Bool = false,

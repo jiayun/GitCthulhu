@@ -37,9 +37,9 @@ public struct GitDiffChunk: Identifiable, Equatable {
         oldCount: Int,
         newStart: Int,
         newCount: Int,
+        headerLine: String,
         context: String? = nil,
-        lines: [GitDiffLine] = [],
-        headerLine: String
+        lines: [GitDiffLine] = []
     ) {
         self.oldStart = oldStart
         self.oldCount = oldCount

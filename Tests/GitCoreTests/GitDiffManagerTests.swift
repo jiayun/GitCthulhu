@@ -197,7 +197,7 @@ final class GitDiffManagerTests: XCTestCase {
         +++ b/newfile.swift
         @@ -0,0 +1,3 @@
         +func newFunction() {
-        +    print("Hello World")
+        +    // This is a new line
         +}
         """
 
@@ -229,7 +229,7 @@ final class GitDiffManagerTests: XCTestCase {
         +++ /dev/null
         @@ -1,3 +0,0 @@
         -func deletedFunction() {
-        -    print("Goodbye World")
+        -    // This line was deleted
         -}
         """
 

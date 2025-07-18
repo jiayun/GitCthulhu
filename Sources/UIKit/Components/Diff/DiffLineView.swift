@@ -40,7 +40,12 @@ public struct DiffLineView: View {
             }
 
             // Line content
-            lineContent
+            DiffLineContentView(
+                line: line,
+                language: language,
+                showWhitespace: showWhitespace,
+                showSyntaxHighlighting: showSyntaxHighlighting
+            )
 
             Spacer(minLength: 0)
         }
@@ -76,25 +81,6 @@ public struct DiffLineView: View {
         }
         .padding(.horizontal, 8)
         .background(Color(NSColor.controlBackgroundColor))
-    }
-
-    private var lineContent: some View {
-        Group {
-            if showSyntaxHighlighting, line.type.isContentLine, language != "text" {
-                // Syntax highlighted content
-                Text(highlightedContent)
-                    .textSelection(.enabled)
-            } else {
-                // Plain text content
-                Text(displayContent)
-                    .font(.custom("SF Mono", size: 11))
-                    .foregroundColor(lineTextColor)
-                    .textSelection(.enabled)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 2)
     }
 
     private var displayContent: String {
@@ -212,73 +198,84 @@ public struct EnhancedUnifiedDiffView: View {
 
     private var fileHeader: some View {
         VStack(spacing: 4) {
-            // File path with language indicator
-            HStack {
-                Image(systemName: diff.changeType.symbol)
-                    .foregroundColor(changeTypeColor)
-
-                Text(diff.displayPath)
-                    .font(.headline)
-                    .fontWeight(.medium)
-
-                // Language indicator
-                if language != "text" {
-                    Text(language.uppercased())
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.secondary.opacity(0.1))
-                        .cornerRadius(3)
-                }
-
-                Spacer()
-
-                // File stats
-                if !diff.isBinary {
-                    DiffStatsView(stats: diff.stats)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-
-            // Syntax highlighting toggle
-            if showSyntaxHighlighting && language != "text" {
-                HStack {
-                    Image(systemName: "paintbrush.fill")
-                        .foregroundColor(.blue)
-                        .font(.caption)
-
-                    Text("Syntax highlighting enabled for \(language)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 4)
-            }
-
-            // Change type info
-            if diff.isRenamed || diff.isNew || diff.isDeleted {
-                HStack {
-                    Text(diff.changeType.displayName)
-                        .font(.caption)
-                        .foregroundColor(changeTypeColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(changeTypeColor.opacity(0.1))
-                        .cornerRadius(4)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-            }
-
+            fileHeaderTopSection
+            syntaxHighlightingInfo
+            changeTypeInfo
             Divider()
         }
         .background(Color(NSColor.controlBackgroundColor))
+    }
+
+    private var fileHeaderTopSection: some View {
+        HStack {
+            Image(systemName: "plus.circle.fill")
+                .foregroundColor(changeTypeColor)
+
+            Text(diff.displayPath)
+                .font(.headline)
+                .fontWeight(.medium)
+
+            languageIndicator
+
+            Spacer()
+
+            if !diff.isBinary {
+                DiffStatsView(stats: diff.stats)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var languageIndicator: some View {
+        if language != "text" {
+            Text(language.uppercased())
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(3)
+        }
+    }
+
+    @ViewBuilder
+    private var syntaxHighlightingInfo: some View {
+        if showSyntaxHighlighting && language != "text" {
+            HStack {
+                Image(systemName: "paintbrush.fill")
+                    .foregroundColor(.blue)
+                    .font(.caption)
+
+                Text("Syntax highlighting enabled for \(language)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 4)
+        }
+    }
+
+    @ViewBuilder
+    private var changeTypeInfo: some View {
+        if diff.isRenamed || diff.isNew || diff.isDeleted {
+            HStack {
+                Text(diff.changeType.displayName)
+                    .font(.caption)
+                    .foregroundColor(changeTypeColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(changeTypeColor.opacity(0.1))
+                    .cornerRadius(4)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
     }
 
     private var emptyDiffState: some View {

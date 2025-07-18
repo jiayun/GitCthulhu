@@ -357,8 +357,8 @@ final class SyntaxHighlighterTests: XCTestCase {
     func testHighlightingPerformance() {
         // Given
         var largeCode = ""
-        for i in 1 ... 1000 {
-            largeCode += "func function\(i)() { let value\(i) = \"\(i)\" }\n"
+        for index in 1 ... 1000 {
+            largeCode += "func function\(index)() { let value\(index) = \"\(index)\" }\n"
         }
 
         // When/Then

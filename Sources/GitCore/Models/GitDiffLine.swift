@@ -28,10 +28,10 @@ public struct GitDiffLine: Identifiable, Equatable {
 
     public init(
         type: GitDiffLineType,
-        oldLineNumber: Int? = nil,
-        newLineNumber: Int? = nil,
         content: String,
-        rawLine: String
+        rawLine: String,
+        oldLineNumber: Int? = nil,
+        newLineNumber: Int? = nil
     ) {
         self.type = type
         self.oldLineNumber = oldLineNumber

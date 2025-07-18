@@ -78,7 +78,7 @@ final class UnifiedDiffParserTests: XCTestCase {
         +++ b/newfile.swift
         @@ -0,0 +1,3 @@
         +func newFunction() {
-        +    print("Hello World")
+        +    // This is a new line
         +}
         """
 
@@ -118,7 +118,7 @@ final class UnifiedDiffParserTests: XCTestCase {
         +++ /dev/null
         @@ -1,3 +0,0 @@
         -func deletedFunction() {
-        -    print("Goodbye World")
+        -    // This line was deleted
         -}
         """
 
@@ -405,12 +405,12 @@ final class UnifiedDiffParserTests: XCTestCase {
         """
 
         // Generate 1000 lines of diff
-        for i in 1 ... 1000 {
-            if i % 10 == 0 {
-                largeDiffOutput += "\n-let old\(i) = true"
-                largeDiffOutput += "\n+let new\(i) = false"
+        for index in 1 ... 1000 {
+            if index % 10 == 0 {
+                largeDiffOutput += "\n-let old\(index) = true"
+                largeDiffOutput += "\n+let new\(index) = false"
             } else {
-                largeDiffOutput += "\n let line\(i) = value"
+                largeDiffOutput += "\n let line\(index) = value"
             }
         }
         largeDiffOutput += "\n+let additional = true"

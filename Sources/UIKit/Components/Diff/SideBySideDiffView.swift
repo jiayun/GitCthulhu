@@ -30,10 +30,7 @@ public struct SideBySideDiffView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // File header
-            fileHeader
-
-            // Column headers
-            columnHeaders
+            SideBySideDiffHeaderView(diff: diff)
 
             // Diff content
             ScrollView([.horizontal, .vertical]) {
@@ -61,114 +58,6 @@ public struct SideBySideDiffView: View {
         }
         .font(.custom("SF Mono", size: 12))
         .background(Color(NSColor.textBackgroundColor))
-    }
-
-    private var fileHeader: some View {
-        VStack(spacing: 4) {
-            // File path
-            HStack {
-                Image(systemName: diff.changeType.symbol)
-                    .foregroundColor(changeTypeColor)
-
-                Text(diff.displayPath)
-                    .font(.headline)
-                    .fontWeight(.medium)
-
-                Spacer()
-
-                // File stats
-                if !diff.isBinary {
-                    DiffStatsView(stats: diff.stats)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-
-            // Change type info
-            if diff.isRenamed || diff.isNew || diff.isDeleted {
-                HStack {
-                    Text(diff.changeType.displayName)
-                        .font(.caption)
-                        .foregroundColor(changeTypeColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(changeTypeColor.opacity(0.1))
-                        .cornerRadius(4)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-            }
-
-            Divider()
-        }
-        .background(Color(NSColor.controlBackgroundColor))
-    }
-
-    private var columnHeaders: some View {
-        HStack(spacing: 0) {
-            // Left column header (old version)
-            VStack(spacing: 4) {
-                HStack {
-                    Image(systemName: "minus.circle")
-                        .foregroundColor(.red)
-
-                    Text(diff.oldPath ?? diff.filePath)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-
-                    Spacer()
-                }
-
-                if diff.deletionsCount > 0 {
-                    Text("\(diff.deletionsCount) deletions")
-                        .font(.caption2)
-                        .foregroundColor(.red)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.red.opacity(0.05))
-
-            // Divider
-            Rectangle()
-                .frame(width: 1)
-                .foregroundColor(Color(NSColor.separatorColor))
-
-            // Right column header (new version)
-            VStack(spacing: 4) {
-                HStack {
-                    Image(systemName: "plus.circle")
-                        .foregroundColor(.green)
-
-                    Text(diff.filePath)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-
-                    Spacer()
-                }
-
-                if diff.additionsCount > 0 {
-                    Text("\(diff.additionsCount) additions")
-                        .font(.caption2)
-                        .foregroundColor(.green)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.green.opacity(0.05))
-        }
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(Color(NSColor.separatorColor)),
-            alignment: .bottom
-        )
     }
 
     private var emptyDiffState: some View {
@@ -341,9 +230,9 @@ struct SideBySideDiffChunkView: View {
     ) {
         let maxCount = max(leftLines.count, rightLines.count)
 
-        for i in 0 ..< maxCount {
-            let left = i < leftLines.count ? leftLines[i] : nil
-            let right = i < rightLines.count ? rightLines[i] : nil
+        for index in 0 ..< maxCount {
+            let left = index < leftLines.count ? leftLines[index] : nil
+            let right = index < rightLines.count ? rightLines[index] : nil
 
             result.append(SideBySideLinePair(left: left, right: right))
         }
@@ -351,167 +240,6 @@ struct SideBySideDiffChunkView: View {
         leftLines.removeAll()
         rightLines.removeAll()
     }
-}
-
-/// Represents a pair of lines for side-by-side display
-struct SideBySideLinePair {
-    let left: GitDiffLine?
-    let right: GitDiffLine?
-}
-
-/// Individual line view in side-by-side diff
-struct SideBySideLineView: View {
-    let leftLine: GitDiffLine?
-    let rightLine: GitDiffLine?
-    let showWhitespace: Bool
-    let showLineNumbers: Bool
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Left side (old version)
-            SideBySideLineContentView(
-                line: leftLine,
-                side: .left,
-                showWhitespace: showWhitespace,
-                showLineNumbers: showLineNumbers
-            )
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // Divider
-            Rectangle()
-                .frame(width: 1)
-                .foregroundColor(Color(NSColor.separatorColor))
-
-            // Right side (new version)
-            SideBySideLineContentView(
-                line: rightLine,
-                side: .right,
-                showWhitespace: showWhitespace,
-                showLineNumbers: showLineNumbers
-            )
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(minHeight: 20)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-}
-
-/// Content view for one side of the side-by-side diff
-struct SideBySideLineContentView: View {
-    let line: GitDiffLine?
-    let side: DiffSide
-    let showWhitespace: Bool
-    let showLineNumbers: Bool
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Line number
-            if showLineNumbers {
-                lineNumber
-            }
-
-            // Line content
-            lineContent
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(lineBackgroundColor)
-        .overlay(
-            // Left border for line type
-            Rectangle()
-                .frame(width: 2)
-                .foregroundColor(lineIndicatorColor),
-            alignment: .leading
-        )
-    }
-
-    private var lineNumber: some View {
-        Text(displayLineNumber)
-            .frame(width: 50, alignment: .trailing)
-            .foregroundColor(.secondary)
-            .font(.custom("SF Mono", size: 11))
-            .padding(.horizontal, 8)
-            .background(Color(NSColor.controlBackgroundColor))
-    }
-
-    private var lineContent: some View {
-        Text(displayContent)
-            .font(.custom("SF Mono", size: 11))
-            .foregroundColor(lineTextColor)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 2)
-            .textSelection(.enabled)
-    }
-
-    private var displayLineNumber: String {
-        guard let line else { return "" }
-
-        switch side {
-        case .left:
-            return line.oldLineNumber?.description ?? ""
-        case .right:
-            return line.newLineNumber?.description ?? ""
-        }
-    }
-
-    private var displayContent: String {
-        guard let line else { return "" }
-
-        let content = showWhitespace ?
-            line.content
-            .replacingOccurrences(of: " ", with: "·")
-            .replacingOccurrences(of: "\t", with: "→") :
-            line.content
-
-        return content
-    }
-
-    private var lineBackgroundColor: Color {
-        guard let line else { return Color.clear }
-
-        switch line.type {
-        case .addition:
-            return side == .right ? Color.green.opacity(0.15) : Color.clear
-        case .deletion:
-            return side == .left ? Color.red.opacity(0.15) : Color.clear
-        case .context:
-            return Color.clear
-        case .noNewline, .header, .fileHeader, .meta:
-            return Color(NSColor.controlBackgroundColor)
-        }
-    }
-
-    private var lineIndicatorColor: Color {
-        guard let line else { return Color.clear }
-
-        switch line.type {
-        case .addition:
-            return side == .right ? .green : .clear
-        case .deletion:
-            return side == .left ? .red : .clear
-        case .context:
-            return .clear
-        case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
-        }
-    }
-
-    private var lineTextColor: Color {
-        guard let line else { return Color.secondary }
-
-        switch line.type {
-        case .addition, .deletion, .context:
-            return .primary
-        case .noNewline, .header, .fileHeader, .meta:
-            return .secondary
-        }
-    }
-}
-
-/// Represents which side of the diff we're displaying
-enum DiffSide {
-    case left
-    case right
 }
 
 #Preview("Side by Side Diff") {

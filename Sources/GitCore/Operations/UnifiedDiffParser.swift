@@ -38,27 +38,42 @@ public class UnifiedDiffParser {
     }
 
     private func processLine(_ line: String, state: inout ParserState) {
+        if handleSpecialLine(line, state: &state) { return }
+
+        if !line.isEmpty, state.currentChunk != nil {
+            parseAndAddDiffLine(line, state: &state)
+        }
+    }
+
+    private func handleSpecialLine(_ line: String, state: inout ParserState) -> Bool {
         if line.hasPrefix("diff --git") {
             finalizeCurrentDiff(state: &state)
             startNewDiff(line: line, state: &state)
+            return true
         } else if line.hasPrefix("index ") {
             updateDiffHeader(line: line, state: &state)
+            return true
         } else if line.hasPrefix("--- ") || line.hasPrefix("+++ ") {
             updateDiffWithFileHeader(line: line, state: &state)
+            return true
         } else if line.hasPrefix("@@ ") {
             finalizeCurrentChunk(state: &state)
             startNewChunk(line: line, state: &state)
+            return true
         } else if line.hasPrefix("Binary files") {
             markDiffAsBinary(line: line, state: &state)
+            return true
         } else if line.hasPrefix("new file mode") {
             markDiffAsNew(line: line, state: &state)
+            return true
         } else if line.hasPrefix("deleted file mode") {
             markDiffAsDeleted(line: line, state: &state)
+            return true
         } else if line.hasPrefix("rename from ") || line.hasPrefix("rename to ") {
             markDiffAsRenamed(line: line, state: &state)
-        } else if !line.isEmpty, state.currentChunk != nil {
-            parseAndAddDiffLine(line, state: &state)
+            return true
         }
+        return false
     }
 
     // MARK: - State Management
@@ -196,59 +211,84 @@ public class UnifiedDiffParser {
 
         switch prefix {
         case " ":
-            // Context line
-            let diffLine = GitDiffLine(
-                type: .context,
-                oldLineNumber: oldLineNumber,
-                newLineNumber: newLineNumber,
-                content: content,
+            return createContextLine(
+                content,
+                oldLineNumber: &oldLineNumber,
+                newLineNumber: &newLineNumber,
                 rawLine: line
             )
-            oldLineNumber += 1
-            newLineNumber += 1
-            return diffLine
-
         case "+":
-            // Addition
-            let diffLine = GitDiffLine(
-                type: .addition,
-                oldLineNumber: nil,
-                newLineNumber: newLineNumber,
-                content: content,
-                rawLine: line
-            )
-            newLineNumber += 1
-            return diffLine
-
+            return createAdditionLine(content, newLineNumber: &newLineNumber, rawLine: line)
         case "-":
-            // Deletion
-            let diffLine = GitDiffLine(
-                type: .deletion,
-                oldLineNumber: oldLineNumber,
-                newLineNumber: nil,
-                content: content,
-                rawLine: line
-            )
-            oldLineNumber += 1
-            return diffLine
-
+            return createDeletionLine(content, oldLineNumber: &oldLineNumber, rawLine: line)
         case "\\":
-            // No newline marker
-            return GitDiffLine(type: .noNewline, content: content, rawLine: line)
-
+            return createNoNewlineLine(content, rawLine: line)
         default:
-            // Treat as context by default
-            let diffLine = GitDiffLine(
-                type: .context,
-                oldLineNumber: oldLineNumber,
-                newLineNumber: newLineNumber,
-                content: line,
-                rawLine: line
-            )
-            oldLineNumber += 1
-            newLineNumber += 1
-            return diffLine
+            return createDefaultLine(line, oldLineNumber: &oldLineNumber, newLineNumber: &newLineNumber)
         }
+    }
+
+    private func createContextLine(
+        _ content: String,
+        oldLineNumber: inout Int,
+        newLineNumber: inout Int,
+        rawLine: String
+    ) -> GitDiffLine {
+        let diffLine = GitDiffLine(
+            type: .context,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: newLineNumber,
+            content: content,
+            rawLine: rawLine
+        )
+        oldLineNumber += 1
+        newLineNumber += 1
+        return diffLine
+    }
+
+    private func createAdditionLine(_ content: String, newLineNumber: inout Int, rawLine: String) -> GitDiffLine {
+        let diffLine = GitDiffLine(
+            type: .addition,
+            oldLineNumber: nil,
+            newLineNumber: newLineNumber,
+            content: content,
+            rawLine: rawLine
+        )
+        newLineNumber += 1
+        return diffLine
+    }
+
+    private func createDeletionLine(_ content: String, oldLineNumber: inout Int, rawLine: String) -> GitDiffLine {
+        let diffLine = GitDiffLine(
+            type: .deletion,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: nil,
+            content: content,
+            rawLine: rawLine
+        )
+        oldLineNumber += 1
+        return diffLine
+    }
+
+    private func createNoNewlineLine(_ content: String, rawLine: String) -> GitDiffLine {
+        GitDiffLine(
+            type: .noNewline,
+            content: content,
+            rawLine: rawLine
+        )
+    }
+
+    private func createDefaultLine(_ line: String, oldLineNumber: inout Int, newLineNumber: inout Int) -> GitDiffLine {
+        let diffLine = GitDiffLine(
+            type: .context,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: newLineNumber,
+            content: line,
+            rawLine: line
+        )
+        oldLineNumber += 1
+        newLineNumber += 1
+        return diffLine
     }
 }
 

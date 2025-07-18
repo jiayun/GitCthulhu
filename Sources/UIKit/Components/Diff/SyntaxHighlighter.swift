@@ -306,10 +306,10 @@ public class SyntaxHighlighter {
             for match in matches.reversed() {
                 if let swiftRange = Range(match.range, in: content) {
                     let attributedRange = AttributedString
-                        .Index(swiftRange.lowerBound, within: result)! ..< AttributedString.Index(
+                        .Index(swiftRange.lowerBound, within: result) ..< AttributedString.Index(
                             swiftRange.upperBound,
                             within: result
-                        )!
+                        )
                     result[attributedRange].foregroundColor = color
                 }
             }
