@@ -145,10 +145,10 @@ public extension GitDiffLine {
     ) -> GitDiffLine {
         GitDiffLine(
             type: .context,
-            oldLineNumber: oldLineNumber,
-            newLineNumber: newLineNumber,
             content: content,
-            rawLine: " \(content)"
+            rawLine: " \(content)",
+            oldLineNumber: oldLineNumber,
+            newLineNumber: newLineNumber
         )
     }
 
@@ -159,10 +159,10 @@ public extension GitDiffLine {
     ) -> GitDiffLine {
         GitDiffLine(
             type: .addition,
-            oldLineNumber: nil,
-            newLineNumber: newLineNumber,
             content: content,
-            rawLine: "+\(content)"
+            rawLine: "+\(content)",
+            oldLineNumber: nil,
+            newLineNumber: newLineNumber
         )
     }
 

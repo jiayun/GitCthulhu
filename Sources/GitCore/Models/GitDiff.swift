@@ -332,8 +332,8 @@ public extension GitDiff {
     ) -> GitDiff {
         GitDiff(
             filePath: filePath,
-            oldPath: oldPath,
             changeType: changeType,
+            oldPath: oldPath,
             isBinary: true,
             isNew: changeType == .added,
             isDeleted: changeType == .deleted,

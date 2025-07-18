@@ -224,8 +224,8 @@ public extension GitDiffChunk {
             oldCount: oldCount,
             newStart: newStart,
             newCount: newCount,
-            context: context?.isEmpty == false ? context : nil,
-            headerLine: headerLine
+            headerLine: headerLine,
+            context: context?.isEmpty == false ? context : nil
         )
     }
 
