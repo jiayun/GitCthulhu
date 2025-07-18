@@ -39,10 +39,10 @@ public struct IntegratedRepositoryView: View {
                 repository: $repository,
                 selectedFileForDiff: $selectedFileForDiff
             )
-                .tabItem {
-                    Label("Changes", systemImage: "square.and.pencil")
-                }
-                .tag(RepositoryTab.changes)
+            .tabItem {
+                Label("Changes", systemImage: "square.and.pencil")
+            }
+            .tag(RepositoryTab.changes)
 
             // Diff viewer tab
             diffTab

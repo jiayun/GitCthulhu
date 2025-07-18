@@ -281,10 +281,10 @@ public class UnifiedDiffParser {
     private func createDefaultLine(_ line: String, oldLineNumber: inout Int, newLineNumber: inout Int) -> GitDiffLine {
         let diffLine = GitDiffLine(
             type: .context,
-            oldLineNumber: oldLineNumber,
-            newLineNumber: newLineNumber,
             content: line,
-            rawLine: line
+            rawLine: line,
+            oldLineNumber: oldLineNumber,
+            newLineNumber: newLineNumber
         )
         oldLineNumber += 1
         newLineNumber += 1

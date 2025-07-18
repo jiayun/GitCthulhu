@@ -375,8 +375,8 @@ public extension GitDiff {
     ) -> GitDiff {
         GitDiff(
             filePath: newPath,
-            oldPath: oldPath,
             changeType: .renamed,
+            oldPath: oldPath,
             chunks: chunks,
             isRenamed: true
         )

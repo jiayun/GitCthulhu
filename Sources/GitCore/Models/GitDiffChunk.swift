@@ -236,9 +236,9 @@ public extension GitDiffChunk {
             oldCount: oldCount,
             newStart: newStart,
             newCount: newCount,
+            headerLine: headerLine,
             context: context,
-            lines: newLines,
-            headerLine: headerLine
+            lines: newLines
         )
     }
 }

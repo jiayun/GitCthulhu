@@ -173,10 +173,9 @@ public extension GitDiffLine {
     ) -> GitDiffLine {
         GitDiffLine(
             type: .deletion,
-            oldLineNumber: oldLineNumber,
-            newLineNumber: nil,
             content: content,
-            rawLine: "-\(content)"
+            rawLine: "-\(content)",
+            oldLineNumber: oldLineNumber
         )
     }
 

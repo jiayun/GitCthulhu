@@ -242,7 +242,7 @@ public struct EnhancedUnifiedDiffView: View {
 
     @ViewBuilder
     private var syntaxHighlightingInfo: some View {
-        if showSyntaxHighlighting && language != "text" {
+        if showSyntaxHighlighting, language != "text" {
             HStack {
                 Image(systemName: "paintbrush.fill")
                     .foregroundColor(.blue)
