@@ -30,6 +30,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-swift-
 
+    - name: Clean Swift Package Manager cache
+      run: rm -rf ~/Library/Caches/org.swift.swiftpm
+
     - name: Clean build directory
       run: rm -rf .build
 
