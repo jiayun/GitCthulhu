@@ -36,6 +36,9 @@ jobs:
     - name: Clean build directory
       run: rm -rf .build
 
+    - name: Print GitDiff.swift content
+      run: cat Sources/GitCore/Models/GitDiff.swift
+
     - name: Build
       run: |
         swift build --configuration debug
