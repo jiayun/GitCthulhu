@@ -30,6 +30,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-swift-
 
+    - name: Clean build directory
+      run: rm -rf .build
+
     - name: Build
       run: |
         swift build --configuration debug

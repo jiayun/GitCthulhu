@@ -31,6 +31,9 @@ jobs:
           ${{ runner.os }}-swift-coverage-
           ${{ runner.os }}-swift-
 
+    - name: Clean build directory
+      run: rm -rf .build
+
     - name: Run Tests with Coverage
       run: |
         # 暫時禁用程式碼覆蓋率以避免 CI 權限問題
