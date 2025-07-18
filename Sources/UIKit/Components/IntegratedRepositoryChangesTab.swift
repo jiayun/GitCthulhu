@@ -44,31 +44,33 @@ struct IntegratedRepositoryChangesTab: View {
     }
 
     private var stagingAreaSection: some View {
-        if let repository {
-            StagingAreaView(
-                repository: repository,
-                selectedFiles: .constant(Set<String>()),
-                onStageFiles: performStageFiles,
-                onUnstageFiles: performUnstageFiles,
-                onStageAll: performStageAll,
-                onUnstageAll: performUnstageAll
-            )
-            .frame(minWidth: 300, idealWidth: 400)
-            .id(repository.id) // Force refresh when repository changes
-        } else {
-            VStack {
-                Text("Staging Area")
-                    .font(.headline)
-                    .padding()
+        Group {
+            if let repository {
+                StagingAreaView(
+                    repository: repository,
+                    selectedFiles: .constant(Set<String>()),
+                    onStageFiles: performStageFiles,
+                    onUnstageFiles: performUnstageFiles,
+                    onStageAll: performStageAll,
+                    onUnstageAll: performUnstageAll
+                )
+                .id(repository.id) // Force refresh when repository changes
+            } else {
+                VStack {
+                    Text("Staging Area")
+                        .font(.headline)
+                        .padding()
 
-                Text("Loading...")
-                    .foregroundColor(.secondary)
-                    .padding()
+                    Text("Loading...")
+                        .foregroundColor(.secondary)
+                        .padding()
 
-                Spacer()
+                    Spacer()
+                }
+                .id("loading-state")
             }
-            .frame(minWidth: 300, idealWidth: 400)
         }
+        .frame(minWidth: 300, idealWidth: 400)
     }
 
     private var fileStatusHeader: some View {
@@ -97,16 +99,16 @@ struct IntegratedRepositoryChangesTab: View {
         )
     }
 
-    private func performStageFiles(filePaths: Set<String>) {
+    private func performStageFiles(filePaths: [String]) {
         Task {
-            await stagingViewModel.stageSelectedFiles(filePaths)
+            await stagingViewModel.stageSelectedFiles(Set(filePaths))
             await repository?.refreshStatus()
         }
     }
 
-    private func performUnstageFiles(filePaths: Set<String>) {
+    private func performUnstageFiles(filePaths: [String]) {
         Task {
-            await stagingViewModel.unstageSelectedFiles(filePaths)
+            await stagingViewModel.unstageSelectedFiles(Set(filePaths))
             await repository?.refreshStatus()
         }
     }

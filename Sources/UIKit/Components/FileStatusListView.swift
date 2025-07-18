@@ -113,9 +113,9 @@ public extension FileStatusListState {
 }
 
 public struct FileStatusListView: View {
-    @ObservedObject private var repository: GitRepository
+    @ObservedObject internal var repository: GitRepository
     @StateObject private var state = FileStatusListState()
-    @StateObject private var stagingViewModel: StagingViewModel
+    @StateObject internal var stagingViewModel: StagingViewModel
 
     private let onViewDiff: ((String) -> Void)?
     private let onStagingChanged: (() -> Void)?
@@ -154,7 +154,7 @@ public struct FileStatusListView: View {
             .navigationTitle("File Status")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    FileStatusListUtilityViews(repository: repository, stagingViewModel: stagingViewModel).refreshButton
+                    refreshButton
                 }
             }
             .focusable()

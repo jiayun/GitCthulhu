@@ -252,6 +252,7 @@ struct SideBySideDiffChunkView: View {
                 oldCount: 5,
                 newStart: 1,
                 newCount: 6,
+                headerLine: "@@ -1,5 +1,6 @@ func example()",
                 context: "func example()",
                 lines: [
                     .context(oldLineNumber: 1, newLineNumber: 1, content: "func example() {"),
@@ -260,8 +261,7 @@ struct SideBySideDiffChunkView: View {
                     .addition(newLineNumber: 3, content: "    let additionalLine = true"),
                     .context(oldLineNumber: 3, newLineNumber: 4, content: "    return value"),
                     .context(oldLineNumber: 4, newLineNumber: 5, content: "}")
-                ],
-                headerLine: "@@ -1,5 +1,6 @@ func example()"
+                ]
             )
         ]
     )

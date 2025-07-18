@@ -7,6 +7,7 @@
 
 import GitCore
 import SwiftUI
+import Utilities
 
 /// Integrated view combining file status list and diff viewer
 public struct IntegratedRepositoryView: View {

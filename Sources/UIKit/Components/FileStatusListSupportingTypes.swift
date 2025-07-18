@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GitCore
 
 public enum FileStatusFilter: String, CaseIterable, Identifiable {
     case all = "All Files"

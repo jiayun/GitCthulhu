@@ -17,28 +17,28 @@ struct IntegratedRepositoryStagingAreaTab: View {
             StagingAreaView(
                 repository: repository,
                 selectedFiles: .constant(Set<String>()),
-                onStageFiles: { _ in
+                onStageFiles: { filePaths in
                     Task {
                         await stagingViewModel.stageSelectedFiles(Set(filePaths))
                         // Refresh repository status after staging
                         await repository.refreshStatus()
                     }
                 },
-                onUnstageFiles: { _ in
+                onUnstageFiles: { filePaths in
                     Task {
                         await stagingViewModel.unstageSelectedFiles(Set(filePaths))
                         // Refresh repository status after unstaging
                         await repository.refreshStatus()
                     }
                 },
-                onStageAll: { _ in
+                onStageAll: {
                     Task {
                         await stagingViewModel.stageAllFiles()
                         // Refresh repository status after staging all
                         await repository.refreshStatus()
                     }
                 },
-                onUnstageAll: { _ in
+                onUnstageAll: {
                     Task {
                         await stagingViewModel.unstageAllFiles()
                         // Refresh repository status after unstaging all

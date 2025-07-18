@@ -89,7 +89,7 @@ public class SyntaxHighlighter {
 
     private func highlightSwift(_ attributedString: AttributedString) -> AttributedString {
         var result = attributedString
-        let content = String(attributedString.characters)
+        let _ = String(attributedString.characters)
 
         // Swift keywords
         let swiftKeywords = [
@@ -304,12 +304,10 @@ public class SyntaxHighlighter {
             let matches = regex.matches(in: content, options: [], range: range)
 
             for match in matches.reversed() {
-                if let swiftRange = Range(match.range, in: content) {
-                    let attributedRange = AttributedString
-                        .Index(swiftRange.lowerBound, within: result) ..< AttributedString.Index(
-                            swiftRange.upperBound,
-                            within: result
-                        )
+                if let swiftRange = Range(match.range, in: content),
+                   let startIndex = AttributedString.Index(swiftRange.lowerBound, within: result),
+                   let endIndex = AttributedString.Index(swiftRange.upperBound, within: result) {
+                    let attributedRange = startIndex ..< endIndex
                     result[attributedRange].foregroundColor = color
                 }
             }
