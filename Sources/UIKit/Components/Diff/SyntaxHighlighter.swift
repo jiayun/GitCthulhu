@@ -89,7 +89,7 @@ public class SyntaxHighlighter {
 
     private func highlightSwift(_ attributedString: AttributedString) -> AttributedString {
         var result = attributedString
-        let _ = String(attributedString.characters)
+        _ = String(attributedString.characters)
 
         // Swift keywords
         let swiftKeywords = [

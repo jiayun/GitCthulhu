@@ -113,9 +113,9 @@ public extension FileStatusListState {
 }
 
 public struct FileStatusListView: View {
-    @ObservedObject internal var repository: GitRepository
+    @ObservedObject var repository: GitRepository
     @StateObject private var state = FileStatusListState()
-    @StateObject internal var stagingViewModel: StagingViewModel
+    @StateObject var stagingViewModel: StagingViewModel
 
     private let onViewDiff: ((String) -> Void)?
     private let onStagingChanged: (() -> Void)?
