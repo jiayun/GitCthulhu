@@ -13,17 +13,20 @@ public struct FileStatusItemView: View {
     let isSelected: Bool
     let onSelectionToggle: () -> Void
     let onStageToggle: (() -> Void)?
+    let onViewDiff: (() -> Void)?
 
     public init(
         fileStatus: GitStatusEntry,
         isSelected: Bool = false,
         onSelectionToggle: @escaping () -> Void = {},
-        onStageToggle: (() -> Void)? = nil
+        onStageToggle: (() -> Void)? = nil,
+        onViewDiff: (() -> Void)? = nil
     ) {
         self.fileStatus = fileStatus
         self.isSelected = isSelected
         self.onSelectionToggle = onSelectionToggle
         self.onStageToggle = onStageToggle
+        self.onViewDiff = onViewDiff
     }
 
     public var body: some View {
@@ -55,6 +58,11 @@ public struct FileStatusItemView: View {
             }
 
             Spacer()
+
+            // View Diff button
+            if let onViewDiff {
+                viewDiffButton(onViewDiff: onViewDiff)
+            }
 
             // Stage/Unstage button
             if let onStageToggle {
@@ -150,6 +158,26 @@ public struct FileStatusItemView: View {
             .background(color.opacity(0.15))
             .foregroundColor(color)
             .cornerRadius(4)
+    }
+
+    private func viewDiffButton(onViewDiff: @escaping () -> Void) -> some View {
+        Button(action: onViewDiff) {
+            HStack(spacing: 4) {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 12, weight: .medium))
+
+                Text("Diff")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.blue.opacity(0.15))
+            .foregroundColor(.blue)
+            .cornerRadius(4)
+        }
+        .buttonStyle(.plain)
+        .help("View file diff")
     }
 
     private func stageButton(onStageToggle: @escaping () -> Void) -> some View {
@@ -334,7 +362,8 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: false,
-            onStageToggle: {}
+            onStageToggle: {},
+            onViewDiff: {}
         )
     }
 
@@ -347,7 +376,8 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: true,
-            onStageToggle: {}
+            onStageToggle: {},
+            onViewDiff: {}
         )
     }
 
@@ -360,7 +390,8 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: nil
             ),
             isSelected: false,
-            onStageToggle: {}
+            onStageToggle: {},
+            onViewDiff: {}
         )
     }
 
@@ -373,7 +404,8 @@ private struct FileStatusItemPreview: View {
                 originalFilePath: "OldFile.swift"
             ),
             isSelected: false,
-            onStageToggle: {}
+            onStageToggle: {},
+            onViewDiff: {}
         )
     }
 }

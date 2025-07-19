@@ -34,6 +34,27 @@ public class StagingViewModel: ObservableObject {
         }
     }
 
+    public convenience init(repositoryPath: String) {
+        let url = URL(fileURLWithPath: repositoryPath)
+        do {
+            let repository = try GitRepository(url: url)
+            self.init(repository: repository)
+        } catch {
+            let logger = Logger(category: "StagingViewModel.init")
+            logger.error("Failed to initialize GitRepository with path \(repositoryPath): \(error)")
+            // Initialize with a dummy/invalid repository to avoid crashing.
+            // The view model will be in an error state.
+            // We can't avoid a try! here unless we make the init failable,
+            // which would be a larger API change.
+            // Using /dev/null is a safe fallback on Unix-like systems.
+            let dummyURL = URL(fileURLWithPath: "/dev/null")
+            // swiftlint:disable:next force_try
+            let dummyRepository = try! GitRepository(url: dummyURL)
+            self.init(repository: dummyRepository)
+            errorMessage = "Failed to open repository: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Public Methods
 
     /// Loads the current staging status
@@ -56,6 +77,11 @@ public class StagingViewModel: ObservableObject {
     /// Refreshes the staging status
     public func refreshStagingStatus() async {
         await loadStagingStatus()
+    }
+
+    /// Alias for refreshStagingStatus to match interface expected by IntegratedRepositoryView
+    public func refreshStatus() async {
+        await refreshStagingStatus()
     }
 
     // MARK: - Single File Operations
