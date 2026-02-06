@@ -8,12 +8,14 @@
 import Combine
 import Foundation
 import GitCore
+import UIKit
 
 @MainActor
 final class RepositoryDetailViewModel: ViewModelBase {
     @Published var selectedRepository: GitRepository?
     @Published var repositoryInfo: RepositoryInfo?
     @Published var isInfoLoading = false
+    @Published var diffViewMode: DiffViewMode = .unified
 
     private let appViewModel: AppViewModel
     private let repositoryInfoService: RepositoryInfoService

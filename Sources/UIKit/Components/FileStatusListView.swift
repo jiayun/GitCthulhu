@@ -152,11 +152,6 @@ public struct FileStatusListView: View {
             }
             .id(repositoryId)
             .navigationTitle("File Status")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    refreshButton
-                }
-            }
             .focusable()
     }
 

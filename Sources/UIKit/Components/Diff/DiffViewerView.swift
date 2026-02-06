@@ -370,10 +370,10 @@ struct DiffViewerToolbar: View {
             .disabled(!viewModel.canNavigateNext)
 
             // Refresh button
-            Button(action: viewModel.refresh) {
+            /* Button(action: viewModel.refresh) {
                 Image(systemName: "arrow.clockwise")
             }
-            .disabled(viewModel.isLoading)
+            .disabled(viewModel.isLoading) */
         }
     }
 }

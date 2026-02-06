@@ -36,15 +36,6 @@ struct RepositoryDetailView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Refresh") {
-                        Task {
-                            await viewModel.refreshRepositoryInfo()
-                        }
-                    }
-                }
-            }
         } else {
             // This should not happen as ContentView handles this case
             EmptyState(

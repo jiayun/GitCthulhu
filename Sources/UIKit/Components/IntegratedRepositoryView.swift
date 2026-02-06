@@ -53,9 +53,6 @@ public struct IntegratedRepositoryView: View {
                 .tag(RepositoryTab.diff)
         }
         .navigationTitle("Repository")
-        .toolbar {
-            repositoryToolbar
-        }
         .onAppear {
             Task {
                 await loadRepositoryData()
@@ -65,6 +62,29 @@ public struct IntegratedRepositoryView: View {
             if let filePath {
                 diffViewModel.selectFile(filePath)
                 selectedTab = .diff
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                HStack {
+                    // Refresh button
+                    Button(action: {
+                        Task {
+                            await refreshRepositoryData()
+                        }
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(statusManager.isLoading || stagingViewModel.isLoading)
+                    .help("Refresh repository status")
+
+                    // Loading indicator
+                    if statusManager.isLoading || stagingViewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(0.8)
+                    }
+                }
             }
         }
     }
